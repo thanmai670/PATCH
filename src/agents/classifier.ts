@@ -46,12 +46,16 @@ AXIS 2 — disposition: what are we PERMITTED to do about it?
   historical   : it was accurate when written and records what actually happened
                  (an as-built record, a delivered project's documentation, a signed
                  document). Preserve and annotate. NEVER edit.
-  irreversible : already sent, published or delivered to someone outside the edit
+  irreversible : ALREADY SENT, published or delivered to someone outside the edit
                  boundary (a sent email, a published bulletin). History cannot be
                  rewritten silently; it needs a corrective action instead.
 
 THE AXES ARE INDEPENDENT. A sent customer email is infected AND irreversible. A 2024
 as-built document is infected AND historical. Never collapse them.
+
+A candidate snippet prefixed [UNSENT DRAFT] has NOT been delivered to anyone: it is
+editable, never irreversible. A snippet prefixed [ALREADY SENT] has been delivered and
+is irreversible. Do not guess this from the title.
 
 matchKind: exact (literal string hit) | semantic (meaning only) | inferred (your reasoning
 only — the lowest trust, and it must be shown as such).

@@ -1,4 +1,4 @@
-import { search, scanDealsFor, getDoc, type SearchHit } from "@/adapters/ambiguous";
+import { search, scanDealsFor, getDoc, listSent, listDrafts, type SearchHit } from "@/adapters/ambiguous";
 import type { TruthChange, AgentTraceEntry } from "@/contract";
 
 export type Candidate = {
@@ -22,6 +22,27 @@ export type Candidate = {
  * 2026-09-12). A deal holding motor_rating "22 kW" never comes back from
  * search("22 kW"). Search alone silently loses the CRM node, so we scan deals too.
  */
+/**
+ * A mail candidate's title cannot say whether it was sent. Without this the
+ * classifier guessed, and an unsent DRAFT came back "irreversible" - the exact
+ * distinction the product turns on.
+ */
+async function markMailState(candidates: Candidate[]): Promise<void> {
+  const mail = candidates.filter((c) => c.module === "Mail");
+  if (mail.length === 0) return;
+  try {
+    const [sent, drafts] = await Promise.all([listSent(), listDrafts()]);
+    const sentIds = new Set((sent.data ?? []).map((m) => m.id));
+    const draftIds = new Set((drafts.data ?? []).map((m) => m.id));
+    for (const c of mail) {
+      if (draftIds.has(c.ambiguousId)) c.snippet = `[UNSENT DRAFT] ${c.snippet}`;
+      else if (sentIds.has(c.ambiguousId)) c.snippet = `[ALREADY SENT] ${c.snippet}`;
+    }
+  } catch {
+    /* leave unmarked; the classifier will flag for review, which is correct */
+  }
+}
+
 /**
  * Search hits come back without body text, which leaves the classifier guessing from
  * titles — it then labels everything "exposed ... cannot confirm literal presence".
@@ -78,7 +99,23 @@ export async function tracer(
     scanDealsFor(change.previousValue),
     ...terms.map((t) => search(t)),
   ]);
-  const subjectHits = { data: subjectResults.flatMap((r) => r.data ?? []) };
+  // The subject pass exists to surface DEPENDENCIES (exposed artefacts), not to
+  // drag in everything mentioning the project. Uncapped it returned ten mostly
+  // irrelevant candidates, which the classifier then spent 80s marking immune.
+  const SUBJECT_LIMIT = 5;
+  const seen = new Set((hits.data ?? []).map((h) => String(h.id)));
+  const subjectPool = [];
+  for (const r of subjectResults) {
+    for (const h of r.data ?? []) {
+      const id = String(h.id);
+      if (seen.has(id)) continue;
+      seen.add(id);
+      subjectPool.push(h);
+      if (subjectPool.length >= SUBJECT_LIMIT) break;
+    }
+    if (subjectPool.length >= SUBJECT_LIMIT) break;
+  }
+  const subjectHits = { data: subjectPool };
 
   const candidates: Candidate[] = (hits.data ?? []).map((h: SearchHit) => ({
     ambiguousId: String(h.id),
@@ -116,6 +153,7 @@ export async function tracer(
   }
 
   await enrich(candidates, change.previousValue);
+  await markMailState(candidates);
 
   const modules = [...new Set(candidates.map((c) => c.module))];
   return {

@@ -85,7 +85,16 @@ export async function planner(args: {
   const nodes: InfectionNode[] = args.nodes.map((n) => {
     const s = bySurface.get(n.id);
     // Fall back to the deterministic mapping if the model omitted a node.
+    // Enforced, not suggested. A historical artefact that renders a
+    // dependency_decision offers a control that edits it - which is the one thing
+    // we promise never to do. The model chooses only where the rule is silent.
+    const forced: InfectionNode["surface"] | null =
+      n.disposition === "irreversible" ? "corrective_message"
+      : n.disposition === "historical" ? "preservation_notice"
+      : null;
+
     const surface: InfectionNode["surface"] =
+      forced ??
       s?.surface ??
       (n.disposition === "irreversible"
         ? "corrective_message"
@@ -97,8 +106,15 @@ export async function planner(args: {
               ? "dependency_decision"
               : "document_diff");
 
-    const props: Record<string, unknown> = { actions: s?.actions ?? [] };
-    for (const [k, v] of Object.entries(s ?? {})) {
+    // Props from a surface the model picked but the rule overrode would describe
+    // the wrong control, so fall back to the surface's own action set.
+    const mismatched = forced !== null && s?.surface !== forced;
+    const props: Record<string, unknown> = {
+      actions: mismatched
+        ? (forced === "corrective_message" ? ["draft_correction", "except"] : ["annotate", "except"])
+        : (s?.actions ?? []),
+    };
+    for (const [k, v] of Object.entries(mismatched ? {} : (s ?? {}))) {
       if (k === "id" || k === "surface" || k === "actions") continue;
       if (v !== null && v !== undefined) props[k] = v;
     }

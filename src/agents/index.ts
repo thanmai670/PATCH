@@ -37,7 +37,18 @@ export async function runPipeline(
   const pl = await planner({ change, nodes: cls.nodes });
   emit(pl.trace);
 
-  const nodes = pl.nodes;
+  // CONTEXT.md: infection status decides whether a node lights up. An immune
+  // artefact was checked and does not carry the stale fact, so it is not part of
+  // the spread and does not belong on the map. The count of everything examined
+  // stays visible in the classifier's trace line, so nothing is hidden.
+  const examined = pl.nodes.length;
+  const nodes = pl.nodes.filter((n) => n.status !== "immune");
+  const clean = examined - nodes.length;
+  if (clean > 0) {
+    const t = trace.find((x) => x.agent === "classifier");
+    if (t) t.summary += `. ${clean} checked and clean (not shown)`;
+  }
+
   return {
     reportId: `rpt_${change.id}`,
     change,
