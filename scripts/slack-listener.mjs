@@ -109,6 +109,29 @@ async function jsonCapableModels() {
   return modelCache;
 }
 
+const AGENT_NAMES = ["interpreter", "evidence", "classifier", "planner", "executor"];
+
+/** Set one agent, or all of them, and report it. Shared by the card and the text command. */
+async function applyModel(target, model, post) {
+  const models = await jsonCapableModels();
+  const meta = models.find((m) => m.id === model);
+  if (!meta) {
+    const near = models.filter((m) => m.id.includes(model.split("/").pop() ?? model)).slice(0, 8);
+    await post(
+      `I do not have \`${model}\` in the JSON-capable list.` +
+      (near.length ? `\n\nDid you mean:\n${near.map((m) => `• \`${m.id}\``).join("\n")}` : ""),
+    );
+    return false;
+  }
+  const overrides = readOverrides();
+  if (target === "__all__") for (const a of AGENT_NAMES) overrides[a] = model;
+  else overrides[target] = model;
+  writeFileSync(OVERRIDE_PATH, JSON.stringify(overrides, null, 2));
+  console.log(`   model set: ${target} -> ${model}`);
+  await post(modelSetCard({ agent: target, model, pricing: meta.pricing }));
+  return true;
+}
+
 /** Which agent a subsequent model pick applies to. Per Slack thread. */
 const pickScope = new Map();
 
@@ -131,18 +154,7 @@ async function showModelPicker(evt, threadKey) {
       },
       onPick: async (ctx) => {
         if (!(await requires(ctx, "change_models", "Changing model routing"))) return;
-        const model = String(ctx.action.value);
-        const target = pickScope.get(threadKey) ?? "__all__";
-        const overrides = readOverrides();
-        if (target === "__all__") {
-          for (const a of ["interpreter", "evidence", "classifier", "planner", "executor"]) overrides[a] = model;
-        } else {
-          overrides[target] = model;
-        }
-        writeFileSync(OVERRIDE_PATH, JSON.stringify(overrides, null, 2));
-        const meta = (await jsonCapableModels()).find((m) => m.id === model);
-        console.log(`   model set: ${target} -> ${model}`);
-        await ctx.thread.post(modelSetCard({ agent: target, model, pricing: meta?.pricing }));
+        await applyModel(pickScope.get(threadKey) ?? "__all__", String(ctx.action.value), (m) => ctx.thread.post(m));
       },
     }),
   );
@@ -385,11 +397,35 @@ channel.onMention(async (evt) => {
     return;
   }
 
+  const use = text.match(/^use\s+(\S+)(?:\s+(\S+))?/i);
+  if (use) {
+    if (!(await requires(evt, "change_models", "Changing model routing"))) return;
+    const [, a, b] = use;
+    const target = b && AGENT_NAMES.includes(a.toLowerCase()) ? a.toLowerCase() : "__all__";
+    const model = b && AGENT_NAMES.includes(a.toLowerCase()) ? b : a;
+    console.log(`   -> use ${target} ${model}`);
+    await applyModel(target, model, (m) => evt.thread.post(m));
+    return;
+  }
+
   if (/^(models?|model routing|which model)/i.test(text)) {
     console.log("   -> model picker");
     if (!(await requires(evt, "change_models", "Changing model routing"))) return;
     try {
       await showModelPicker(evt, evt.messageId ?? "default");
+      const picks = await jsonCapableModels();
+      const shortlist = [
+        "anthropic/claude-sonnet-4.5", "anthropic/claude-haiku-4.5",
+        "openai/gpt-4o", "openai/gpt-4o-mini",
+        "google/gemini-2.5-flash", "deepseek/deepseek-chat",
+        "qwen/qwen-2.5-72b-instruct", "x-ai/grok-2-1212",
+      ].filter((id) => picks.some((m) => m.id === id));
+      await evt.thread.post(
+        "*Or just type it* — the dropdown above may not be interactive on every Slack surface.\n\n" +
+        "`@patch use <model>` for all agents, or `@patch use <agent> <model>` for one.\n\n" +
+        shortlist.map((id) => `• \`@patch use ${id}\``).join("\n") +
+        `\n\n_Agents: ${AGENT_NAMES.join(", ")}. ${picks.length} models available._`,
+      );
     } catch (e) {
       console.error("   picker failed:", e?.message ?? e);
       await evt.thread.post(`Could not load the model list: ${e?.message ?? e}`);
