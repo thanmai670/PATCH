@@ -4,14 +4,7 @@ import { useState } from "react";
 import type { InfectionNode, TruthChange } from "@/contract";
 import { Action, Provenance } from "../atoms";
 import { actions, str, strList } from "../surfaceProps";
-
-function sentWhen(iso: string): string {
-  if (!iso) return "earlier";
-  const d = new Date(iso);
-  return Number.isNaN(d.getTime())
-    ? iso
-    : d.toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" });
-}
+import { formatDate } from "../formatDate";
 
 /**
  * An Irreversible artefact. This surface renders NO control that would apply the
@@ -48,7 +41,7 @@ export function CorrectiveMessageSurface({
           <span aria-hidden>⛔</span> Cannot be repaired silently
         </p>
         <p className="mt-2 text-[12px] leading-relaxed text-pink-100/80">
-          This message was delivered {sentAt ? `on ${sentWhen(sentAt)}` : "already"} and has
+          This message was delivered {sentAt ? `on ${formatDate(sentAt, "an earlier date")}` : "already"} and has
           been read outside the workspace. PATCH will not edit it, and there is no action
           here that would.
         </p>
