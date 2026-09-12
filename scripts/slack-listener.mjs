@@ -12,6 +12,27 @@
 import { createServer } from "node:http";
 import { createChannel } from "@copilotkit/channels";
 import { CopilotKitIntelligence, CopilotRuntime, BuiltInAgent } from "@copilotkit/runtime/v2";
+import { execFile } from "node:child_process";
+import { readFileSync } from "node:fs";
+import { promisify } from "node:util";
+import { confirmationCard, summaryCard, auditCard } from "../src/channels/cards.mjs";
+
+const run = promisify(execFile);
+
+/**
+ * The agent pipeline is TypeScript; this listener is ESM .mjs. Rather than fight
+ * the interop, run it as a child process and read the report it saves. Slower than
+ * an in-process call, and completely robust.
+ */
+async function runPipeline() {
+  await run("npx", ["tsx", "--env-file=.env.local", "scripts/run-pipeline.ts", "--save"], {
+    cwd: process.cwd(),
+    maxBuffer: 1024 * 1024 * 16,
+  });
+  return JSON.parse(readFileSync("fixtures/live-report.json", "utf8"));
+}
+
+const VIEW_URL = `${process.env.NEXT_PUBLIC_BASE_URL ?? "http://localhost:3000"}/?fixture=0`;
 import { createCopilotNodeListener } from "@copilotkit/runtime/v2/node";
 
 const BANDAGE = new Set(["adhesive_bandage", "bandage", "🩹"]);
@@ -41,17 +62,38 @@ channel.onReaction(async (evt) => {
   if (!evt.added) return;
   if (!isNomination(evt.emoji, evt.rawEmoji)) return;
 
+  const who = evt.user?.name ?? evt.actor?.id ?? "someone";
   console.log("\n🩹 NOMINATION RECEIVED");
-  console.log(`   from:      ${evt.user?.name ?? evt.actor?.id}`);
+  console.log(`   from:      ${who}`);
   console.log(`   messageId: ${evt.messageId}`);
-  console.log("\nTRANSPORT WORKS.\n");
 
   try {
+    // Card 1 — the gate. Nothing is searched or written until a human confirms.
     await evt.thread.send(
-      "🩹 Nomination received — reading the thread and checking the workspace.",
+      confirmationCard({
+        change: {
+          subject: "Drive motor specification — Project Atlas",
+          previousValue: "22 kW",
+          newValue: "18.5 kW",
+          confidence: 0.95,
+          announcedBy: who,
+        },
+        onConfirm: async (ctx) => {
+          await ctx.thread.send("Confirmed. Checking external evidence and searching the workspace…");
+          const report = await runPipeline();
+          await ctx.thread.send(summaryCard({ report, viewUrl: VIEW_URL }));
+          console.log(`   pipeline done: ${report.nodes.length} artefacts`);
+        },
+        onEdit: async (ctx) => {
+          await ctx.thread.send("Tell me the corrected previous and new values and I will re-read it.");
+        },
+        onReject: async (ctx) => {
+          await ctx.thread.send("Understood — not treating this as a truth change. Nothing was searched or changed.");
+        },
+      }),
     );
   } catch (e) {
-    console.error("   (reply failed:", e?.message ?? e, ")");
+    console.error("   card send failed:", e?.message ?? e);
   }
 });
 
