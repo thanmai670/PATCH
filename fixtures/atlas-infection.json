@@ -1,0 +1,204 @@
+{
+  "reportId": "rpt_atlas_motor_001",
+  "change": {
+    "id": "chg_atlas_motor",
+    "subject": "Drive motor specification — Project Atlas",
+    "previousValue": "22 kW",
+    "newValue": "18.5 kW",
+    "confidence": 0.94,
+    "announcedBy": "Thanmai",
+    "announcedAt": "2026-09-12T08:14:00Z",
+    "project": "Project Atlas",
+    "patientZero": {
+      "channel": "#project-atlas",
+      "messageTs": "1789012440.000100",
+      "text": "Supplier correction: the approved motor for Project Atlas is now 18.5 kW, not 22 kW. Please use the revised specification attached here.",
+      "permalink": "https://slack.com/archives/C0ATLAS/p1789012440000100"
+    }
+  },
+  "evidence": [
+    {
+      "id": "ev_bulletin",
+      "title": "Technical Bulletin TB-2026-114 — Drive Motor Series Revision",
+      "url": "https://example-supplier.com/bulletins/tb-2026-114",
+      "publishedAt": "2026-09-12T06:00:00Z",
+      "highlight": "Effective immediately, the ATX-series drive motor supplied under contract 44-119 is rated at 18.5 kW. The previously published 22 kW rating is withdrawn.",
+      "sourceStatus": "live",
+      "supports": true
+    },
+    {
+      "id": "ev_catalogue",
+      "title": "Supplier Product Catalogue 2025 (archived)",
+      "url": "https://example-supplier.com/catalogue/2025",
+      "publishedAt": "2025-03-01T00:00:00Z",
+      "highlight": "ATX-series drive motor — nominal output 22 kW.",
+      "sourceStatus": "cached",
+      "supports": false
+    }
+  ],
+  "nodes": [
+    {
+      "id": "n_proposal",
+      "ambiguousId": "doc_atlas_proposal",
+      "kind": "document",
+      "title": "Project Atlas — Commercial Proposal (Draft v3)",
+      "href": "https://app.ambiguous.ai/documents/doc_atlas_proposal",
+      "status": "infected",
+      "disposition": "editable",
+      "matchKind": "exact",
+      "confidence": 0.97,
+      "rationale": "Literal match on '22 kW' in the equipment schedule. Document is an unsent draft, so it can be corrected in place.",
+      "excerpt": {
+        "before": "Drive motor: 22 kW, 400 V, IE3 efficiency class.",
+        "after": "Drive motor: 18.5 kW, 400 V, IE3 efficiency class.",
+        "field": null
+      },
+      "surface": "document_diff",
+      "surfaceProps": {
+        "actions": ["accept", "rewrite", "except"],
+        "paragraphContext": "Section 4.2 — Equipment Schedule",
+        "occurrences": 2
+      },
+      "dependsOn": [],
+      "requiresHumanReview": false
+    },
+    {
+      "id": "n_crm",
+      "ambiguousId": "deal_atlas_001",
+      "kind": "crm_record",
+      "title": "Deal — Atlas Drive Package (Stadler)",
+      "href": "https://app.ambiguous.ai/crm/deals/deal_atlas_001",
+      "status": "infected",
+      "disposition": "editable",
+      "matchKind": "exact",
+      "confidence": 0.99,
+      "rationale": "Custom field 'motor_rating' holds the stale value verbatim. Single-field replacement, fully reversible.",
+      "excerpt": {
+        "before": "22 kW",
+        "after": "18.5 kW",
+        "field": "motor_rating"
+      },
+      "surface": "field_change",
+      "surfaceProps": {
+        "actions": ["accept", "except"],
+        "connectedOpportunities": ["Atlas Phase 2", "Atlas Service Contract"],
+        "verifiedBy": "ev_bulletin"
+      },
+      "dependsOn": ["n_proposal"],
+      "requiresHumanReview": false
+    },
+    {
+      "id": "n_task",
+      "ambiguousId": "task_atlas_electrical",
+      "kind": "task",
+      "title": "Electrical preparation — Atlas motor mount",
+      "href": "https://app.ambiguous.ai/tasks/task_atlas_electrical",
+      "status": "exposed",
+      "disposition": "editable",
+      "matchKind": "semantic",
+      "confidence": 0.71,
+      "rationale": "Task specifies cable sizing derived from motor load. It does not contain '22 kW' literally, but the sizing depends on it. Changing the number silently could leave the cable schedule wrong.",
+      "excerpt": null,
+      "surface": "dependency_decision",
+      "surfaceProps": {
+        "actions": ["create_review", "assign_engineer", "preserve_original", "set_urgency"],
+        "impactStatement": "Updating the rating may invalidate the existing cable schedule (4 mm² selected for 22 kW).",
+        "suggestedAssignee": "Electrical lead",
+        "suggestedUrgency": "high"
+      },
+      "dependsOn": ["n_crm"],
+      "requiresHumanReview": true
+    },
+    {
+      "id": "n_email_sent",
+      "ambiguousId": "msg_atlas_customer",
+      "kind": "email_sent",
+      "title": "Sent — 'Atlas specification confirmation' to customer",
+      "href": "https://app.ambiguous.ai/mail/msg_atlas_customer",
+      "status": "infected",
+      "disposition": "irreversible",
+      "matchKind": "exact",
+      "confidence": 0.96,
+      "rationale": "Message was delivered to the customer on 9 September. History cannot be rewritten — a corrective message is the only honest repair.",
+      "excerpt": {
+        "before": "…confirming the drive motor at 22 kW as specified…",
+        "after": "…confirming the drive motor at 18.5 kW as specified…",
+        "field": null
+      },
+      "surface": "corrective_message",
+      "surfaceProps": {
+        "actions": ["draft_correction", "except"],
+        "recipients": ["procurement@customer.example", "eng@customer.example"],
+        "sentAt": "2026-09-09T14:22:00Z",
+        "impactExplanation": "The customer has the withdrawn 22 kW rating in writing. A correction referencing TB-2026-114 should go out before their design freeze."
+      },
+      "dependsOn": ["n_proposal"],
+      "requiresHumanReview": true
+    },
+    {
+      "id": "n_historical",
+      "ambiguousId": "doc_orion_asbuilt",
+      "kind": "historical_document",
+      "title": "Project Orion — As-Built Documentation (2024)",
+      "href": "https://app.ambiguous.ai/documents/doc_orion_asbuilt",
+      "status": "infected",
+      "disposition": "historical",
+      "matchKind": "exact",
+      "confidence": 0.88,
+      "rationale": "Contains '22 kW', but this records what was actually installed on Orion in 2024. It was true then and must stay true. Annotate, never edit.",
+      "excerpt": {
+        "before": "Installed drive motor: 22 kW (ATX-series).",
+        "after": "Installed drive motor: 22 kW (ATX-series). [Note: specification revised to 18.5 kW for later projects — see TB-2026-114]",
+        "field": null
+      },
+      "surface": "preservation_notice",
+      "surfaceProps": {
+        "actions": ["annotate", "except"],
+        "reason": "As-built record of a delivered project. Editing would falsify the installation history.",
+        "proposedNotice": "Specification superseded 12 Sep 2026 (TB-2026-114). This document records the as-built Orion configuration and is unchanged."
+      },
+      "dependsOn": [],
+      "requiresHumanReview": false
+    },
+    {
+      "id": "n_techdoc",
+      "ambiguousId": "doc_atlas_spec",
+      "kind": "document",
+      "title": "Atlas Drivetrain — Technical Specification",
+      "href": "https://app.ambiguous.ai/documents/doc_atlas_spec",
+      "status": "infected",
+      "disposition": "editable",
+      "matchKind": "exact",
+      "confidence": 0.62,
+      "rationale": "Contains '22 kW', but the surrounding text references a secondary auxiliary motor. This may be a DIFFERENT 22 kW motor. Low confidence — human must confirm before any write.",
+      "excerpt": {
+        "before": "Auxiliary drive: 22 kW continuous.",
+        "after": "Auxiliary drive: 18.5 kW continuous.",
+        "field": null
+      },
+      "surface": "document_diff",
+      "surfaceProps": {
+        "actions": ["accept", "rewrite", "except"],
+        "paragraphContext": "Section 2.1 — Drivetrain Overview",
+        "occurrences": 1,
+        "warning": "This document may refer to a different 22 kW motor. Human review required."
+      },
+      "dependsOn": [],
+      "requiresHumanReview": true
+    }
+  ],
+  "trace": [
+    { "agent": "interpreter", "model": "anthropic/claude-sonnet-4.5", "startedAt": "2026-09-12T08:14:02Z", "durationMs": 1840, "summary": "Extracted truth change: motor spec 22 kW → 18.5 kW, confidence 0.94", "tokensIn": 1420, "tokensOut": 180 },
+    { "agent": "evidence", "model": "openai/gpt-4o-mini", "startedAt": "2026-09-12T08:14:04Z", "durationMs": 3210, "summary": "Exa found supplier bulletin TB-2026-114 (live) and one contradicting archived catalogue", "tokensIn": 2100, "tokensOut": 240 },
+    { "agent": "tracer", "model": "openai/gpt-4o-mini", "startedAt": "2026-09-12T08:14:07Z", "durationMs": 2650, "summary": "Ambiguous workspace search returned 6 candidate artefacts across docs, CRM, tasks, mail", "tokensIn": 3400, "tokensOut": 420 },
+    { "agent": "classifier", "model": "anthropic/claude-sonnet-4.5", "startedAt": "2026-09-12T08:14:10Z", "durationMs": 4100, "summary": "Classified: 3 editable, 1 historical, 1 irreversible, 1 exposed dependency. 3 flagged for human review", "tokensIn": 5200, "tokensOut": 890 },
+    { "agent": "planner", "model": "anthropic/claude-sonnet-4.5", "startedAt": "2026-09-12T08:14:14Z", "durationMs": 2300, "summary": "Generated 5 distinct repair surfaces matched to disposition and artefact kind", "tokensIn": 4100, "tokensOut": 1120 }
+  ],
+  "summary": {
+    "safeToUpdate": 2,
+    "requiresReview": 2,
+    "alreadyCommunicated": 1,
+    "preserveAsHistorical": 1
+  },
+  "generatedAt": "2026-09-12T08:14:16Z"
+}
