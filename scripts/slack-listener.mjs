@@ -55,12 +55,36 @@ channel.onReaction(async (evt) => {
   }
 });
 
-channel.onMention?.(async (evt) => {
-  console.log(`[mention] from ${evt.user?.name ?? "?"}`);
+// Every handler registered, so "nothing arrives" is distinguishable from
+// "reactions specifically do not arrive".
+channel.onMessage(async (evt) => {
+  console.log(`[message] from=${evt.user?.name ?? evt.actor?.id ?? "?"} text=${String(evt.text ?? "").slice(0, 80)}`);
 });
 
+channel.onMention(async (evt) => {
+  console.log(`[mention] from=${evt.user?.name ?? evt.actor?.id ?? "?"} text=${String(evt.text ?? "").slice(0, 80)}`);
+  try { await evt.thread.send("PATCH is listening. React 🩹 on a message to nominate it."); }
+  catch (e) { console.error("  reply failed:", e?.message ?? e); }
+});
+
+channel.onThreadStarted?.(async () => console.log("[threadStarted]"));
+
 const intelligence = new CopilotKitIntelligence({ apiKey: API_KEY });
-const runtime = new CopilotRuntime({ agents: {}, intelligence, channels: [channel] });
+
+// identifyUser is REQUIRED on the runtime, not only on the channel.
+// Without it the runtime still starts, still reports a valid license, and still
+// answers /info — but it wires NO gateway and serves no thread routes, so Slack
+// events never arrive and nothing errors. `copilotkit verify` names this exact
+// signature: "no agents and no gateway URL while still reporting a license".
+const runtime = new CopilotRuntime({
+  agents: {},
+  intelligence,
+  channels: [channel],
+  identifyUser: (request) => {
+    const id = request?.headers?.get?.("x-copilotkit-user-id") ?? "patch-demo-user";
+    return { id: String(id), name: "PATCH demo user" };
+  },
+});
 const listener = createCopilotNodeListener({ runtime, basePath: "/api/copilotkit" });
 
 const server = createServer(listener);

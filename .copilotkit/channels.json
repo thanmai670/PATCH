@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "channels": [
+    {
+      "name": "patch",
+      "displayName": "patch",
+      "providers": {
+        "slack": {
+          "env": {
+            "botToken": "INTELLIGENCE_CHANNEL_PATCH_SLACK_BOT_TOKEN",
+            "signingSecret": "INTELLIGENCE_CHANNEL_PATCH_SLACK_SIGNING_SECRET"
+          }
+        }
+      }
+    }
+  ]
+}
