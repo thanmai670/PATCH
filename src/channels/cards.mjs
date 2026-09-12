@@ -312,3 +312,26 @@ export function workspaceChangeCard({ detections, onNominate, onDismiss }) {
     ],
   });
 }
+
+/**
+ * A refusal that is actionable rather than a dead end: it says what was blocked,
+ * what the person's role is, and who can do it.
+ */
+export function deniedCard({ action, role, admins }) {
+  return Message({
+    accent: "#f59e0b",
+    fallbackText: `Not permitted: ${action}`,
+    children: [
+      Header({ children: "That needs a higher role" }),
+      Section({
+        children: Markdown({
+          children: `*${action}* is restricted. You are a *${role}*, which can see everything PATCH finds but cannot start a search or cause a write.`,
+        }),
+      }),
+      ...(admins.length
+        ? [Fields({ children: [Field({ label: "Ask one of", children: admins.join(", ") })] })]
+        : []),
+      Context({ children: "Roles live in patch.config.json." }),
+    ],
+  });
+}

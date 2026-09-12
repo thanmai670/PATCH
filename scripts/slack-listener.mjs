@@ -17,8 +17,9 @@ import { readFileSync } from "node:fs";
 import { promisify } from "node:util";
 import {
   confirmationCard, summaryCard, auditCard, modelPickerCard, modelSetCard,
-  workspaceChangeCard,
+  workspaceChangeCard, deniedCard,
 } from "../src/channels/cards.mjs";
+import { can, describeRole, adminsFor, identityOf } from "../src/channels/authz.mjs";
 import { writeFileSync } from "node:fs";
 
 const run = promisify(execFile);
@@ -129,6 +130,7 @@ async function showModelPicker(evt, threadKey) {
         );
       },
       onPick: async (ctx) => {
+        if (!(await requires(ctx, "change_models", "Changing model routing"))) return;
         const model = String(ctx.action.value);
         const target = pickScope.get(threadKey) ?? "__all__";
         const overrides = readOverrides();
@@ -230,6 +232,7 @@ const channel = createChannel({
  * deliver today, so the mention path is not a second-class citizen here.
  */
 async function handleNomination(evt, { nominator, text, trigger }) {
+  if (!(await requires(evt, "nominate", "Nominating a truth change"))) return;
   console.log(`\n🩹 NOMINATION via ${trigger}`);
   console.log(`   from: ${nominator}`);
   console.log(`   text: ${text.slice(0, 120)}`);
@@ -273,6 +276,7 @@ async function handleNomination(evt, { nominator, text, trigger }) {
           announcedBy: c.announcedBy ?? nominator,
         },
         onConfirm: async (ctx) => {
+          if (!(await requires(ctx, "confirm", "Confirming a truth change"))) return;
           // One message, edited as each agent lands — the guide's pattern for slow
           // work, and it makes the six agents visible instead of a silent 45s gap.
           const done = [];
@@ -311,6 +315,19 @@ async function handleNomination(evt, { nominator, text, trigger }) {
 }
 
 const who = (evt) => evt.user?.name ?? evt.actor?.id ?? "someone";
+
+/**
+ * Gate one action. Viewing is never gated - the whole point is that the team can
+ * see where a stale fact spread. Acting is gated, because starting a search or
+ * causing a write should not follow from merely being in the channel.
+ */
+async function requires(evt, perm, label) {
+  const id = identityOf(evt);
+  if (can(id, perm)) return true;
+  console.log(`   denied: ${who(evt)} (${describeRole(id)}) tried ${perm}`);
+  await evt.thread.post(deniedCard({ action: label, role: describeRole(id), admins: adminsFor(perm) }));
+  return false;
+}
 const textOf = (evt) => String(evt.message?.text ?? evt.text ?? "");
 
 channel.onMessage(async (evt) => {
@@ -320,6 +337,18 @@ channel.onMessage(async (evt) => {
 channel.onMention(async (evt) => {
   const text = textOf(evt).replace(/<@[^>]+>/g, "").trim();
   console.log(`[mention] from=${who(evt)} text=${text.slice(0, 90)}`);
+
+  if (/^(whoami|who am i|my role|permissions?)/i.test(text)) {
+    const id = identityOf(evt);
+    const allowed = ["nominate", "confirm", "approve_repairs", "change_models", "dismiss"]
+      .filter((perm) => can(id, perm));
+    await evt.thread.post(
+      `You are a *${describeRole(id)}*.\n` +
+      (allowed.length ? `You can: ${allowed.join(", ")}.` : "You can see everything PATCH finds, but not start a search or cause a write.") +
+      `\n_Roles live in patch.config.json._`,
+    );
+    return;
+  }
 
   if (/^(changes?|workspace|what.?s changed|pending)/i.test(text)) {
     const pending = readPending();
@@ -332,11 +361,13 @@ channel.onMention(async (evt) => {
       workspaceChangeCard({
         detections: pending,
         onDismiss: async (ctx) => {
+          if (!(await requires(ctx, "dismiss", "Dismissing workspace detections"))) return;
           writePending([]);
           await ctx.thread.post("Dismissed. Nothing was searched or changed.");
         },
         onNominate: async (ctx) => {
           const id = String(ctx.action.value);
+          if (!(await requires(ctx, "nominate", "Nominating a workspace edit"))) return;
           const d = readPending().find((x) => x.id === id);
           if (!d) { await ctx.thread.post("That detection is no longer pending."); return; }
           writePending(readPending().filter((x) => x.id !== id));
@@ -353,6 +384,7 @@ channel.onMention(async (evt) => {
 
   if (/^(models?|model routing|which model)/i.test(text)) {
     console.log("   -> model picker");
+    if (!(await requires(evt, "change_models", "Changing model routing"))) return;
     try {
       await showModelPicker(evt, evt.messageId ?? "default");
     } catch (e) {

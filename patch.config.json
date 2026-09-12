@@ -1,0 +1,34 @@
+{
+  "$comment": "PATCH access control. Edit this file and restart the listener.",
+
+  "roles": {
+    "admin": {
+      "description": "Can nominate, confirm, approve repairs, and change model routing.",
+      "members": [
+        "thanmaibk@gmail.com",
+        "Thanmai"
+      ]
+    },
+    "operator": {
+      "description": "Can nominate and confirm a truth change, but not change model routing.",
+      "members": []
+    }
+  },
+
+  "permissions": {
+    "view": "everyone",
+    "nominate": ["admin", "operator"],
+    "confirm": ["admin", "operator"],
+    "approve_repairs": ["admin"],
+    "change_models": ["admin"],
+    "dismiss": ["admin", "operator"]
+  },
+
+  "$notes": [
+    "Members are matched on Slack email, display name, or user id — case-insensitive.",
+    "Anyone not listed is a viewer: they see every card and every result, and can ask",
+    "PATCH to read a message, but cannot start a search or cause a write.",
+    "'view' is intentionally everyone. Hiding the reasoning would defeat the point:",
+    "the audit trail is only useful if the team can read it."
+  ]
+}
