@@ -69,7 +69,18 @@ if (!CHANNEL_CODE || !API_KEY) {
 
 const channel = createChannel({
   name: CHANNEL_NAME,
-  identifyUser: "platform",
+  // "platform" leaves evt.user null, so every card read "Announced by: someone".
+  // ChannelIdentityContext exposes lookupProfile() for the provider's real profile;
+  // fall back through handle then id so a card never shows a blank author.
+  identifyUser: async (ctx) => {
+    let profile;
+    try { profile = await ctx.lookupProfile?.(); } catch { /* keep the fallbacks */ }
+    const actor = profile ?? ctx.actor;
+    return {
+      id: String(ctx.actor?.id ?? "unknown"),
+      name: String(actor?.name ?? actor?.handle ?? ctx.actor?.id ?? "someone"),
+    };
+  },
 });
 
 /**
