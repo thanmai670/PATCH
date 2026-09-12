@@ -1,119 +1,44 @@
 /**
- * Seed the Ambiguous workspace with the six Project Atlas artefacts, all carrying 22 kW.
- * WORKSTREAM A — issue #6.
+ * Seed the Meridian Rail Systems workspace. WORKSTREAM A — issue #6.
  *
- *   npm run seed          idempotent: creates what's missing, restores 22 kW on what exists
- *   npm run seed:reset    deletes the seeded docs/task/deal and recreates them
+ *   npm run seed          idempotent: create what's missing, restore stale values
+ *   npm run seed:reset    delete and recreate the editable artefacts
  *
- * These mirror fixtures/atlas-infection.json so a live run and the fixture tell the
- * same story on stage.
+ * Content lives in scripts/seed/company.ts, which carries five independent
+ * truth-change scenarios so a demo is never tied to one fact.
  *
- * The sent email is deliberately NOT deleted by --reset. It is the irreversible
- * artefact: if the seed could delete it, the demo would be lying about what
- * irreversible means.
+ * Sent mail is never deleted by --reset. An irreversible artefact the seed can
+ * delete would make the demo dishonest about what irreversible means.
  */
 import {
   listDocs, createDoc, updateDoc, deleteDoc,
   listTasks, createTask, deleteTask,
   listDeals, createDeal, updateDeal, deleteDeal,
-  listSent, sendMail,
-  search, AmbiguousError,
+  listSent, sendMail, listDrafts, createDraft,
+  listContacts, createContact,
+  listWikiSpaces, createWikiSpace, createWikiPage,
+  search, idOf, AmbiguousError,
 } from "../src/adapters/ambiguous";
+import {
+  OLD, DOCS, TASKS, COMPANIES, PEOPLE, DEALS, SENT_MAIL, DRAFT_MAIL,
+  WIKI_SPACE, WIKI_PAGES,
+} from "./seed/company";
 
 const RESET = process.argv.includes("--reset");
-const OLD = "22 kW";
-
-/** Recipient on the workspace's own domain — routes internally, never bounces externally. */
-const CUSTOMER = "procurement@meridian-rail.ambi.cc";
-
-const DOCS = [
-  {
-    key: "proposal",
-    title: "Project Atlas — Commercial Proposal (Draft v3)",
-    content: [
-      "# Project Atlas — Commercial Proposal",
-      "",
-      "_Draft v3 — not yet issued to the customer._",
-      "",
-      "## 4.2 Equipment Schedule",
-      "",
-      `Drive motor: ${OLD}, 400 V, IE3 efficiency class.`,
-      "",
-      `The drive package is rated at ${OLD} continuous duty and is supplied under`,
-      "contract 44-119.",
-      "",
-      "## 4.3 Commercial Terms",
-      "",
-      "Delivery 14 weeks from order. Payment 30/60/10.",
-    ].join("\n"),
-  },
-  {
-    key: "orion",
-    title: "Project Orion — As-Built Documentation (2024)",
-    content: [
-      "# Project Orion — As-Built Documentation",
-      "",
-      "_Issued 2024-11-08. Records the configuration as actually installed._",
-      "",
-      "## Drivetrain",
-      "",
-      `Installed drive motor: ${OLD} (ATX-series).`,
-      "",
-      "Commissioned 2024-10-30 and accepted by the customer without deviation.",
-    ].join("\n"),
-  },
-  {
-    key: "techspec",
-    title: "Atlas Drivetrain — Technical Specification",
-    content: [
-      "# Atlas Drivetrain — Technical Specification",
-      "",
-      "## 2.1 Drivetrain Overview",
-      "",
-      "Primary drive: ATX-series, see equipment schedule.",
-      `Auxiliary drive: ${OLD} continuous.`,
-      "",
-      "The auxiliary unit drives the compressor set and is independent of the",
-      "primary traction package.",
-    ].join("\n"),
-  },
-];
-
-/** Exposed, not infected: depends on the motor rating without naming it. */
-const TASK = {
-  title: "Electrical preparation — Atlas motor mount",
-  description: [
-    "Prepare the electrical installation for the Atlas drive motor mount.",
-    "",
-    "Cable sizing has been derived from the approved motor load in the equipment",
-    "schedule; 4 mm2 selected accordingly. Confirm terminal box orientation before",
-    "the cable pull.",
-  ].join("\n"),
-  priority: "high" as const,
-};
-
-const DEAL = {
-  title: "Atlas Drive Package",
-  amount: 184000,
-  currency: "EUR",
-  custom_properties: { motor_rating: OLD, project: "Project Atlas", contract: "44-119" },
-};
-
-const MAIL = {
-  to: [CUSTOMER],
-  subject: "Atlas specification confirmation",
-  body_markdown: [
-    "Hello,",
-    "",
-    `Confirming the drive motor at ${OLD} as specified in the equipment schedule`,
-    "for Project Atlas. Please proceed with the interface design on that basis.",
-    "",
-    "Kind regards,",
-    "Meridian Rail Systems",
-  ].join("\n"),
-};
-
 const log = (s: string) => console.log(s);
+const ok = (label: string, id: string, name: string) =>
+  log(`  ${label.padEnd(16)} ${(id || "—").slice(0, 8).padEnd(9)} ${name}`);
+
+/** Never let one failing module abort the rest of the seed. */
+async function attempt<T>(what: string, fn: () => Promise<T>): Promise<T | null> {
+  try {
+    return await fn();
+  } catch (e) {
+    const msg = e instanceof AmbiguousError ? `${e.status} ${e.body.slice(0, 120)}` : String(e);
+    log(`  ! ${what}: ${msg}`);
+    return null;
+  }
+}
 
 async function main() {
   if (!process.env.AMBIGUOUS_API_KEY) {
@@ -121,79 +46,119 @@ async function main() {
     process.exit(1);
   }
 
-  log(RESET ? "Resetting Project Atlas seed data…\n" : "Seeding Project Atlas artefacts…\n");
+  log(RESET ? "Resetting Meridian Rail Systems workspace…\n" : "Seeding Meridian Rail Systems workspace…\n");
 
-  /* ── Documents ─────────────────────────────────────────────────────────── */
+  /* ── Documents ───────────────────────────────────────────────────────────── */
+  log("Documents");
   const existingDocs = (await listDocs()).data ?? [];
   for (const spec of DOCS) {
     const hit = existingDocs.find((d) => d.title === spec.title);
     if (hit && RESET) {
-      await deleteDoc(hit.id);
-      const made = await createDoc({ type: "doc", title: spec.title, content: spec.content });
-      log(`  recreated doc   ${made.id}  ${spec.title}`);
+      await attempt("delete doc", () => deleteDoc(hit.id));
+      const made = await attempt("create doc", () => createDoc({ type: "doc", title: spec.title, content: spec.content }));
+      if (made) ok("recreated", made.id, spec.title);
     } else if (hit) {
-      await updateDoc(hit.id, { content: spec.content });
-      log(`  restored doc    ${hit.id}  ${spec.title}`);
+      await attempt("restore doc", () => updateDoc(hit.id, { content: spec.content }));
+      ok("restored", hit.id, spec.title);
     } else {
-      const made = await createDoc({ type: "doc", title: spec.title, content: spec.content });
-      log(`  created doc     ${made.id}  ${spec.title}`);
+      const made = await attempt("create doc", () => createDoc({ type: "doc", title: spec.title, content: spec.content }));
+      if (made) ok("created", made.id, spec.title);
     }
   }
 
-  /* ── Task ──────────────────────────────────────────────────────────────── */
+  /* ── Tasks ───────────────────────────────────────────────────────────────── */
+  log("\nTasks");
   const existingTasks = (await listTasks()).data ?? [];
-  const taskHit = existingTasks.find((t) => t.title === TASK.title);
-  if (taskHit && RESET) {
-    await deleteTask(taskHit.id);
-    const made = await createTask(TASK);
-    log(`  recreated task  ${made.id}  ${TASK.title}`);
-  } else if (taskHit) {
-    log(`  task exists     ${taskHit.id}  ${TASK.title}`);
-  } else {
-    const made = await createTask(TASK);
-    log(`  created task    ${made.id}  ${TASK.title}`);
-  }
-
-  /* ── CRM deal ──────────────────────────────────────────────────────────── */
-  const existingDeals = (await listDeals()).data ?? [];
-  const dealHit = existingDeals.find((d) => d.title === DEAL.title);
-  if (dealHit && RESET) {
-    await deleteDeal(dealHit.id);
-    const made = await createDeal(DEAL);
-    log(`  recreated deal  ${made.id}  ${DEAL.title}`);
-  } else if (dealHit) {
-    await updateDeal(dealHit.id, { custom_properties: DEAL.custom_properties });
-    log(`  restored deal   ${dealHit.id}  ${DEAL.title}  (motor_rating -> ${OLD})`);
-  } else {
-    const made = await createDeal(DEAL);
-    log(`  created deal    ${made.id}  ${DEAL.title}`);
-  }
-
-  /* ── Sent mail — never deleted, only created if absent ─────────────────── */
-  const sent = (await listSent()).data ?? [];
-  const mailHit = sent.find((m) => m.subject === MAIL.subject);
-  if (mailHit) {
-    log(`  mail exists     ${mailHit.id}  ${MAIL.subject}  (never reset — irreversible by design)`);
-  } else {
-    try {
-      const made = await sendMail(MAIL);
-      log(`  sent mail       ${made.id}  ${MAIL.subject}`);
-    } catch (e) {
-      const msg = e instanceof AmbiguousError ? `${e.status} ${e.body.slice(0, 200)}` : String(e);
-      log(`  ! mail send failed: ${msg}`);
-      log(`    The other five artefacts are fine. Fix the recipient and re-run.`);
+  for (const t of TASKS) {
+    const hit = existingTasks.find((x) => x.title === t.title);
+    if (hit && RESET) {
+      await attempt("delete task", () => deleteTask(hit.id));
+      const made = await attempt("create task", () => createTask(t));
+      if (made) ok("recreated", made.id, t.title);
+    } else if (hit) {
+      ok("exists", hit.id, t.title);
+    } else {
+      const made = await attempt("create task", () => createTask(t));
+      if (made) ok("created", made.id, t.title);
     }
   }
 
-  /* ── Prove the tracer will find them ───────────────────────────────────── */
-  log("\nVerifying via cross-module search…");
-  const found = await search(OLD);
-  log(`  search("${OLD}") -> ${found.total} hit(s)`);
-  for (const h of found.data.slice(0, 10)) {
-    log(`    [${h.module}] ${h.title ?? h.id}`);
+  /* ── CRM ─────────────────────────────────────────────────────────────────── */
+  log("\nCRM");
+  const existingContacts = (await listContacts()).data ?? [];
+  const companyIds = new Map<string, string>();
+  for (const c of COMPANIES) {
+    const hit = existingContacts.find((x) => x.name === c.name);
+    if (hit) { companyIds.set(c.name, hit.id); ok("company exists", hit.id, c.name); continue; }
+    const made = await attempt("create company", () => createContact({ type: "company", ...c }));
+    if (made) { const id = idOf(made); companyIds.set(c.name, id); ok("company", id, c.name); }
   }
-  if (found.total === 0) {
-    log("  ! search returned nothing — indexing may lag; re-run in a few seconds.");
+  for (const p of PEOPLE) {
+    const hit = existingContacts.find((x) => x.name === p.name);
+    if (hit) { ok("person exists", hit.id, p.name); continue; }
+    const made = await attempt("create person", () => createContact({
+      type: "person", name: p.name, email: p.email, title: p.title,
+      company_id: companyIds.get(p.company),
+    }));
+    if (made) ok("person", idOf(made), p.name);
+  }
+
+  const existingDeals = (await listDeals()).data ?? [];
+  for (const d of DEALS) {
+    const hit = existingDeals.find((x) => x.title === d.title);
+    if (hit && RESET) {
+      await attempt("delete deal", () => deleteDeal(hit.id));
+      const made = await attempt("create deal", () => createDeal(d));
+      if (made) ok("recreated deal", made.id, d.title);
+    } else if (hit) {
+      await attempt("restore deal", () => updateDeal(hit.id, { custom_properties: d.custom_properties }));
+      ok("restored deal", hit.id, d.title);
+    } else {
+      const made = await attempt("create deal", () => createDeal(d));
+      if (made) ok("created deal", made.id, d.title);
+    }
+  }
+
+  /* ── Wiki ────────────────────────────────────────────────────────────────── */
+  log("\nWiki");
+  const spaces = (await attempt("list spaces", () => listWikiSpaces()))?.data ?? [];
+  let spaceId = spaces.find((s) => s.name === WIKI_SPACE.name)?.id;
+  if (!spaceId) {
+    const made = await attempt("create space", () => createWikiSpace(WIKI_SPACE));
+    spaceId = made ? idOf(made) : undefined;
+    if (spaceId) ok("space", spaceId, WIKI_SPACE.name);
+  } else {
+    ok("space exists", spaceId, WIKI_SPACE.name);
+  }
+  if (spaceId) {
+    for (const page of WIKI_PAGES) {
+      const made = await attempt("create page", () => createWikiPage(spaceId!, page));
+      if (made) ok("page", idOf(made), page.title);
+    }
+  }
+
+  /* ── Mail ────────────────────────────────────────────────────────────────── */
+  log("\nMail");
+  const sent = (await listSent()).data ?? [];
+  for (const m of SENT_MAIL) {
+    const hit = sent.find((x) => x.subject === m.subject);
+    if (hit) { ok("sent exists", hit.id, `${m.subject}  (never reset — irreversible)`); continue; }
+    const made = await attempt("send mail", () => sendMail(m));
+    if (made) ok("sent", made.id, m.subject);
+  }
+  const drafts = (await attempt("list drafts", () => listDrafts()))?.data ?? [];
+  for (const m of DRAFT_MAIL) {
+    const hit = drafts.find((x) => x.subject === m.subject);
+    if (hit) { ok("draft exists", hit.id, m.subject); continue; }
+    const made = await attempt("create draft", () => createDraft(m));
+    if (made) ok("draft", idOf(made), m.subject);
+  }
+
+  /* ── Prove each scenario is findable ─────────────────────────────────────── */
+  log("\nScenario coverage (what the tracer will find)");
+  for (const [name, value] of Object.entries(OLD)) {
+    const r = await attempt(`search ${value}`, () => search(value));
+    log(`  ${name.padEnd(10)} "${value}"`.padEnd(34) + `-> ${r?.total ?? 0} hit(s)`);
   }
   log("\nDone.");
 }

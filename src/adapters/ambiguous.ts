@@ -131,3 +131,36 @@ export async function scanDealsFor(value: string): Promise<{ deal: AmbiguousDeal
   }
   return out;
 }
+
+/* ── Wider workspace surface, used by the company seed ─────────────────────── */
+
+export type WikiSpace = { id: string; name: string };
+export const listWikiSpaces = () => get<{ data: WikiSpace[] }>("/wiki/spaces");
+export const createWikiSpace = (s: { name: string; description?: string }) =>
+  post<{ space?: WikiSpace; id?: string }>("/wiki/spaces", s);
+export const createWikiPage = (spaceId: string, p: { title: string; content_markdown: string }) =>
+  post<{ page?: { id: string }; id?: string }>(`/wiki/spaces/${spaceId}/pages`, p);
+
+export type Calendar = { id: string; name: string };
+export const listCalendars = () => get<{ data: Calendar[] }>("/calendar/calendars");
+export const createEvent = (calendarId: string, e: {
+  title: string; start_at: string; end_at: string; description?: string; location?: string;
+}) => post<{ event?: { id: string }; id?: string }>(`/calendar/${calendarId}/events`, e);
+
+export type Contact = { id: string; name: string };
+export const listContacts = () => get<{ data: Contact[] }>("/crm/contacts");
+export const createContact = (c: {
+  type: "person" | "company"; name: string; email?: string; title?: string;
+  company_id?: string; industry?: string; website?: string;
+  custom_properties?: Record<string, unknown>;
+}) => post<{ contact?: Contact; id?: string }>("/crm/contacts", c);
+
+export const createDraft = (m: { to: string[]; subject: string; body_markdown: string }) =>
+  post<{ draft?: { id: string }; id?: string }>("/mail/drafts", m);
+export const listDrafts = () => get<{ data: { id: string; subject: string }[] }>("/mail/drafts");
+
+/** POST shapes are inconsistent across modules; unwrap whatever came back. */
+export const idOf = (r: unknown): string => {
+  const o = r as Record<string, any>;
+  return String(o?.id ?? o?.task?.id ?? o?.deal?.id ?? o?.contact?.id ?? o?.page?.id ?? o?.space?.id ?? o?.event?.id ?? o?.draft?.id ?? "");
+};

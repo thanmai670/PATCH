@@ -1,17 +1,17 @@
 {
-  "reportId": "rpt_chg_1789216862000100",
+  "reportId": "rpt_chg_1789217523000100",
   "change": {
-    "id": "chg_1789216862000100",
-    "subject": "Project Atlas approved motor power rating",
+    "id": "chg_1789217523000100",
+    "subject": "approved motor power rating",
     "previousValue": "22 kW",
     "newValue": "18.5 kW",
     "confidence": 0.95,
     "announcedBy": "Thanmai",
-    "announcedAt": "2026-09-12T12:41:02.000Z",
+    "announcedAt": "2026-09-12T12:52:03.000Z",
     "project": "Project Atlas",
     "patientZero": {
       "channel": "#project-atlas",
-      "messageTs": "1789216862.000100",
+      "messageTs": "1789217523.000100",
       "text": "Supplier correction: the approved motor for Project Atlas is now 18.5 kW, not 22 kW. Please use the revised specification attached here.",
       "permalink": null
     }
@@ -28,7 +28,7 @@
       "disposition": "editable",
       "matchKind": "exact",
       "confidence": 0.95,
-      "rationale": "Technical specification for Project Atlas contains the literal '22 kW' for auxiliary drive. This is an internal specification document and safe to update in place.",
+      "rationale": "Technical specification for Project Atlas contains the literal '22 kW' for auxiliary drive. This is an internal specification document that can be updated in place.",
       "excerpt": {
         "before": "Auxiliary drive: 22 kW continuous.",
         "after": "Auxiliary drive: 18.5 kW continuous.",
@@ -57,7 +57,7 @@
       "disposition": "historical",
       "matchKind": "exact",
       "confidence": 0.98,
-      "rationale": "Project Orion as-built documentation from 2024 contains '22 kW' but this is a DIFFERENT project. The document accurately records what was installed in Orion and must be preserved unchanged. Not related to Atlas fact change.",
+      "rationale": "As-built documentation from 2024 for Project Orion (not Atlas) contains '22 kW'. This is a historical record of what was actually installed and must be preserved as-is. Do not edit.",
       "excerpt": {
         "before": "Installed drive motor: 22 kW (ATX-series).",
         "after": "",
@@ -71,8 +71,8 @@
           "annotate",
           "except"
         ],
-        "reason": "This document records the actual 22 kW motor installed in Project Orion in 2024, which is a different project from Atlas and remains factually correct.",
-        "proposedNotice": "Note: Project Atlas subsequently adopted an 18.5 kW rating. This Orion as-built record remains accurate for the Orion installation."
+        "reason": "This is as-built documentation from 2024 for Project Orion, recording what was actually installed at that time. The 22 kW rating is a historical fact about that installation and must remain unchanged.",
+        "proposedNotice": "Note: Project Atlas subsequently adopted an 18.5 kW rating. This Orion documentation reflects the actual 2024 installation and remains accurate for that project."
       }
     },
     {
@@ -85,14 +85,14 @@
       "disposition": "editable",
       "matchKind": "exact",
       "confidence": 0.92,
-      "rationale": "Draft commercial proposal for Project Atlas contains literal '22 kW'. Marked as draft v3, so still internal and editable. Should be updated to reflect approved rating.",
+      "rationale": "Draft commercial proposal for Project Atlas contains literal '22 kW'. Marked draft v3, so likely editable, but human should verify this hasn't been sent to customer yet before modifying.",
       "excerpt": {
         "before": "Drive motor: 22 kW, 400 V, IE3 efficiency class.",
         "after": "Drive motor: 18.5 kW, 400 V, IE3 efficiency class.",
         "field": null
       },
       "dependsOn": [],
-      "requiresHumanReview": false,
+      "requiresHumanReview": true,
       "surface": "document_diff",
       "surfaceProps": {
         "actions": [
@@ -101,7 +101,8 @@
           "except"
         ],
         "paragraphContext": "Drive motor: 22 kW, 400 V, IE3 efficiency class.",
-        "occurrences": 1
+        "occurrences": 1,
+        "warning": "Draft v3 status suggests this may not have been sent to customer yet, but human review is required to confirm before modification."
       }
     },
     {
@@ -114,14 +115,14 @@
       "disposition": "irreversible",
       "matchKind": "exact",
       "confidence": 0.97,
-      "rationale": "Sent email confirming '22 kW' specification for Project Atlas. Already delivered to recipient, so cannot be silently edited. Requires follow-up corrective communication to update the recipient.",
+      "rationale": "Sent email confirming '22 kW' specification for Project Atlas. Email has already been delivered and cannot be silently edited. Requires corrective follow-up communication.",
       "excerpt": {
         "before": "Confirming the drive motor at 22 kW as specified in the equipment schedule for Project Atlas.",
-        "after": "Confirming the drive motor at 18.5 kW as specified in the equipment schedule for Project Atlas.",
+        "after": "",
         "field": null
       },
       "dependsOn": [],
-      "requiresHumanReview": true,
+      "requiresHumanReview": false,
       "surface": "corrective_message",
       "surfaceProps": {
         "actions": [
@@ -129,10 +130,10 @@
           "except"
         ],
         "recipients": [
-          "original email recipient"
+          "original email recipients"
         ],
         "sentAt": "unknown",
-        "impactExplanation": "The recipient was informed that Atlas would use a 22 kW motor, but the approved specification has changed to 18.5 kW, which may affect their planning, procurement, or integration work."
+        "impactExplanation": "Your sent email confirmed a 22 kW drive motor for Project Atlas. The approved specification has since changed to 18.5 kW, requiring a correction to be sent to the same recipients to update their understanding of the Atlas specification."
       }
     },
     {
@@ -145,9 +146,11 @@
       "disposition": "editable",
       "matchKind": "inferred",
       "confidence": 0.7,
-      "rationale": "Task for electrical preparation and motor mount for Atlas. Likely depends on motor rating for sizing cables, mounting hardware, or electrical protection, but snippet does not contain the literal value. Requires human review to determine if work scope is affected by power change.",
+      "rationale": "Task for electrical preparation and motor mount for Atlas project. Likely depends on motor rating for sizing/preparation work but snippet does not contain the literal value. Human should review task details to determine if rework is needed.",
       "excerpt": null,
-      "dependsOn": [],
+      "dependsOn": [
+        "n_3dfae650"
+      ],
       "requiresHumanReview": true,
       "surface": "dependency_decision",
       "surfaceProps": {
@@ -157,8 +160,8 @@
           "preserve_original",
           "set_urgency"
         ],
-        "impactStatement": "Motor power reduction from 22 kW to 18.5 kW may affect cable sizing, circuit breaker ratings, and mounting hardware specified for this electrical preparation task.",
-        "suggestedAssignee": "electrical engineer",
+        "impactStatement": "This electrical preparation task for Atlas motor mounting may require rework if cable sizing, breaker ratings, or mounting hardware were specified for the original 22 kW motor rather than the new 18.5 kW rating.",
+        "suggestedAssignee": "electrical engineer responsible for TASK-001",
         "suggestedUrgency": "medium"
       }
     },
@@ -171,8 +174,8 @@
       "status": "infected",
       "disposition": "editable",
       "matchKind": "exact",
-      "confidence": 0.96,
-      "rationale": "CRM record for Atlas Drive Package contains literal '22 kW' in motor_rating field. Internal database record, safe to update directly.",
+      "confidence": 0.99,
+      "rationale": "CRM record for Atlas Drive Package contains literal '22 kW' in motor_rating field. This is structured data that should be updated to reflect the approved change.",
       "excerpt": {
         "before": "22 kW",
         "after": "18.5 kW",
@@ -185,7 +188,12 @@
         "actions": [
           "accept",
           "except"
-        ]
+        ],
+        "connectedOpportunities": [
+          "Atlas Drive Package sales record",
+          "related quotations or orders"
+        ],
+        "verifiedBy": "motor_rating field update from 22 kW to 18.5 kW"
       }
     }
   ],
@@ -193,26 +201,26 @@
     {
       "agent": "interpreter",
       "model": "anthropic/claude-sonnet-4.5",
-      "startedAt": "2026-09-12T12:41:02.008Z",
-      "durationMs": 4156,
-      "summary": "Extracted truth change: Project Atlas approved motor power rating 22 kW → 18.5 kW, confidence 0.95",
+      "startedAt": "2026-09-12T12:52:03.772Z",
+      "durationMs": 3874,
+      "summary": "Extracted truth change: approved motor power rating 22 kW → 18.5 kW, confidence 0.95",
       "tokensIn": 399,
-      "tokensOut": 143
+      "tokensOut": 153
     },
     {
       "agent": "evidence",
       "model": "openai/gpt-4o-mini",
-      "startedAt": "2026-09-12T12:41:07.655Z",
-      "durationMs": 3171,
+      "startedAt": "2026-09-12T12:52:07.890Z",
+      "durationMs": 3833,
       "summary": "Exa returned 5 source(s); 0 relevant, 0 contradicting",
-      "tokensIn": 1844,
+      "tokensIn": 1843,
       "tokensOut": 156
     },
     {
       "agent": "tracer",
       "model": "n/a (mechanical retrieval)",
-      "startedAt": "2026-09-12T12:41:06.167Z",
-      "durationMs": 2001,
+      "startedAt": "2026-09-12T12:52:07.650Z",
+      "durationMs": 1268,
       "summary": "Found 6 candidate artefact(s) across Docs, Mail, Tasks, CRM: 4 literal, 1 by subject (possible dependencies), 1 via CRM field scan that search missed",
       "tokensIn": null,
       "tokensOut": null
@@ -220,27 +228,27 @@
     {
       "agent": "classifier",
       "model": "anthropic/claude-sonnet-4.5",
-      "startedAt": "2026-09-12T12:41:10.826Z",
-      "durationMs": 24873,
+      "startedAt": "2026-09-12T12:52:11.724Z",
+      "durationMs": 24294,
       "summary": "Classified 6: 4 editable, 1 historical, 1 irreversible, 1 exposed. 2 flagged for human review",
-      "tokensIn": 2958,
-      "tokensOut": 1255
+      "tokensIn": 2951,
+      "tokensOut": 1250
     },
     {
       "agent": "planner",
       "model": "anthropic/claude-sonnet-4.5",
-      "startedAt": "2026-09-12T12:41:35.700Z",
-      "durationMs": 13448,
+      "startedAt": "2026-09-12T12:52:36.019Z",
+      "durationMs": 11084,
       "summary": "Generated 5 distinct repair surface type(s) across 6 artefact(s)",
-      "tokensIn": 1587,
-      "tokensOut": 619
+      "tokensIn": 1098,
+      "tokensOut": 713
     }
   ],
   "summary": {
-    "safeToUpdate": 3,
+    "safeToUpdate": 2,
     "requiresReview": 2,
     "alreadyCommunicated": 1,
     "preserveAsHistorical": 1
   },
-  "generatedAt": "2026-09-12T12:41:49.149Z"
+  "generatedAt": "2026-09-12T12:52:47.103Z"
 }
