@@ -19,6 +19,13 @@ it fights reactflow's render model. Hand-rolled SVG gives that moment directly.
 
 ## Consequences
 
-We give up pan/zoom and node dragging. With six nodes on a fixed 1440×900 stage layout
-that costs nothing. If the node count ever grows past ~15 this decision should be
-revisited, because depth-ring layout degenerates into overlapping siblings.
+We give up pan and zoom. With six artefacts on a fixed 1440×900 stage that costs nothing.
+If the count ever grows past ~15 this decision should be revisited, because ring layout
+degenerates into overlapping siblings.
+
+**Amended:** this originally gave up node dragging too. Dragging turned out to cost
+nothing to add on top of hand-rolled SVG — a per-artefact offset applied to the computed
+position — and it is how people expect to untangle a graph, so it is now supported. A
+dragged artefact is clamped to the visible canvas so one can never be lost off an edge,
+and "Put them back" restores the computed layout. The layout algorithm remains the
+source of truth; dragging only offsets from it.

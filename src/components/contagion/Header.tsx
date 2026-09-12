@@ -1,6 +1,7 @@
 "use client";
 
 import type { InfectionReport } from "@/contract";
+import { ThemeToggle } from "./ThemeToggle";
 
 const WORDS = ["No", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight"];
 const word = (n: number) => WORDS[n] ?? String(n);
@@ -31,6 +32,7 @@ export function Header({ report }: { report: InfectionReport }) {
             ? `Raised by ${change.announcedBy} in ${change.patientZero.channel}`
             : `Raised by ${change.announcedBy}`}
         </span>
+        <ThemeToggle />
       </div>
 
       <div className="mt-3 flex flex-wrap items-end justify-between gap-x-10 gap-y-3">

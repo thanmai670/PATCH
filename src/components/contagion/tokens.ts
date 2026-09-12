@@ -9,15 +9,15 @@ import type { InfectionStatus, RepairDisposition, MatchKind } from "@/contract";
  */
 
 export const STATUS_COLOR: Record<InfectionStatus, string> = {
-  infected: "#E0413F",
-  exposed: "#E08A11",
-  immune: "#0E9F6E",
+  infected: "rgb(var(--c-infected))",
+  exposed: "rgb(var(--c-exposed))",
+  immune: "rgb(var(--c-immune))",
 };
 
 export const STATUS_DEEP: Record<InfectionStatus, string> = {
-  infected: "#B02020",
-  exposed: "#9A5B06",
-  immune: "#06724E",
+  infected: "rgb(var(--c-infected-deep))",
+  exposed: "rgb(var(--c-exposed-deep))",
+  immune: "rgb(var(--c-immune-deep))",
 };
 
 export const STATUS_LABEL: Record<InfectionStatus, string> = {
@@ -29,8 +29,8 @@ export const STATUS_LABEL: Record<InfectionStatus, string> = {
 /** null = editable, which draws no ring at all. Absence is the signal. */
 export const DISPOSITION_RING: Record<RepairDisposition, string | null> = {
   editable: null,
-  historical: "#7C4DDB",
-  irreversible: "#DB3C8A",
+  historical: "rgb(var(--c-historical))",
+  irreversible: "rgb(var(--c-irreversible))",
 };
 
 export const DISPOSITION_LABEL: Record<RepairDisposition, string> = {
@@ -52,9 +52,9 @@ export const MATCH_LABEL: Record<MatchKind, string> = {
   inferred: "worked out by the agent",
 };
 
-export const REVIEW_COLOR = "#E08A11";
-export const HEALED_COLOR = "#0E9F6E";
-export const RULE_COLOR = "#D8DEE5";
+export const REVIEW_COLOR = "rgb(var(--c-exposed))";
+export const HEALED_COLOR = "rgb(var(--c-immune))";
+export const RULE_COLOR = "rgb(var(--rule))";
 
 /** An artefact is in the Safe Set when it needs no individual human judgement. */
 export function isSafe(node: {

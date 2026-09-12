@@ -2,7 +2,7 @@
 
 import type { InfectionNode, TruthChange } from "@/contract";
 import { ArtefactIcon } from "./ArtefactIcon";
-import { STATUS_COLOR, STATUS_DEEP, isSafe } from "./tokens";
+import { STATUS_COLOR, STATUS_DEEP, HEALED_COLOR, isSafe } from "./tokens";
 import { KIND_LABEL, TONE_COLOR, plainAction, plainStatus, plainWhy } from "./plainLanguage";
 
 /**
@@ -68,11 +68,11 @@ export function ArtefactList({
                   <svg width={30} height={30} viewBox="-15 -15 30 30" aria-hidden>
                     <circle
                       r={14}
-                      fill={isHealed ? "#0E9F6E" : STATUS_COLOR[node.status]}
-                      stroke={isHealed ? "#06724E" : STATUS_DEEP[node.status]}
+                      fill={isHealed ? HEALED_COLOR : STATUS_COLOR[node.status]}
+                      stroke={isHealed ? HEALED_COLOR : STATUS_DEEP[node.status]}
                       strokeWidth={1.25}
                     />
-                    <ArtefactIcon kind={node.kind} size={17} />
+                    <ArtefactIcon kind={node.kind} size={17} color="rgb(var(--map-disc-ink))" />
                   </svg>
                 </span>
 

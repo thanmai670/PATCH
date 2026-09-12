@@ -19,11 +19,11 @@ export const KIND_LABEL: Record<ArtefactKind, string> = {
 export type Tone = "safe" | "care" | "sent" | "keep" | "done";
 
 export const TONE_COLOR: Record<Tone, { dot: string; text: string }> = {
-  safe: { dot: "#0E9F6E", text: "text-immune-deep" },
-  care: { dot: "#E08A11", text: "text-exposed-deep" },
-  sent: { dot: "#DB3C8A", text: "text-irreversible-deep" },
-  keep: { dot: "#7C4DDB", text: "text-historical-deep" },
-  done: { dot: "#0E9F6E", text: "text-immune-deep" },
+  safe: { dot: "rgb(var(--c-immune))", text: "text-immune-deep" },
+  care: { dot: "rgb(var(--c-exposed))", text: "text-exposed-deep" },
+  sent: { dot: "rgb(var(--c-irreversible))", text: "text-irreversible-deep" },
+  keep: { dot: "rgb(var(--c-historical))", text: "text-historical-deep" },
+  done: { dot: "rgb(var(--c-immune))", text: "text-immune-deep" },
 };
 
 /** What PATCH is allowed to do about this one, said plainly. */

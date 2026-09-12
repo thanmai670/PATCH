@@ -130,6 +130,23 @@ export function InfectionMap({
   } | null>(null);
   const movedRef = useRef(false);
 
+  /**
+   * Content-space bounds of what is actually on screen. Margins are in content units
+   * too — the disc needs clearance on every side, and the two label lines hang below
+   * it, so the bottom needs more. Drop anything anywhere inside this and it stays
+   * fully visible.
+   */
+  const reach = useMemo(() => {
+    const clear = RING_R + 16;
+    const labelDrop = RING_R + 26 + 2 * 17 + 14;
+    return {
+      minX: (0 - fit.tx) / fit.scale + clear,
+      maxX: (view.w - fit.tx) / fit.scale - clear,
+      minY: (0 - fit.ty) / fit.scale + clear,
+      maxY: (view.h - fit.ty) / fit.scale - labelDrop,
+    };
+  }, [fit, view]);
+
   function toView(ev: React.PointerEvent): { x: number; y: number } | null {
     const svg = svgRef.current;
     const ctm = svg?.getScreenCTM();
@@ -167,11 +184,15 @@ export function InfectionMap({
       if (Math.hypot(p.x - moving.from.x, p.y - moving.from.y) > DRAG_THRESHOLD) {
         movedRef.current = true;
       }
+      const home = nodes.find((n) => n.node.id === moving.id);
+      if (!home) return;
+      const wantX = home.x + moving.base.dx + (p.x - moving.from.x);
+      const wantY = home.y + moving.base.dy + (p.y - moving.from.y);
       setNudge((n) => ({
         ...n,
         [moving.id]: {
-          dx: moving.base.dx + (p.x - moving.from.x),
-          dy: moving.base.dy + (p.y - moving.from.y),
+          dx: Math.min(Math.max(wantX, reach.minX), reach.maxX) - home.x,
+          dy: Math.min(Math.max(wantY, reach.minY), reach.maxY) - home.y,
         },
       }));
       return;
@@ -225,6 +246,16 @@ export function InfectionMap({
         space to pick up several at once.
       </p>
 
+      {Object.keys(nudge).length > 0 && (
+        <button
+          type="button"
+          onClick={() => setNudge({})}
+          className="absolute left-5 top-[98px] z-10 rounded-md border border-rule bg-surface px-2.5 py-1 text-[12px] text-ink-2 shadow-panel hover:bg-sunk"
+        >
+          Put them back
+        </button>
+      )}
+
       <svg
         ref={svgRef}
         viewBox={`0 0 ${view.w} ${view.h}`}
@@ -245,8 +276,8 @@ export function InfectionMap({
               dx="0"
               dy="2"
               stdDeviation="4"
-              floodColor="#16202B"
-              floodOpacity="0.18"
+              floodColor="rgb(var(--shadow-ink))"
+              floodOpacity="var(--shadow-strength)"
             />
           </filter>
         </defs>
@@ -262,7 +293,7 @@ export function InfectionMap({
                 rx={r * X_STRETCH}
                 ry={r}
                 fill="none"
-                stroke="#D5DDE5"
+                stroke="rgb(var(--map-orbit))"
                 strokeWidth={1}
                 strokeDasharray="2 6"
                 style={{ animationDelay: `${i * RING_MS}ms` }}
@@ -294,7 +325,7 @@ export function InfectionMap({
                     y1={from.y}
                     x2={to.x}
                     y2={to.y}
-                    stroke={lit ? "#16202B" : "#AEBAC6"}
+                    stroke={lit ? "rgb(var(--ink))" : "rgb(var(--map-edge))"}
                     strokeWidth={lit ? 2.2 : 1.5}
                     strokeDasharray={MATCH_DASH[e.matchKind]}
                     strokeLinecap="round"
@@ -349,7 +380,7 @@ export function InfectionMap({
             />
             <circle
               r={42}
-              fill="#FFFFFF"
+              fill="rgb(var(--surface))"
               stroke={STATUS_COLOR.infected}
               strokeWidth={3}
               filter="url(#patch-lift)"
@@ -357,10 +388,10 @@ export function InfectionMap({
             <text textAnchor="middle" dy={13} fontSize={32}>
               🩹
             </text>
-            <text textAnchor="middle" dy={76} fontSize={14} fontWeight={600} fill="#16202B">
+            <text textAnchor="middle" dy={76} fontSize={14} fontWeight={600} fill="rgb(var(--ink))">
               Someone flagged it here
             </text>
-            <text textAnchor="middle" dy={96} fontSize={13} fill="#828E9B">
+            <text textAnchor="middle" dy={96} fontSize={13} fill="rgb(var(--ink-3))">
               {report.change.patientZero?.channel ?? "Flagged in the app"}
             </text>
           </g>
@@ -378,7 +409,11 @@ export function InfectionMap({
             const lines = wrapLabel(node.title);
 
             return (
-              <g key={node.id} transform={`translate(${x},${y})`}>
+              <g
+                key={node.id}
+                className={moving?.id === node.id ? undefined : "patch-settle"}
+                transform={`translate(${x},${y})`}
+              >
                 <g
                   className="patch-node"
                   style={{ animationDelay: `${depth * RING_MS}ms` }}
@@ -404,7 +439,7 @@ export function InfectionMap({
                         r={RING_R + 11}
                         fill="none"
                         stroke={
-                          isSelected ? "#16202B" : isLassoed ? HEALED_COLOR : "#9AA6B2"
+                          isSelected ? "rgb(var(--ink))" : isLassoed ? HEALED_COLOR : "rgb(var(--map-halo))"
                         }
                         strokeWidth={isSelected ? 2 : isLassoed ? 3 : 1.5}
                         strokeDasharray={isLassoed ? "6 5" : undefined}
@@ -423,17 +458,17 @@ export function InfectionMap({
                       filter="url(#patch-lift)"
                       style={{ transition: "fill 600ms ease, stroke 600ms ease" }}
                     />
-                    <ArtefactIcon kind={node.kind} size={26} />
+                    <ArtefactIcon kind={node.kind} size={26} color="rgb(var(--map-disc-ink))" />
 
                     {node.requiresHumanReview && !isHealed && (
                       <g transform={`translate(${RING_R * 0.72},${-RING_R * 0.72})`}>
-                        <circle r={9} fill="#FFFFFF" stroke={REVIEW_COLOR} strokeWidth={2.5} />
+                        <circle r={9} fill="rgb(var(--surface))" stroke={REVIEW_COLOR} strokeWidth={2.5} />
                         <text
                           textAnchor="middle"
                           dy={4}
                           fontSize={11}
                           fontWeight={700}
-                          fill="#9A5B06"
+                          fill="rgb(var(--c-exposed-deep))"
                         >
                           !
                         </text>
@@ -442,8 +477,8 @@ export function InfectionMap({
 
                     {unconfirmedSet.has(node.id) && (
                       <g transform={`translate(${RING_R * 0.72},${RING_R * 0.72})`}>
-                        <circle r={9} fill="#FFFFFF" stroke="#828E9B" strokeWidth={2} />
-                        <circle r={3} fill="#828E9B" />
+                        <circle r={9} fill="rgb(var(--surface))" stroke="rgb(var(--ink-3))" strokeWidth={2} />
+                        <circle r={3} fill="rgb(var(--ink-3))" />
                       </g>
                     )}
 
@@ -454,7 +489,7 @@ export function InfectionMap({
                         dy={RING_R + 26 + i * 17}
                         fontSize={13.5}
                         fontWeight={600}
-                        fill="#16202B"
+                        fill="rgb(var(--ink))"
                       >
                         {line}
                       </text>
@@ -464,7 +499,7 @@ export function InfectionMap({
                       dy={RING_R + 26 + lines.length * 17 + 2}
                       fontSize={12}
                       fontWeight={500}
-                      fill={isHealed ? "#06724E" : TONE_COLOR[status.tone].dot}
+                      fill={isHealed ? "rgb(var(--c-immune-deep))" : TONE_COLOR[status.tone].dot}
                     >
                       {isHealed ? "Repair approved" : status.label}
                     </text>
@@ -480,7 +515,7 @@ export function InfectionMap({
               y={Math.min(lasso.y0, lasso.y1)}
               width={Math.abs(lasso.x1 - lasso.x0)}
               height={Math.abs(lasso.y1 - lasso.y0)}
-              fill="rgba(14,159,110,0.10)"
+              fill="rgb(var(--c-immune) / 0.12)"
               stroke={HEALED_COLOR}
               strokeWidth={2}
               strokeDasharray="7 5"

@@ -8,30 +8,32 @@ export default {
         sans: ["var(--font-plex-sans)", "ui-sans-serif", "system-ui", "sans-serif"],
         mono: ["var(--font-plex-mono)", "ui-monospace", "SFMono-Regular", "monospace"],
       },
+      // Every colour comes from a CSS variable so the theme switch is a single
+      // attribute flip — see globals.css.
       colors: {
-        // Drafting paper, not warm cream.
-        paper: "#EFF2F5",
-        surface: "#FFFFFF",
-        sunk: "#E4E9EF",
-        rule: "#D8DEE5",
-        ink: "#16202B",
-        "ink-2": "#4A5763",
-        "ink-3": "#828E9B",
+        paper: "rgb(var(--paper) / <alpha-value>)",
+        surface: "rgb(var(--surface) / <alpha-value>)",
+        sunk: "rgb(var(--sunk) / <alpha-value>)",
+        rule: "rgb(var(--rule) / <alpha-value>)",
+        ink: "rgb(var(--ink) / <alpha-value>)",
+        "ink-2": "rgb(var(--ink-2) / <alpha-value>)",
+        "ink-3": "rgb(var(--ink-3) / <alpha-value>)",
 
-        // Semantic, fixed by ADR-0001. `fill` reads on paper; `deep` reads as text.
-        infected: "#E0413F",
-        "infected-deep": "#B02020",
-        exposed: "#E08A11",
-        "exposed-deep": "#9A5B06",
-        immune: "#0E9F6E",
-        "immune-deep": "#06724E",
-        historical: "#7C4DDB",
-        "historical-deep": "#5B2FB0",
-        irreversible: "#DB3C8A",
-        "irreversible-deep": "#A81F63",
+        // Semantic, fixed by ADR-0001. `fill` reads on the page; `deep` reads as text.
+        infected: "rgb(var(--c-infected) / <alpha-value>)",
+        "infected-deep": "rgb(var(--c-infected-deep) / <alpha-value>)",
+        exposed: "rgb(var(--c-exposed) / <alpha-value>)",
+        "exposed-deep": "rgb(var(--c-exposed-deep) / <alpha-value>)",
+        immune: "rgb(var(--c-immune) / <alpha-value>)",
+        "immune-deep": "rgb(var(--c-immune-deep) / <alpha-value>)",
+        historical: "rgb(var(--c-historical) / <alpha-value>)",
+        "historical-deep": "rgb(var(--c-historical-deep) / <alpha-value>)",
+        irreversible: "rgb(var(--c-irreversible) / <alpha-value>)",
+        "irreversible-deep": "rgb(var(--c-irreversible-deep) / <alpha-value>)",
       },
       boxShadow: {
-        panel: "0 1px 2px rgba(22,32,43,0.06), 0 8px 24px -12px rgba(22,32,43,0.18)",
+        panel:
+          "0 1px 2px rgb(var(--shadow-ink) / 0.07), 0 8px 24px -12px rgb(var(--shadow-ink) / 0.28)",
       },
     },
   },

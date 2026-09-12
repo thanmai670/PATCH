@@ -41,7 +41,7 @@ export function MapLegend() {
           <span className="flex items-center gap-2">
             <span
               className="grid h-4 w-4 shrink-0 place-items-center rounded-full border-2 bg-surface text-[9px] font-bold"
-              style={{ borderColor: REVIEW_COLOR, color: "#9A5B06" }}
+              style={{ borderColor: REVIEW_COLOR, color: "rgb(var(--c-exposed-deep))" }}
             >
               !
             </span>

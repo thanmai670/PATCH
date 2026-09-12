@@ -10,7 +10,7 @@ import type { ArtefactKind } from "@/contract";
 export function ArtefactIcon({
   kind,
   size = 20,
-  color = "#FFFFFF",
+  color = "rgb(var(--map-disc-ink))",
 }: {
   kind: ArtefactKind;
   size?: number;
