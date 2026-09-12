@@ -21,7 +21,10 @@ const nomination = {
 
 (async () => {
   console.time("pipeline");
-  const report = await runPipeline(nomination);
+  const report = await runPipeline(nomination, (t) => {
+    // Machine-readable marker the Slack listener streams and renders live.
+    console.log(`@@AGENT ${JSON.stringify({ agent: t.agent, model: t.model, ms: t.durationMs, summary: t.summary })}`);
+  });
   console.timeEnd("pipeline");
 
   InfectionReport.parse(report);

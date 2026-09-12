@@ -12,7 +12,7 @@
 import { createServer } from "node:http";
 import { createChannel } from "@copilotkit/channels";
 import { CopilotKitIntelligence, CopilotRuntime, BuiltInAgent } from "@copilotkit/runtime/v2";
-import { execFile } from "node:child_process";
+import { execFile, spawn } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { promisify } from "node:util";
 import { confirmationCard, summaryCard, auditCard } from "../src/channels/cards.mjs";
@@ -34,12 +34,41 @@ async function interpretMessage(text, author, channel) {
   return JSON.parse(stdout.trim().split("\n").pop());
 }
 
-async function runPipeline() {
-  await run("npx", ["tsx", "--env-file=.env.local", "scripts/run-pipeline.ts", "--save"], {
-    cwd: process.cwd(),
-    maxBuffer: 1024 * 1024 * 16,
+const AGENT_LABEL = {
+  interpreter: "Reading the message",
+  evidence:    "Checking external evidence (Exa)",
+  tracer:      "Searching the workspace (Ambiguous)",
+  classifier:  "Classifying each artefact",
+  planner:     "Generating repair interfaces",
+};
+
+/**
+ * Stream the pipeline so Slack can show the six agents working, rather than
+ * going quiet for 45 seconds. Each `@@AGENT` marker on stdout is one finished
+ * agent; `onAgent` renders it by editing a single message in place.
+ */
+function runPipelineStreaming(onAgent) {
+  return new Promise((resolve, reject) => {
+    const child = spawn("npx", ["tsx", "--env-file=.env.local", "scripts/run-pipeline.ts", "--save"], {
+      cwd: process.cwd(),
+    });
+    let buf = "";
+    let stderr = "";
+    child.stdout.on("data", (chunk) => {
+      buf += chunk.toString();
+      const lines = buf.split("\n");
+      buf = lines.pop() ?? "";
+      for (const line of lines) {
+        if (!line.startsWith("@@AGENT ")) continue;
+        try { onAgent(JSON.parse(line.slice(8))); } catch { /* ignore a partial line */ }
+      }
+    });
+    child.stderr.on("data", (c) => { stderr += c.toString(); });
+    child.on("close", (code) => {
+      if (code !== 0) return reject(new Error(stderr.slice(-500) || `pipeline exited ${code}`));
+      resolve(JSON.parse(readFileSync("fixtures/live-report.json", "utf8")));
+    });
   });
-  return JSON.parse(readFileSync("fixtures/live-report.json", "utf8"));
 }
 
 const VIEW_URL = `${process.env.NEXT_PUBLIC_BASE_URL ?? "http://localhost:3000"}/?fixture=0`;
@@ -132,8 +161,26 @@ async function handleNomination(evt, { nominator, text, trigger }) {
           announcedBy: c.announcedBy ?? nominator,
         },
         onConfirm: async (ctx) => {
-          await ctx.thread.post("Confirmed. Checking external evidence and searching the workspace…");
-          const report = await runPipeline();
+          // One message, edited as each agent lands — the guide's pattern for slow
+          // work, and it makes the six agents visible instead of a silent 45s gap.
+          const done = [];
+          const render = () => [
+            "*Working…*",
+            ...done.map((d) => `✓ ${AGENT_LABEL[d.agent] ?? d.agent} — _${d.summary}_  \`${d.model}\` ${d.ms}ms`),
+          ].join("\n");
+
+          const ref = await ctx.thread.post("*Working…*\n_Starting the agents…_");
+          let pending = Promise.resolve();
+
+          const report = await runPipelineStreaming((a) => {
+            done.push(a);
+            console.log(`   [${a.agent}] ${a.ms}ms ${a.model}`);
+            // Serialise edits so two fast agents can't race the same message.
+            pending = pending.then(() => ctx.thread.update(ref, render()).catch(() => {}));
+          });
+          await pending;
+          await ctx.thread.update(ref, render() + "\n\n*Done.*").catch(() => {});
+
           await ctx.thread.post(summaryCard({ report, viewUrl: VIEW_URL }));
           console.log(`   pipeline done: ${report.nodes.length} artefacts`);
         },

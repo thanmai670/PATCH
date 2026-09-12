@@ -15,21 +15,27 @@ import { executor } from "./executor";
 export { interpreter, evidence, tracer, classifier, planner, executor };
 export type { SlackNomination, ClassifiedNode };
 
-export async function runPipeline(nomination: SlackNomination): Promise<InfectionReport> {
+export type ProgressFn = (t: AgentTraceEntry) => void;
+
+export async function runPipeline(
+  nomination: SlackNomination,
+  onProgress?: ProgressFn,
+): Promise<InfectionReport> {
   const trace: AgentTraceEntry[] = [];
+  const emit = (t: AgentTraceEntry) => { trace.push(t); onProgress?.(t); };
 
   const { change, extras, trace: t1 } = await interpreter(nomination);
-  trace.push(t1);
+  emit(t1);
 
   // Evidence and spread are independent — run them together.
   const [ev, tr] = await Promise.all([evidence(change, extras), tracer(change)]);
-  trace.push(ev.trace, tr.trace);
+  emit(ev.trace); emit(tr.trace);
 
   const cls = await classifier({ change, candidates: tr.candidates });
-  trace.push(cls.trace);
+  emit(cls.trace);
 
   const pl = await planner({ change, nodes: cls.nodes });
-  trace.push(pl.trace);
+  emit(pl.trace);
 
   const nodes = pl.nodes;
   return {
