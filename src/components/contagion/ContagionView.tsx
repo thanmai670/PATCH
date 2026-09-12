@@ -47,7 +47,11 @@ export function ContagionView({ report }: { report: InfectionReport }) {
 
       <aside className="overflow-y-auto border-l border-white/10">
         {selected ? (
-          <RepairSurface node={selected} change={report.change} />
+          <RepairSurface
+            node={selected}
+            change={report.change}
+            evidence={report.evidence}
+          />
         ) : (
           <EvidenceRail evidence={report.evidence} />
         )}
