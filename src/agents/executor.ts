@@ -1,5 +1,5 @@
 import {
-  updateDoc, updateDeal, createTask, sendMail, AmbiguousError,
+  getDoc, updateDoc, updateDeal, createTask, sendMail, AmbiguousError,
 } from "@/adapters/ambiguous";
 import type { RepairPlan, ExecutionReport, ExecutionResult, InfectionNode } from "@/contract";
 
@@ -45,11 +45,24 @@ export async function executor(
 
       switch (node.surface) {
         case "document_diff": {
-          const body = String(action.payload.content ?? "");
-          const next = body || undefined;
           if (!node.ambiguousId) throw new Error("no ambiguousId");
-          await updateDoc(node.ambiguousId, next ? { content: next } : { content: replaceIn(node, change) });
-          results.push({ nodeId: node.id, ok: true, operation: `PATCH /documents/${node.ambiguousId}`, ambiguousId: node.ambiguousId, error: null });
+          const { content, count } = await replaceInDocument(
+            node.ambiguousId, change.previousValue, change.newValue,
+            action.payload.content as string | undefined,
+          );
+          if (count === 0) {
+            results.push({
+              nodeId: node.id, ok: false, operation: null, ambiguousId: node.ambiguousId,
+              error: `"${change.previousValue}" no longer appears in this document`,
+            });
+            break;
+          }
+          await updateDoc(node.ambiguousId, { content });
+          results.push({
+            nodeId: node.id, ok: true,
+            operation: `PATCH /documents/${node.ambiguousId} (${count} occurrence${count === 1 ? "" : "s"})`,
+            ambiguousId: node.ambiguousId, error: null,
+          });
           break;
         }
         case "field_change": {
@@ -80,9 +93,20 @@ export async function executor(
         }
         case "preservation_notice": {
           if (!node.ambiguousId) throw new Error("no ambiguousId");
-          const notice = String(action.payload.notice ?? node.surfaceProps.proposedNotice ?? `Note: this value was superseded (${change.previousValue} → ${change.newValue}). This document is preserved as a historical record.`);
-          await updateDoc(node.ambiguousId, { content: `${node.excerpt?.before ?? ""}\n\n> ${notice}` });
-          results.push({ nodeId: node.id, ok: true, operation: `PATCH /documents/${node.ambiguousId} (annotation appended, original preserved)`, ambiguousId: node.ambiguousId, error: null });
+          const notice = String(
+            action.payload.notice ??
+            node.surfaceProps.proposedNotice ??
+            `Note: superseded ${change.previousValue} → ${change.newValue}. Preserved as a historical record.`,
+          );
+          // APPEND. The stale value stays exactly as written - that is the whole
+          // point of calling it historical.
+          const appended = await appendToDocument(node.ambiguousId, notice);
+          await updateDoc(node.ambiguousId, { content: appended });
+          results.push({
+            nodeId: node.id, ok: true,
+            operation: `PATCH /documents/${node.ambiguousId} (annotated; original text untouched)`,
+            ambiguousId: node.ambiguousId, error: null,
+          });
           break;
         }
       }
@@ -102,6 +126,51 @@ export async function executor(
   };
 }
 
-function replaceIn(node: InfectionNode, change: { previousValue: string; newValue: string }) {
-  return (node.excerpt?.after ?? "").length ? node.excerpt!.after : change.newValue;
+/**
+ * Rewrite one value inside a document, preserving everything else.
+ *
+ * The previous implementation sent the excerpt line as the whole body, which
+ * would have replaced an entire document with a single sentence. Documents are
+ * also ProseMirror JSON, not markdown, so a hand-written string mangles them:
+ * the replacement runs over the serialised form and is parsed back, which
+ * rewrites the text nodes and leaves the structure intact.
+ */
+async function replaceInDocument(
+  id: string,
+  previousValue: string,
+  newValue: string,
+  override?: string,
+): Promise<{ content: unknown; count: number }> {
+  const doc = await getDoc(id);
+  const raw = doc.content;
+
+  if (override && override.trim()) return { content: override, count: 1 };
+
+  const isObject = raw !== null && typeof raw === "object";
+  const serialised = isObject ? JSON.stringify(raw) : String(raw ?? "");
+
+  // Escape for a global literal replacement; values carry ".", "(" and so on.
+  const needle = previousValue.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const count = (serialised.match(new RegExp(needle, "g")) ?? []).length;
+  if (count === 0) return { content: raw, count: 0 };
+
+  const replaced = serialised.replace(new RegExp(needle, "g"), newValue);
+  return { content: isObject ? JSON.parse(replaced) : replaced, count };
+}
+
+/** Append a note without touching a single character of the original. */
+async function appendToDocument(id: string, notice: string): Promise<unknown> {
+  const doc = await getDoc(id);
+  const raw = doc.content as any;
+
+  if (raw && typeof raw === "object" && Array.isArray(raw.content)) {
+    return {
+      ...raw,
+      content: [
+        ...raw.content,
+        { type: "paragraph", content: [{ type: "text", text: `— ${notice}` }] },
+      ],
+    };
+  }
+  return `${String(raw ?? "")}\n\n> ${notice}`;
 }

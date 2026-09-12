@@ -72,7 +72,7 @@ export const search = (q: string, limit = 50) =>
     `/search?q=${encodeURIComponent(q)}&limit=${limit}`,
   );
 
-export type AmbiguousDoc = { id: string; title: string; type: string; content?: string };
+export type AmbiguousDoc = { id: string; title: string; type: string; content?: unknown };
 export const listDocs = () => get<{ data: AmbiguousDoc[] }>("/documents");
 export const getDoc = (id: string) => get<AmbiguousDoc>(`/documents/${id}`);
 /**
@@ -118,7 +118,7 @@ export const createSheet = (d: {
   visibility: d.visibility ?? "workspace",
   content: JSON.stringify({ sheets: d.tabs }),
 });
-export const updateDoc = (id: string, d: { title?: string; content?: string; visibility?: string }) =>
+export const updateDoc = (id: string, d: { title?: string; content?: unknown; visibility?: string }) =>
   patch<AmbiguousDoc>(`/documents/${id}`, d);
 export const deleteDoc = (id: string) => del<void>(`/documents/${id}`);
 

@@ -1,22 +1,50 @@
 {
-  "reportId": "rpt_chg_1789220635000100",
+  "reportId": "rpt_chg_1789221594000100",
   "change": {
-    "id": "chg_1789220635000100",
-    "subject": "approved motor power rating",
-    "previousValue": "22 kW",
-    "newValue": "18.5 kW",
+    "id": "chg_1789221594000100",
+    "subject": "lead time",
+    "previousValue": "14 weeks",
+    "newValue": "22 weeks",
     "confidence": 0.95,
-    "announcedBy": "Thanmai",
-    "announcedAt": "2026-09-12T13:43:55.000Z",
-    "project": "Project Atlas",
+    "announcedBy": "UT3DWQD28",
+    "announcedAt": "2026-09-12T13:59:54.000Z",
+    "project": "project-atlas",
     "patientZero": {
       "channel": "#project-atlas",
-      "messageTs": "1789220635.000100",
-      "text": "Supplier correction: the approved motor for Project Atlas is now 18.5 kW, not 22 kW. Please use the revised specification attached here.",
+      "messageTs": "1789221594.000100",
+      "text": "lead times are 22 weeks from the time of order placement and not 14weeks .",
       "permalink": null
     }
   },
-  "evidence": [],
+  "evidence": [
+    {
+      "id": "ev_0",
+      "title": "Procurement Lead Time Explained: Calculation, Benchmarks & Optimization Strategies",
+      "url": "https://letsworkwise.com/blog/procurement/procurement-lead-time-explained-calculation-benchmarks-optimization-strategies/",
+      "publishedAt": "2026-03-13T15:28:21.000Z",
+      "highlight": "Ten months for one transformer. That’s not a worst-case number that’s fairly normal.",
+      "sourceStatus": "live",
+      "supports": false
+    },
+    {
+      "id": "ev_1",
+      "title": "Lead Time in Procurement: Why the Number on the BOM Is Lying to You | Lumari",
+      "url": "https://lumari.ai/blog/lead-time-procurement",
+      "publishedAt": "2026-05-16T00:00:00.000Z",
+      "highlight": "The lead time hasn't been re-audited since semiconductor allocation.",
+      "sourceStatus": "live",
+      "supports": false
+    },
+    {
+      "id": "ev_4",
+      "title": "Procurement Lead Time: Definition, Formula & How to ...",
+      "url": "https://ramp.com/blog/optimizing-procurement-lead-times",
+      "publishedAt": "2025-10-13T00:00:00.000Z",
+      "highlight": "Additional factors, such as customs clearance or supplier delays, may extend lead time in certain cases.",
+      "sourceStatus": "live",
+      "supports": false
+    }
+  ],
   "nodes": [
     {
       "id": "n_416f9774",
@@ -27,39 +55,11 @@
       "status": "infected",
       "disposition": "editable",
       "matchKind": "exact",
-      "confidence": 0.6,
-      "rationale": "Supplier Directory lists a 'Series rating: 22 kW' which may refer to a standard product line rather than the Project Atlas motor specifically. Needs human review to confirm whether this is the Atlas motor or a general supplier capability.",
-      "excerpt": {
-        "before": "Series rating: 22 kW",
-        "after": "Series rating: 18.5 kW",
-        "field": null
-      },
-      "dependsOn": [],
-      "requiresHumanReview": true,
-      "surface": "document_diff",
-      "surfaceProps": {
-        "actions": [
-          "except"
-        ],
-        "paragraphContext": "Series rating: 22 kW",
-        "occurrences": 1,
-        "warning": "This Supplier Directory entry may describe the supplier's standard product line capability rather than the Project Atlas motor specification. Human review required to confirm whether this 22 kW rating refers to Atlas or to general supplier inventory."
-      }
-    },
-    {
-      "id": "n_771f981e",
-      "ambiguousId": "771f981e-a9dd-4ae0-8bda-07a7914c6c65",
-      "kind": "document",
-      "title": "Drive Systems — Selection Guidance",
-      "href": "https://app.ambiguous.ai/documents/771f981e-a9dd-4ae0-8bda-07a7914c6c65",
-      "status": "infected",
-      "disposition": "editable",
-      "matchKind": "exact",
       "confidence": 0.95,
-      "rationale": "Drive Systems guidance document explicitly states 'current series rating for refurbishment projects is 22 kW' — this is policy/guidance that should reflect the new approved rating.",
+      "rationale": "Wiki supplier directory contains literal '14 weeks' for standard lead time. This is reference documentation that should reflect current supplier terms.",
       "excerpt": {
-        "before": "The current series rating for refurbishment projects is **22 kW**.",
-        "after": "The current series rating for refurbishment projects is **18.5 kW**.",
+        "before": "Standard lead time: 14 weeks",
+        "after": "Standard lead time: 22 weeks",
         "field": null
       },
       "dependsOn": [],
@@ -71,7 +71,7 @@
           "rewrite",
           "except"
         ],
-        "paragraphContext": "The current series rating for refurbishment projects is **22 kW**.",
+        "paragraphContext": "Standard lead time: 14 weeks",
         "occurrences": 1
       }
     },
@@ -84,15 +84,15 @@
       "status": "infected",
       "disposition": "editable",
       "matchKind": "exact",
-      "confidence": 0.98,
-      "rationale": "Commercial Proposal Draft v3 for Project Atlas contains literal '22 kW' motor specification. As a draft, it is editable and should be updated to reflect the approved 18.5 kW rating.",
+      "confidence": 0.85,
+      "rationale": "Draft proposal for Project Atlas contains '14 weeks' delivery commitment. Draft status means editable, but changing delivery terms affects commercial commitments and pricing—requires human review before update.",
       "excerpt": {
-        "before": "Drive motor: 22 kW, 400 V, IE3 efficiency class.",
-        "after": "Drive motor: 18.5 kW, 400 V, IE3 efficiency class.",
+        "before": "Delivery: 14 weeks from order confirmation",
+        "after": "Delivery: 22 weeks from order confirmation",
         "field": null
       },
       "dependsOn": [],
-      "requiresHumanReview": false,
+      "requiresHumanReview": true,
       "surface": "document_diff",
       "surfaceProps": {
         "actions": [
@@ -100,37 +100,37 @@
           "rewrite",
           "except"
         ],
-        "paragraphContext": "Drive motor: 22 kW, 400 V, IE3 efficiency class.",
-        "occurrences": 1
+        "paragraphContext": "Delivery: 14 weeks from order confirmation",
+        "occurrences": 1,
+        "warning": "This draft proposal contains commercial delivery commitments. Changing from 14 to 22 weeks affects pricing assumptions and customer expectations—verify commercial impact before accepting."
       }
     },
     {
-      "id": "n_3dfae650",
-      "ambiguousId": "3dfae650-8cf5-42b7-9b85-80518384d58f",
-      "kind": "document",
-      "title": "Atlas Drivetrain — Technical Specification",
-      "href": "https://app.ambiguous.ai/documents/3dfae650-8cf5-42b7-9b85-80518384d58f",
+      "id": "n_55919d00",
+      "ambiguousId": "55919d00-58a8-479a-8cad-1d6d46cf83ff",
+      "kind": "historical_document",
+      "title": "Project Orion — Commissioning Report (2024)",
+      "href": "https://app.ambiguous.ai/documents/55919d00-58a8-479a-8cad-1d6d46cf83ff",
       "status": "infected",
-      "disposition": "editable",
+      "disposition": "historical",
       "matchKind": "exact",
-      "confidence": 0.97,
-      "rationale": "Atlas Drivetrain Technical Specification states 'Auxiliary drive: 22 kW continuous' — directly references the motor rating that has changed to 18.5 kW.",
+      "confidence": 0.98,
+      "rationale": "Project Orion commissioning report from 2024 records actual delivery at 14 weeks. This is an as-built historical record of what actually happened in that project—must be preserved as-is.",
       "excerpt": {
-        "before": "Auxiliary drive: 22 kW continuous.",
-        "after": "Auxiliary drive: 18.5 kW continuous.",
+        "before": "Delivered 14 weeks from order",
+        "after": "",
         "field": null
       },
       "dependsOn": [],
       "requiresHumanReview": false,
-      "surface": "document_diff",
+      "surface": "preservation_notice",
       "surfaceProps": {
         "actions": [
-          "accept",
-          "rewrite",
+          "annotate",
           "except"
         ],
-        "paragraphContext": "Auxiliary drive: 22 kW continuous.",
-        "occurrences": 1
+        "reason": "Project Orion commissioning report records the actual 14-week delivery that occurred in 2024—this is historical fact about what happened on that project.",
+        "proposedNotice": "NOTE: This report documents actual delivery performance in 2024. Current supplier lead time has since changed to 22 weeks (updated [date])."
       }
     },
     {
@@ -140,28 +140,25 @@
       "title": "Supplier Agreement — ATX Drives (Contract 44-119)",
       "href": "https://app.ambiguous.ai/documents/2de1bb41-3524-4882-840b-57b55a38aa35",
       "status": "infected",
-      "disposition": "irreversible",
+      "disposition": "historical",
       "matchKind": "exact",
-      "confidence": 0.92,
-      "rationale": "Supplier Agreement (Contract 44-119) specifies 'Series drive package nominal rating: 22 kW'. This is a signed contract document, making it historical/irreversible. Requires amendment or addendum, not silent edit.",
+      "confidence": 0.95,
+      "rationale": "Supplier Agreement contract document states '14 weeks' as standard lead time. This is a signed contract recording the terms that were in effect—historical record that must not be edited in place.",
       "excerpt": {
-        "before": "Series drive package nominal rating: 22 kW.",
-        "after": "Series drive package nominal rating: 18.5 kW.",
+        "before": "Standard lead time for series drive packages is 14 weeks from order confirmation",
+        "after": "",
         "field": null
       },
       "dependsOn": [],
-      "requiresHumanReview": true,
-      "surface": "corrective_message",
+      "requiresHumanReview": false,
+      "surface": "preservation_notice",
       "surfaceProps": {
         "actions": [
-          "draft_correction",
+          "annotate",
           "except"
         ],
-        "recipients": [
-          "Contract administrator",
-          "ATX Drives commercial contact"
-        ],
-        "impactExplanation": "Contract 44-119 with ATX Drives specifies a 22 kW series drive package, but the approved motor rating for Project Atlas is now 18.5 kW. This contract requires a formal amendment or addendum to reflect the reduced rating and any associated changes to pricing, delivery schedule, or technical specifications."
+        "reason": "Contract 44-119 is a signed agreement documenting the 14-week terms that were in effect when executed—this is the historical contract record.",
+        "proposedNotice": "NOTE: This contract reflects terms in effect at execution. Supplier lead time has subsequently changed to 22 weeks per revised agreement [reference] dated [date]."
       }
     },
     {
@@ -173,39 +170,11 @@
       "status": "infected",
       "disposition": "editable",
       "matchKind": "exact",
-      "confidence": 0.6,
-      "rationale": "Duplicate of 416f9774 — same Supplier Directory entry with 'Series rating: 22 kW'. Same concern: may refer to supplier's standard product line rather than Atlas-specific rating.",
+      "confidence": 0.95,
+      "rationale": "Wiki supplier directory duplicate entry with literal '14 weeks'. Same as 416f9774—reference documentation to be updated.",
       "excerpt": {
-        "before": "Series rating: 22 kW",
-        "after": "Series rating: 18.5 kW",
-        "field": null
-      },
-      "dependsOn": [],
-      "requiresHumanReview": true,
-      "surface": "document_diff",
-      "surfaceProps": {
-        "actions": [
-          "except"
-        ],
-        "paragraphContext": "Series rating: 22 kW",
-        "occurrences": 1,
-        "warning": "This appears to be a duplicate Supplier Directory entry with the same ambiguity as n_416f9774. The 22 kW rating may describe supplier capability rather than the Atlas project specification. Human review needed before any change."
-      }
-    },
-    {
-      "id": "n_14c4c7ad",
-      "ambiguousId": "14c4c7ad-a702-45e4-826c-7ecb755eb730",
-      "kind": "task",
-      "title": "TASK-003: Technical review — TASK-001: Electrical preparation — Atlas motor mount",
-      "href": "https://app.ambiguous.ai/tasks/14c4c7ad-a702-45e4-826c-7ecb755eb730",
-      "status": "infected",
-      "disposition": "editable",
-      "matchKind": "exact",
-      "confidence": 0.9,
-      "rationale": "Task explicitly references the rating change '22 kW → 18.5 kW' as context for review work. The literal values should be updated to reflect that the change has been approved.",
-      "excerpt": {
-        "before": "Review the impact of 22 kW → 18.5 kW on this work before it proceeds.",
-        "after": "Review the impact of the approved rating change (from 22 kW to 18.5 kW) on this work before it proceeds.",
+        "before": "Standard lead time: 14 weeks",
+        "after": "Standard lead time: 22 weeks",
         "field": null
       },
       "dependsOn": [],
@@ -217,24 +186,53 @@
           "rewrite",
           "except"
         ],
-        "paragraphContext": "Review the impact of 22 kW → 18.5 kW on this work before it proceeds.",
+        "paragraphContext": "Standard lead time: 14 weeks",
         "occurrences": 1
       }
     },
     {
-      "id": "n_7c6c3ca1",
-      "ambiguousId": "7c6c3ca1-e5f3-441f-854a-4ec99564eb5a",
+      "id": "n_90068c59",
+      "ambiguousId": "90068c59-915e-46b1-9b50-bf9fac529fa3",
+      "kind": "document",
+      "title": "Supplier Directory",
+      "href": "https://app.ambiguous.ai/documents/90068c59-915e-46b1-9b50-bf9fac529fa3",
+      "status": "infected",
+      "disposition": "editable",
+      "matchKind": "exact",
+      "confidence": 0.95,
+      "rationale": "Wiki supplier directory duplicate entry with literal '14 weeks'. Same as 416f9774—reference documentation to be updated.",
+      "excerpt": {
+        "before": "Standard lead time: 14 weeks",
+        "after": "Standard lead time: 22 weeks",
+        "field": null
+      },
+      "dependsOn": [],
+      "requiresHumanReview": false,
+      "surface": "document_diff",
+      "surfaceProps": {
+        "actions": [
+          "accept",
+          "rewrite",
+          "except"
+        ],
+        "paragraphContext": "Standard lead time: 14 weeks",
+        "occurrences": 1
+      }
+    },
+    {
+      "id": "n_41f99da6",
+      "ambiguousId": "41f99da6-a29b-4001-aa4b-675780f3fa8d",
       "kind": "email_sent",
-      "title": "Atlas specification confirmation",
-      "href": "https://app.ambiguous.ai/mail/7c6c3ca1-e5f3-441f-854a-4ec99564eb5a",
+      "title": "Atlas delivery commitment and pricing",
+      "href": "https://app.ambiguous.ai/mail/41f99da6-a29b-4001-aa4b-675780f3fa8d",
       "status": "infected",
       "disposition": "irreversible",
       "matchKind": "exact",
       "confidence": 0.98,
-      "rationale": "Email marked [ALREADY SENT] confirming '22 kW as specified' — this is irreversible. A correction email must be sent to update the recipient with the new 18.5 kW rating.",
+      "rationale": "Email marked [ALREADY SENT] confirming '14 weeks' delivery commitment to customer. Cannot be unsent—requires corrective communication to customer about revised lead time.",
       "excerpt": {
-        "before": "Confirming the drive motor at 22 kW as specified in the equipment schedule for Project Atlas.",
-        "after": "Confirming the drive motor at 18.5 kW as specified in the equipment schedule for Project Atlas.",
+        "before": "Confirming delivery at 14 weeks from order confirmation",
+        "after": "",
         "field": null
       },
       "dependsOn": [],
@@ -246,30 +244,30 @@
           "except"
         ],
         "recipients": [
-          "Original email recipient"
+          "Atlas customer contact"
         ],
-        "sentAt": "2024-01-15T09:23:00Z",
-        "impactExplanation": "An email sent on 15 January 2024 confirmed the Atlas drive motor at 22 kW, but the approved specification is now 18.5 kW. The recipient needs to be notified of this correction to ensure their records, planning, and any dependent work reflect the accurate motor rating."
+        "sentAt": "[original send date]",
+        "impactExplanation": "Your sent email confirmed 14-week delivery for Atlas drive packages. The supplier has now extended standard lead time to 22 weeks, creating an 8-week gap between your commitment and current supplier capability."
       }
     },
     {
-      "id": "n_35a8ad97",
-      "ambiguousId": "35a8ad97-bfe9-47ab-bcfe-6b9f2fc067da",
-      "kind": "email_draft",
-      "title": "Atlas — factory acceptance test scheduling",
-      "href": "https://app.ambiguous.ai/mail/35a8ad97-bfe9-47ab-bcfe-6b9f2fc067da",
+      "id": "n_3b28735b",
+      "ambiguousId": "3b28735b-3811-4b4e-b3e7-8a31de4450c8",
+      "kind": "task",
+      "title": "TASK-006: Submit Vega tender response",
+      "href": "https://app.ambiguous.ai/tasks/3b28735b-3811-4b4e-b3e7-8a31de4450c8",
       "status": "infected",
       "disposition": "editable",
       "matchKind": "exact",
-      "confidence": 0.98,
-      "rationale": "Unsent draft email referencing 'Atlas drive packages, rated 22 kW' — editable and should be corrected to 18.5 kW before sending.",
+      "confidence": 0.9,
+      "rationale": "Task for Vega tender response contains '14 weeks lead time' as indicative pricing basis. Editable task, but changing lead time affects tender competitiveness—requires human review.",
       "excerpt": {
-        "before": "factory acceptance test for the Atlas drive packages, rated 22 kW",
-        "after": "factory acceptance test for the Atlas drive packages, rated 18.5 kW",
+        "before": "at 14 weeks lead time",
+        "after": "at 22 weeks lead time",
         "field": null
       },
       "dependsOn": [],
-      "requiresHumanReview": false,
+      "requiresHumanReview": true,
       "surface": "document_diff",
       "surfaceProps": {
         "actions": [
@@ -277,91 +275,39 @@
           "rewrite",
           "except"
         ],
-        "paragraphContext": "factory acceptance test for the Atlas drive packages, rated 22 kW",
-        "occurrences": 1
+        "paragraphContext": "at 14 weeks lead time",
+        "occurrences": 1,
+        "warning": "This task supports the Vega tender response. Changing lead time from 14 to 22 weeks affects delivery commitments in your bid—verify tender strategy before accepting."
       }
     },
     {
-      "id": "n_ddf4ef61",
-      "ambiguousId": "ddf4ef61-7663-4e4b-8e97-5a0dea1fa44d",
+      "id": "n_44b6f4ad",
+      "ambiguousId": "44b6f4ad-2558-4003-bc6c-cc54f363c98b",
       "kind": "task",
-      "title": "TASK-001: Electrical preparation — Atlas motor mount",
-      "href": "https://app.ambiguous.ai/tasks/ddf4ef61-7663-4e4b-8e97-5a0dea1fa44d",
-      "status": "exposed",
+      "title": "TASK-004: Confirm supplier delivery slot for Atlas drive packages",
+      "href": "https://app.ambiguous.ai/tasks/44b6f4ad-2558-4003-bc6c-cc54f363c98b",
+      "status": "infected",
       "disposition": "editable",
-      "matchKind": "inferred",
-      "confidence": 0.7,
-      "rationale": "Task for 'Electrical preparation — Atlas motor mount' likely depends on motor dimensions/weight/mounting which may change with the rating reduction from 22 kW to 18.5 kW. No literal value present but work scope may be affected.",
-      "excerpt": null,
-      "dependsOn": [],
-      "requiresHumanReview": true,
-      "surface": "dependency_decision",
-      "surfaceProps": {
-        "actions": [
-          "create_review",
-          "assign_engineer",
-          "preserve_original",
-          "set_urgency"
-        ],
-        "impactStatement": "The motor mount electrical preparation task may be affected by the rating change from 22 kW to 18.5 kW, as the physical dimensions, weight, cable entry points, and mounting requirements could differ between motor sizes. Engineering review is needed to confirm whether the current preparation scope remains valid or requires modification.",
-        "suggestedAssignee": "Electrical lead engineer",
-        "suggestedUrgency": "medium"
-      }
-    },
-    {
-      "id": "n_402197f4",
-      "ambiguousId": "402197f4-3316-47a1-afd4-7af56e6b9c22",
-      "kind": "document",
-      "title": "Atlas — Cable Schedule and Sizing Calculations",
-      "href": "https://app.ambiguous.ai/documents/402197f4-3316-47a1-afd4-7af56e6b9c22",
-      "status": "exposed",
-      "disposition": "editable",
-      "matchKind": "semantic",
-      "confidence": 0.95,
-      "rationale": "Cable Schedule states 'Conductor sizing derived from the approved motor load' — the sizing calculations depend on the motor rating but do not contain the literal value. Must be recalculated for 18.5 kW.",
-      "excerpt": null,
-      "dependsOn": [],
-      "requiresHumanReview": true,
-      "surface": "dependency_decision",
-      "surfaceProps": {
-        "actions": [
-          "create_review",
-          "assign_engineer",
-          "preserve_original",
-          "set_urgency"
-        ],
-        "impactStatement": "The Atlas Cable Schedule states that conductor sizing is derived from the approved motor load. With the motor rating reduced from 22 kW to 18.5 kW, the load current will decrease, potentially allowing smaller cable sizes. All sizing calculations must be recalculated and the schedule updated to reflect the new 18.5 kW rating.",
-        "suggestedAssignee": "Electrical design engineer",
-        "suggestedUrgency": "high"
-      }
-    },
-    {
-      "id": "n_d80c89b3",
-      "ambiguousId": "d80c89b3-24e6-4425-ad4e-b276b933e2bc",
-      "kind": "task",
-      "title": "TASK-008: Update cable schedule after design freeze",
-      "href": "https://app.ambiguous.ai/tasks/d80c89b3-24e6-4425-ad4e-b276b933e2bc",
-      "status": "exposed",
-      "disposition": "editable",
-      "matchKind": "semantic",
+      "matchKind": "exact",
       "confidence": 0.92,
-      "rationale": "Task to 'Update cable schedule after design freeze' explicitly notes that 'any change to the rating invalidates the current se[lection]' — this task is now actionable given the rating change.",
-      "excerpt": null,
-      "dependsOn": [
-        "n_402197f4"
-      ],
-      "requiresHumanReview": false,
-      "surface": "dependency_decision",
+      "rationale": "Task to confirm supplier delivery slot references '14 weeks from order confirmation' from supplier agreement. Task is editable, but the action item may now be invalid if slots were already confirmed—requires human review.",
+      "excerpt": {
+        "before": "Supplier agreement 44-119 commits to 14 weeks from order confirmation",
+        "after": "Supplier agreement 44-119 commits to 22 weeks from order confirmation",
+        "field": null
+      },
+      "dependsOn": [],
+      "requiresHumanReview": true,
+      "surface": "document_diff",
       "surfaceProps": {
         "actions": [
-          "create_review",
-          "assign_engineer",
-          "preserve_original",
-          "set_urgency"
+          "accept",
+          "rewrite",
+          "except"
         ],
-        "impactStatement": "This task to update the cable schedule after design freeze explicitly notes that any rating change invalidates the current selection. The approved change from 22 kW to 18.5 kW triggers this task, which should now be prioritized and assigned to ensure the cable schedule reflects the correct motor rating.",
-        "suggestedAssignee": "Electrical design engineer",
-        "suggestedUrgency": "high"
+        "paragraphContext": "Supplier agreement 44-119 commits to 14 weeks from order confirmation",
+        "occurrences": 1,
+        "warning": "This task may reference delivery slots already confirmed under the old 14-week terms. Verify whether supplier confirmation has already occurred before updating."
       }
     },
     {
@@ -374,7 +320,7 @@
       "disposition": "editable",
       "matchKind": "inferred",
       "confidence": 0.75,
-      "rationale": "Bill of Materials for Atlas includes a 'Rating' column — likely contains the motor rating and part numbers that may change with the 18.5 kW specification. No literal value visible in snippet.",
+      "rationale": "Atlas Bill of Materials has a 'Lead time' column. Likely contains supplier lead times for components, but snippet shows only column headers—cannot confirm if 14 weeks appears. Exposed because BOM depends on supplier lead times for planning.",
       "excerpt": null,
       "dependsOn": [],
       "requiresHumanReview": true,
@@ -386,37 +332,39 @@
           "preserve_original",
           "set_urgency"
         ],
-        "impactStatement": "The Atlas Bill of Materials includes a Rating column and likely contains the motor specification and associated part numbers. The change from 22 kW to 18.5 kW may require different motor part numbers, different cable specifications, and potentially different ancillary components. The BOM must be reviewed and updated to ensure all listed items match the approved 18.5 kW configuration.",
-        "suggestedAssignee": "Project engineer",
+        "impactStatement": "The Atlas Bill of Materials likely contains component lead times in its 'Lead time' column. If ATX drive packages appear in this BOM with 14-week entries, those planning values are now incorrect and affect project schedule.",
+        "suggestedAssignee": "Atlas project lead or procurement engineer",
         "suggestedUrgency": "medium"
       }
     },
     {
-      "id": "n_a1f91d4b",
-      "ambiguousId": "a1f91d4b-bb4f-4f90-b992-3f73c05b74f6",
+      "id": "n_fdd594d4",
+      "ambiguousId": "fdd594d4-3840-47f4-bab5-cbba11314f2f",
       "kind": "crm_record",
-      "title": "Orion Drive Package (delivered)",
-      "href": "https://app.ambiguous.ai/crm/deals/a1f91d4b-bb4f-4f90-b992-3f73c05b74f6",
+      "title": "Vega Fleet Refurbishment (tender)",
+      "href": "https://app.ambiguous.ai/crm/deals/fdd594d4-3840-47f4-bab5-cbba11314f2f",
       "status": "infected",
-      "disposition": "historical",
+      "disposition": "editable",
       "matchKind": "exact",
-      "confidence": 0.99,
-      "rationale": "CRM record for 'Orion Drive Package (delivered)' shows motor_rating = 22 kW. This is a different project (Orion, not Atlas) that has been delivered — it is historical and should not be changed.",
+      "confidence": 0.92,
+      "rationale": "CRM opportunity record for Vega tender has lead_time field set to '14 weeks'. Editable, but this is a tender opportunity—changing lead time affects bid competitiveness and requires human review.",
       "excerpt": {
-        "before": "motor_rating = 22 kW",
-        "after": "",
-        "field": "motor_rating"
+        "before": "14 weeks",
+        "after": "22 weeks",
+        "field": "lead_time"
       },
       "dependsOn": [],
-      "requiresHumanReview": false,
-      "surface": "preservation_notice",
+      "requiresHumanReview": true,
+      "surface": "field_change",
       "surfaceProps": {
         "actions": [
-          "annotate",
+          "accept",
           "except"
         ],
-        "reason": "This CRM record documents the Orion Drive Package, a different delivered project that actually used a 22 kW motor. The 22 kW rating in this record is correct historical data for Orion and must not be changed to avoid corrupting the delivered project's documentation.",
-        "proposedNotice": "NOTE: This record is for the Orion project (delivered). The motor_rating of 22 kW is correct for Orion and is unaffected by the Atlas project rating change to 18.5 kW."
+        "connectedOpportunities": [
+          "Vega Fleet Refurbishment tender"
+        ],
+        "verifiedBy": "Vega tender lead_time field currently shows 14 weeks; this is a live tender opportunity where delivery commitment affects competitiveness"
       }
     },
     {
@@ -428,15 +376,15 @@
       "status": "infected",
       "disposition": "editable",
       "matchKind": "exact",
-      "confidence": 0.99,
-      "rationale": "CRM record for 'Atlas Drive Package' shows motor_rating = 22 kW — this is the Project Atlas record and should be updated to 18.5 kW to reflect the approved change.",
+      "confidence": 0.95,
+      "rationale": "CRM opportunity record for Atlas Drive Package has lead_time field set to '14 weeks'. Editable, but Atlas is 'In delivery' per project directory—changing committed delivery terms requires human review to assess customer impact.",
       "excerpt": {
-        "before": "motor_rating = 22 kW",
-        "after": "motor_rating = 18.5 kW",
-        "field": "motor_rating"
+        "before": "14 weeks",
+        "after": "22 weeks",
+        "field": "lead_time"
       },
       "dependsOn": [],
-      "requiresHumanReview": false,
+      "requiresHumanReview": true,
       "surface": "field_change",
       "surfaceProps": {
         "actions": [
@@ -444,11 +392,9 @@
           "except"
         ],
         "connectedOpportunities": [
-          "Update related Atlas project records",
-          "Trigger cable schedule recalculation",
-          "Update commercial proposal"
+          "Atlas Drive Package (In delivery status per project directory)"
         ],
-        "verifiedBy": "Change approval: motor power rating 22 kW → 18.5 kW"
+        "verifiedBy": "Atlas opportunity lead_time field currently shows 14 weeks; project directory indicates Atlas is 'In delivery', suggesting committed terms may already be in effect"
       }
     }
   ],
@@ -456,54 +402,54 @@
     {
       "agent": "interpreter",
       "model": "anthropic/claude-sonnet-4.5",
-      "startedAt": "2026-09-12T13:43:55.051Z",
-      "durationMs": 3774,
-      "summary": "Extracted truth change: approved motor power rating 22 kW → 18.5 kW, confidence 0.95",
-      "tokensIn": 399,
-      "tokensOut": 141
+      "startedAt": "2026-09-12T13:59:54.433Z",
+      "durationMs": 3600,
+      "summary": "Extracted truth change: lead time 14 weeks → 22 weeks, confidence 0.95",
+      "tokensIn": 347,
+      "tokensOut": 144
     },
     {
       "agent": "evidence",
       "model": "openai/gpt-4o-mini",
-      "startedAt": "2026-09-12T13:44:00.115Z",
-      "durationMs": 1702,
-      "summary": "Exa returned 5 source(s); 0 relevant, 0 contradicting",
-      "tokensIn": 1844,
-      "tokensOut": 155
+      "startedAt": "2026-09-12T13:59:59.184Z",
+      "durationMs": 2774,
+      "summary": "Exa returned 5 source(s); 3 relevant, 3 contradicting",
+      "tokensIn": 3753,
+      "tokensOut": 205
     },
     {
       "agent": "tracer",
       "model": "n/a (mechanical retrieval)",
-      "startedAt": "2026-09-12T13:43:58.828Z",
-      "durationMs": 1439,
-      "summary": "Found 15 candidate artefact(s) across Wiki, Docs, Tasks, Mail, Sheets, CRM: 9 literal, 4 by subject (possible dependencies), 2 via CRM field scan that search missed",
+      "startedAt": "2026-09-12T13:59:58.037Z",
+      "durationMs": 2374,
+      "summary": "Found 16 candidate artefact(s) across Wiki, Docs, Mail, Tasks, Sheets, CRM: 9 literal, 5 by subject (possible dependencies), 2 via CRM field scan that search missed",
       "tokensIn": null,
       "tokensOut": null
     },
     {
       "agent": "classifier",
       "model": "anthropic/claude-sonnet-4.5",
-      "startedAt": "2026-09-12T13:44:01.818Z",
-      "durationMs": 67201,
-      "summary": "Classified 15: 12 editable, 1 historical, 2 irreversible, 4 exposed. 7 flagged for human review",
-      "tokensIn": 7284,
-      "tokensOut": 3191
+      "startedAt": "2026-09-12T14:00:01.958Z",
+      "durationMs": 59891,
+      "summary": "Classified 16: 12 editable, 3 historical, 1 irreversible, 1 exposed. 7 flagged for human review. 4 checked and clean (not shown)",
+      "tokensIn": 6551,
+      "tokensOut": 3087
     },
     {
       "agent": "planner",
       "model": "anthropic/claude-sonnet-4.5",
-      "startedAt": "2026-09-12T13:45:09.020Z",
-      "durationMs": 24572,
-      "summary": "Generated 5 distinct repair surface type(s) across 15 artefact(s)",
-      "tokensIn": 2247,
-      "tokensOut": 1906
+      "startedAt": "2026-09-12T14:01:01.850Z",
+      "durationMs": 18342,
+      "summary": "Generated 5 distinct repair surface type(s) across 12 artefact(s)",
+      "tokensIn": 2057,
+      "tokensOut": 1300
     }
   ],
   "summary": {
-    "safeToUpdate": 7,
+    "safeToUpdate": 3,
     "requiresReview": 7,
-    "alreadyCommunicated": 2,
-    "preserveAsHistorical": 1
+    "alreadyCommunicated": 1,
+    "preserveAsHistorical": 2
   },
-  "generatedAt": "2026-09-12T13:45:33.592Z"
+  "generatedAt": "2026-09-12T14:01:20.193Z"
 }
