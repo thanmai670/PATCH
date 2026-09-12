@@ -6,7 +6,7 @@
  * real model id, never a hardcoded label.
  */
 import { z } from "zod";
-import { AGENT_MODELS, type AgentName } from "./models";
+import { resolveModel, type AgentName } from "./models";
 import type { AgentTraceEntry } from "@/contract";
 
 const ENDPOINT = "https://openrouter.ai/api/v1/chat/completions";
@@ -64,7 +64,7 @@ export async function runAgent<T extends z.ZodTypeAny>(opts: {
   schema: T;
   summarise: (data: z.infer<T>) => string;
 }): Promise<{ data: z.infer<T>; trace: AgentTraceEntry }> {
-  const model = AGENT_MODELS[opts.agent];
+  const model = resolveModel(opts.agent);
   const startedAt = new Date().toISOString();
   const t0 = Date.now();
 

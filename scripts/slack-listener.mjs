@@ -15,7 +15,10 @@ import { CopilotKitIntelligence, CopilotRuntime, BuiltInAgent } from "@copilotki
 import { execFile, spawn } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { promisify } from "node:util";
-import { confirmationCard, summaryCard, auditCard } from "../src/channels/cards.mjs";
+import {
+  confirmationCard, summaryCard, auditCard, modelPickerCard, modelSetCard,
+} from "../src/channels/cards.mjs";
+import { writeFileSync } from "node:fs";
 
 const run = promisify(execFile);
 
@@ -32,6 +35,77 @@ async function interpretMessage(text, author, channel) {
     { cwd: process.cwd(), maxBuffer: 1024 * 1024 * 8 },
   );
   return JSON.parse(stdout.trim().split("\n").pop());
+}
+
+const OVERRIDE_PATH = ".patch-models.json";
+const DEFAULT_MODELS = {
+  interpreter: "anthropic/claude-sonnet-4.5",
+  evidence: "openai/gpt-4o-mini",
+  tracer: "n/a",
+  classifier: "anthropic/claude-sonnet-4.5",
+  planner: "anthropic/claude-sonnet-4.5",
+  executor: "openai/gpt-4o-mini",
+};
+
+const readOverrides = () => {
+  try { return JSON.parse(readFileSync(OVERRIDE_PATH, "utf8")); } catch { return {}; }
+};
+const currentModels = () => ({ ...DEFAULT_MODELS, ...readOverrides() });
+
+/** Cache the catalogue — 445 models is a slow fetch to repeat per card. */
+let modelCache = null;
+async function jsonCapableModels() {
+  if (modelCache) return modelCache;
+  const res = await fetch("https://openrouter.ai/api/v1/models", {
+    headers: { Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}` },
+  });
+  const { data } = await res.json();
+  const majors = ["openai/", "anthropic/", "google/", "meta-llama/", "mistralai/", "deepseek/", "qwen/", "x-ai/"];
+  modelCache = data
+    // Agents demand JSON and validate with Zod; a model without JSON mode fails
+    // schema validation twice and aborts the run, so never offer one.
+    .filter((m) => (m.supported_parameters ?? []).includes("response_format"))
+    .filter((m) => majors.some((x) => m.id.startsWith(x)) && !m.id.startsWith("~"))
+    .sort((a, b) => a.id.localeCompare(b.id));
+  return modelCache;
+}
+
+/** Which agent a subsequent model pick applies to. Per Slack thread. */
+const pickScope = new Map();
+
+async function showModelPicker(evt, threadKey) {
+  const models = await jsonCapableModels();
+  const agent = pickScope.get(threadKey) ?? "__all__";
+  await evt.thread.post(
+    modelPickerCard({
+      current: currentModels(),
+      models,
+      agent: agent === "__all__" ? null : agent,
+      onPickAgent: async (ctx) => {
+        const chosen = String(ctx.action.value);
+        pickScope.set(threadKey, chosen);
+        await ctx.thread.post(
+          chosen === "__all__"
+            ? "Next model pick applies to *all agents*."
+            : `Next model pick applies to *${chosen}*.`,
+        );
+      },
+      onPick: async (ctx) => {
+        const model = String(ctx.action.value);
+        const target = pickScope.get(threadKey) ?? "__all__";
+        const overrides = readOverrides();
+        if (target === "__all__") {
+          for (const a of ["interpreter", "evidence", "classifier", "planner", "executor"]) overrides[a] = model;
+        } else {
+          overrides[target] = model;
+        }
+        writeFileSync(OVERRIDE_PATH, JSON.stringify(overrides, null, 2));
+        const meta = (await jsonCapableModels()).find((m) => m.id === model);
+        console.log(`   model set: ${target} -> ${model}`);
+        await ctx.thread.post(modelSetCard({ agent: target, model, pricing: meta?.pricing }));
+      },
+    }),
+  );
 }
 
 const AGENT_LABEL = {
@@ -208,6 +282,18 @@ channel.onMessage(async (evt) => {
 channel.onMention(async (evt) => {
   const text = textOf(evt).replace(/<@[^>]+>/g, "").trim();
   console.log(`[mention] from=${who(evt)} text=${text.slice(0, 90)}`);
+
+  if (/^(models?|model routing|which model)/i.test(text)) {
+    console.log("   -> model picker");
+    try {
+      await showModelPicker(evt, evt.messageId ?? "default");
+    } catch (e) {
+      console.error("   picker failed:", e?.message ?? e);
+      await evt.thread.post(`Could not load the model list: ${e?.message ?? e}`);
+    }
+    return;
+  }
+
   await handleNomination(evt, { nominator: who(evt), text, trigger: "@patch mention" });
 });
 

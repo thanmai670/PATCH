@@ -158,3 +158,100 @@ export function auditCard({ report, execution, approvedBy }) {
     ],
   });
 }
+
+/* ── Model picker ──────────────────────────────────────────────────────────── */
+
+const AGENTS = ["interpreter", "evidence", "tracer", "classifier", "planner", "executor"];
+
+/** Per-million-token price, which is how people actually compare models. */
+function perMillion(p) {
+  const n = Number(p);
+  return Number.isFinite(n) ? `$${(n * 1_000_000).toFixed(2)}/M` : "—";
+}
+
+/**
+ * Card showing the current per-agent routing and a picker of OpenRouter models.
+ *
+ * Only models advertising `response_format` are offered: every agent demands
+ * JSON back and validates it with Zod, so a model without JSON mode would fail
+ * schema validation twice and abort the run. Offering it would be a trap.
+ */
+export function modelPickerCard({ current, models, agent, onPick, onPickAgent }) {
+  const scope = agent ?? "all agents";
+
+  return Message({
+    accent: "#6366f1",
+    fallbackText: "Choose an OpenRouter model",
+    children: [
+      Header({ children: "Model routing" }),
+      Section({
+        children: Markdown({
+          children: `Every agent calls *OpenRouter*. Pick a model to apply to *${scope}*.`,
+        }),
+      }),
+
+      Table({
+        columns: [{ header: "Agent" }, { header: "Model" }],
+        children: AGENTS.map((a) =>
+          Row({
+            children: [
+              Cell({ children: a === "tracer" ? `${a} (no LLM)` : a }),
+              Cell({ children: a === "tracer" ? "mechanical retrieval" : (current[a] ?? "—") }),
+            ],
+          }),
+        ),
+      }),
+
+      Divider({}),
+
+      Section({ children: Markdown({ children: "*Apply to one agent*" }) }),
+      Select({
+        name: "agent",
+        placeholder: agent ?? "All agents",
+        onSelect: onPickAgent,
+        options: [
+          { label: "All agents", value: "__all__" },
+          ...AGENTS.filter((a) => a !== "tracer").map((a) => ({ label: a, value: a })),
+        ],
+      }),
+
+      Section({ children: Markdown({ children: `*Choose a model*  ·  _${models.length} JSON-capable models_` }) }),
+      Select({
+        name: "model",
+        placeholder: "Search models…",
+        onSelect: onPick,
+        options: models.slice(0, 100).map((m) => ({
+          label: `${m.id}  ${perMillion(m.pricing?.prompt)}`.slice(0, 74),
+          value: m.id,
+        })),
+      }),
+
+      Context({
+        children: "Only models supporting JSON mode are listed — the agents validate every response against a schema.",
+      }),
+    ],
+  });
+}
+
+/** Confirmation after a pick, with what it costs and what it affects. */
+export function modelSetCard({ agent, model, pricing }) {
+  return Message({
+    accent: "#10b981",
+    fallbackText: `Model set: ${model}`,
+    children: [
+      Header({ children: "Model updated" }),
+      Section({
+        children: Markdown({
+          children: `*${agent === "__all__" ? "All agents" : agent}* now use \`${model}\``,
+        }),
+      }),
+      Fields({
+        children: [
+          Field({ label: "Input", children: perMillion(pricing?.prompt) }),
+          Field({ label: "Output", children: perMillion(pricing?.completion) }),
+        ],
+      }),
+      Context({ children: "Takes effect on the next nomination." }),
+    ],
+  });
+}

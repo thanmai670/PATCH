@@ -14,3 +14,4 @@ next-env.d.ts
 
 # Added by CopilotKit CLI: managed Channel setup credentials and artifacts.
 .copilotkit/artifacts/
+.patch-models.json
