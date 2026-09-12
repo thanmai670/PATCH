@@ -18,16 +18,16 @@ export function Chip({
   tone?: "neutral" | "stale" | "fresh" | "warn" | "violet" | "pink";
 }) {
   const tones: Record<string, string> = {
-    neutral: "border-white/15 bg-white/5 text-white/70",
-    stale: "border-red-500/40 bg-red-500/10 text-red-300",
-    fresh: "border-emerald-500/40 bg-emerald-500/10 text-emerald-300",
-    warn: "border-amber-500/40 bg-amber-500/10 text-amber-300",
-    violet: "border-violet-500/40 bg-violet-500/10 text-violet-300",
-    pink: "border-pink-500/40 bg-pink-500/10 text-pink-300",
+    neutral: "border-rule bg-sunk text-ink-2",
+    stale: "border-infected/35 bg-infected/10 text-infected-deep",
+    fresh: "border-immune/35 bg-immune/10 text-immune-deep",
+    warn: "border-exposed/40 bg-exposed/10 text-exposed-deep",
+    violet: "border-historical/35 bg-historical/10 text-historical-deep",
+    pink: "border-irreversible/35 bg-irreversible/10 text-irreversible-deep",
   };
   return (
     <span
-      className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] ${tones[tone]}`}
+      className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-[11.5px] ${tones[tone]}`}
     >
       {children}
     </span>
@@ -48,18 +48,18 @@ export function Action({
   disabled?: boolean;
 }) {
   const base =
-    "rounded-md px-3 py-1.5 text-xs font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-40";
+    "rounded-md px-3.5 py-2 text-[13px] font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-45 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink";
   const styles = {
-    primary: "bg-emerald-500/90 text-black hover:bg-emerald-400",
-    secondary: "border border-white/20 text-white/80 hover:bg-white/10",
-    quiet: "text-white/45 hover:text-white/80",
+    primary: "bg-ink text-white hover:bg-ink/85",
+    secondary: "border border-rule bg-surface text-ink hover:bg-sunk",
+    quiet: "text-ink-3 hover:text-ink",
   } as const;
   return (
     <button
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className={`${base} ${styles[variant]} ${active ? "ring-2 ring-white/60" : ""}`}
+      className={`${base} ${styles[variant]} ${active ? "ring-2 ring-ink/25" : ""}`}
     >
       {children}
     </button>
@@ -69,15 +69,16 @@ export function Action({
 /** Why the classifier landed here — shown verbatim, per the contract's own note. */
 export function Provenance({ node }: { node: InfectionNode }) {
   return (
-    <div className="mt-5 border-t border-white/10 pt-3">
-      <p className="text-[11px] leading-relaxed text-white/45">{node.rationale}</p>
-      <p className="mt-2 text-[11px] text-white/30">
-        {MATCH_LABEL[node.matchKind]} · {Math.round(node.confidence * 100)}% confidence
+    <div className="mt-6 border-t border-rule pt-3.5">
+      <p className="text-[12.5px] leading-relaxed text-ink-2">{node.rationale}</p>
+      <p className="mt-2 text-[12px] text-ink-3">
+        PATCH {MATCH_LABEL[node.matchKind]}, and is{" "}
+        {Math.round(node.confidence * 100)}% sure this is the same thing.
         {node.href ? (
           <>
-            {" · "}
-            <a className="underline hover:text-white/60" href={node.href}>
-              open in workspace
+            {" "}
+            <a className="text-ink underline underline-offset-2" href={node.href}>
+              Open the original
             </a>
           </>
         ) : null}
@@ -100,8 +101,8 @@ export function Marked({
   const parts = text.split(needle);
   const cls =
     tone === "stale"
-      ? "rounded bg-red-500/25 px-1 text-red-200"
-      : "rounded bg-emerald-500/25 px-1 text-emerald-200";
+      ? "rounded bg-infected/15 px-1 font-mono text-infected-deep"
+      : "rounded bg-immune/15 px-1 font-mono text-immune-deep";
   return (
     <>
       {parts.map((part, i) => (
@@ -116,11 +117,13 @@ export function Marked({
 
 export function ReviewBanner({ change }: { change: TruthChange }) {
   return (
-    <div className="mb-4 flex items-start gap-2 rounded-md border border-amber-500/40 bg-amber-500/10 px-3 py-2">
-      <span className="mt-px text-amber-300">!</span>
-      <p className="text-[11px] leading-relaxed text-amber-200/90">
-        Flagged for human review. PATCH will not include this artefact in a batch
-        approval for <span className="font-medium">{change.subject}</span>.
+    <div className="mb-5 flex items-start gap-2.5 rounded-md border border-exposed/40 bg-exposed/[0.08] px-3.5 py-2.5">
+      <span className="mt-px grid h-4 w-4 shrink-0 place-items-center rounded-full border-2 border-exposed text-[9px] font-bold text-exposed-deep">
+        !
+      </span>
+      <p className="text-[12.5px] leading-relaxed text-ink-2">
+        PATCH will not include this in a bulk repair. Someone has to look at it before
+        anything changes.
       </p>
     </div>
   );

@@ -4,75 +4,70 @@ import type { Evidence } from "@/contract";
 import { Chip } from "./atoms";
 import { formatDate } from "./formatDate";
 
-type SourceStatus = Evidence["sourceStatus"];
-
 const SOURCE: Record<
-  SourceStatus,
+  Evidence["sourceStatus"],
   { tone: "fresh" | "warn" | "neutral"; label: string }
 > = {
-  live: { tone: "fresh", label: "live" },
-  cached: { tone: "warn", label: "cached — source unreachable" },
-  unverified: { tone: "neutral", label: "unverified" },
+  live: { tone: "fresh", label: "checked just now" },
+  cached: { tone: "warn", label: "from a saved copy — site was down" },
+  unverified: { tone: "neutral", label: "not checked" },
 };
 
 /**
  * Evidence informs; it never decides. A source that CONTRADICTS the change is shown,
- * not hidden — hiding it would make the rail an argument rather than a record.
+ * not hidden — hiding it would make this an argument rather than a record.
  */
 export function EvidenceRail({ evidence }: { evidence: Evidence[] }) {
-  const contradicting = evidence.filter((e) => !e.supports).length;
+  const against = evidence.filter((e) => !e.supports).length;
 
   return (
-    <div className="p-5">
-      <div className="flex items-baseline justify-between">
-        <h2 className="text-[11px] uppercase tracking-wider text-white/40">Evidence</h2>
-        <span className="text-[11px] text-white/30">
-          {evidence.length} source{evidence.length === 1 ? "" : "s"}
-          {contradicting > 0 && ` · ${contradicting} contradicting`}
-        </span>
-      </div>
-
-      <p className="mt-1.5 text-[11px] leading-relaxed text-white/35">
-        Evidence informs the Truth Change. It never decides it.
+    <div className="px-6 py-6">
+      <h2 className="text-[15px] font-semibold text-ink">What PATCH checked</h2>
+      <p className="mt-1.5 max-w-[46ch] text-[13px] leading-relaxed text-ink-2">
+        {evidence.length === 1 ? "One source" : `${evidence.length} sources`} were read
+        before anything was proposed.
+        {against > 0 &&
+          ` ${against === 1 ? "One disagrees" : `${against} disagree`} with the change, and ${against === 1 ? "it is" : "they are"} shown here too.`}{" "}
+        None of them decide anything — you do.
       </p>
 
-      <ul className="mt-4 space-y-3">
+      <ul className="mt-5 space-y-4">
         {evidence.map((ev) => {
           const source = SOURCE[ev.sourceStatus];
           return (
             <li
               key={ev.id}
-              className={`rounded-md border p-3 ${
+              className={`rounded-lg border p-4 ${
                 ev.supports
-                  ? "border-white/10 bg-white/[0.02]"
-                  : "border-amber-500/40 bg-amber-500/[0.06]"
+                  ? "border-rule bg-surface"
+                  : "border-exposed/45 bg-exposed/[0.07]"
               }`}
             >
               <div className="flex flex-wrap items-center gap-1.5">
                 <Chip tone={source.tone}>{source.label}</Chip>
-                {!ev.supports && <Chip tone="warn">contradicts this change</Chip>}
+                {!ev.supports && <Chip tone="warn">disagrees with the change</Chip>}
               </div>
 
-              <p className="mt-2 text-[13px] font-medium leading-snug text-white/85">
+              <p className="mt-2.5 text-[13.5px] font-medium leading-snug text-ink">
                 {ev.title}
               </p>
 
-              <p className="mt-1.5 border-l-2 border-white/15 pl-2.5 text-[12px] italic leading-relaxed text-white/55">
+              <p className="mt-2 border-l-2 border-rule pl-3 text-[13px] leading-relaxed text-ink-2">
                 {ev.highlight}
               </p>
 
-              <p className="mt-2 text-[11px] text-white/30">
-                {formatDate(ev.publishedAt)}
+              <p className="mt-2.5 text-[12px] text-ink-3">
+                {formatDate(ev.publishedAt, "no date")}
                 {ev.url && (
                   <>
-                    {" · "}
+                    {"  "}
                     <a
                       href={ev.url}
-                      className="underline hover:text-white/60"
+                      className="text-ink underline underline-offset-2"
                       target="_blank"
                       rel="noreferrer"
                     >
-                      source
+                      Read it
                     </a>
                   </>
                 )}
@@ -83,13 +78,13 @@ export function EvidenceRail({ evidence }: { evidence: Evidence[] }) {
       </ul>
 
       {evidence.length === 0 && (
-        <p className="mt-4 text-[12px] text-white/35">
-          No external evidence was found. The Truth Change rests on the nomination alone.
+        <p className="mt-4 text-[13px] text-ink-2">
+          Nothing external was found. This change rests on what was said in the channel.
         </p>
       )}
 
-      <p className="mt-5 border-t border-white/10 pt-3 text-[11px] leading-relaxed text-white/30">
-        Select an artefact on the map to open its Repair Surface.
+      <p className="mt-6 border-t border-rule pt-3.5 text-[13px] text-ink-3">
+        Pick any circle on the map to see what PATCH wants to do about it.
       </p>
     </div>
   );

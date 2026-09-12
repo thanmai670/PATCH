@@ -34,56 +34,56 @@ export function CorrectiveMessageSurface({
   const [decision, setDecision] = useState<string | null>(null);
 
   return (
-    <div className="p-5">
+    <div className="px-6 py-6">
       {/* The refusal comes first, before anything that looks like a control. */}
-      <div className="rounded-md border-2 border-pink-500/60 bg-pink-500/10 p-3.5">
-        <p className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-pink-300">
-          <span aria-hidden>⛔</span> Cannot be repaired silently
+      <div className="rounded-lg border-2 border-irreversible/55 bg-irreversible/[0.08] p-4">
+        <p className="flex items-center gap-2 text-[14px] font-semibold text-irreversible-deep">
+          This one cannot be quietly fixed
         </p>
-        <p className="mt-2 text-[12px] leading-relaxed text-pink-100/80">
-          This message was delivered {sentAt ? `on ${formatDate(sentAt, "an earlier date")}` : "already"} and has
-          been read outside the workspace. PATCH will not edit it, and there is no action
-          here that would.
+        <p className="mt-2 text-[13px] leading-relaxed text-ink-2">
+          It went out {sentAt ? `on ${formatDate(sentAt, "an earlier date")}` : "already"} and people outside the
+          company have read it. Editing it now would change history without telling anyone,
+          so PATCH will not — and there is no button here that does.
         </p>
       </div>
 
-      <h2 className="mt-4 text-base font-semibold leading-snug">{node.title}</h2>
+      <h2 className="mt-4 text-[17px] font-semibold leading-snug text-ink">{node.title}</h2>
 
-      <div className="mt-3 rounded-md border border-white/10 bg-white/[0.02] p-3">
-        <p className="text-[11px] uppercase tracking-wider text-white/35">
-          Already delivered to
+      <div className="mt-3 rounded-lg border border-rule bg-sunk/50 p-3.5">
+        <p className="text-[12.5px] text-ink-3">
+          It reached
         </p>
         <ul className="mt-1.5 space-y-1">
           {recipients.map((r) => (
-            <li key={r} className="font-mono text-[12px] text-white/70">
+            <li key={r} className="font-mono text-[12.5px] text-ink">
               {r}
             </li>
           ))}
           {recipients.length === 0 && (
-            <li className="text-[12px] text-white/40">recipients unknown</li>
+            <li className="text-[12.5px] text-ink-3">recipients unknown</li>
           )}
         </ul>
         {node.excerpt && (
-          <p className="mt-2.5 border-l-2 border-pink-500/40 pl-2.5 text-[12px] italic leading-relaxed text-white/50">
+          <p className="mt-2.5 border-l-2 border-irreversible/40 pl-2.5 text-[12.5px] leading-relaxed text-ink-2">
             {node.excerpt.before}
           </p>
         )}
       </div>
 
-      <p className="mt-3 text-[12px] leading-relaxed text-white/60">
+      <p className="mt-3 text-[13px] leading-relaxed text-ink-2">
         {str(p, "impactExplanation")}
       </p>
 
       {available.includes("draft_correction") && (
         <div className="mt-4">
-          <p className="mb-1.5 text-[11px] uppercase tracking-wider text-white/35">
-            Corrective message — draft
+          <p className="mb-1.5 text-[12.5px] text-ink-3">
+            A correction you can send instead
           </p>
           <textarea
             value={body}
             onChange={(e) => setBody(e.target.value)}
             rows={7}
-            className="w-full resize-y rounded-md border border-white/15 bg-black/40 p-2.5 text-[12px] leading-relaxed text-white/85 outline-none focus:border-pink-400/60"
+            className="w-full resize-y rounded-md border border-rule bg-surface p-3 text-[13px] leading-relaxed text-ink outline-none focus:border-ink"
           />
         </div>
       )}
@@ -98,7 +98,7 @@ export function CorrectiveMessageSurface({
               onDecide("draft_correction", { recipients, body });
             }}
           >
-            Send correction for approval
+            Send this correction
           </Action>
         )}
         {available.includes("except") && (
@@ -110,16 +110,16 @@ export function CorrectiveMessageSurface({
               onDecide("except");
             }}
           >
-            No correction needed
+            Don't send anything
           </Action>
         )}
       </div>
 
       {decision && (
-        <p className="mt-3 text-[11px] text-emerald-300/80">
+        <p className="mt-3 text-[12.5px] text-immune-deep">
           {decision === "draft_correction"
-            ? `Correction queued for ${recipients.length} recipient${recipients.length === 1 ? "" : "s"}. The original message is unchanged.`
-            : "No correction will be sent. The original message is unchanged."}
+            ? `Correction ready for ${recipients.length} ${recipients.length === 1 ? "person" : "people"}. The message they already have stays exactly as it was.`
+            : "Nothing will be sent. The message they already have stays as it was."}
         </p>
       )}
 

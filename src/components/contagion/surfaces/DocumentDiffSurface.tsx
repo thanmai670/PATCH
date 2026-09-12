@@ -28,29 +28,29 @@ export function DocumentDiffSurface({
   const [decision, setDecision] = useState<string | null>(null);
 
   return (
-    <div className="p-5">
+    <div className="px-6 py-6">
       {warning && (
-        <div className="mb-4 rounded-md border border-amber-500/50 bg-amber-500/10 p-3">
-          <p className="text-xs font-semibold text-amber-300">Low-confidence match</p>
-          <p className="mt-1 text-[11px] leading-relaxed text-amber-200/85">{warning}</p>
+        <div className="mb-4 rounded-lg border border-exposed/45 bg-exposed/[0.09] p-3.5">
+          <p className="text-[13px] font-semibold text-exposed-deep">PATCH is not sure about this one</p>
+          <p className="mt-1 text-[12.5px] leading-relaxed text-ink-2">{warning}</p>
         </div>
       )}
       {node.requiresHumanReview && !warning && <ReviewBanner change={change} />}
 
-      <p className="text-[11px] uppercase tracking-wider text-white/35">Document diff</p>
-      <h2 className="mt-1 text-base font-semibold leading-snug">{node.title}</h2>
-      <p className="mt-1 text-xs text-white/45">
+      <p className="text-[12.5px] text-ink-3">Editable document</p>
+      <h2 className="mt-1 text-[17px] font-semibold leading-snug text-ink">{node.title}</h2>
+      <p className="mt-1 text-[12.5px] text-ink-3">
         {str(p, "paragraphContext", "Body text")} ·{" "}
         {occurrences === 1 ? "1 occurrence" : `${occurrences} occurrences`} of{" "}
         {change.previousValue}
       </p>
 
       <div className="mt-4 space-y-2">
-        <div className="rounded-md border border-red-500/25 bg-red-500/[0.06] p-3">
-          <p className="mb-1.5 text-[10px] uppercase tracking-wider text-red-300/70">
+        <div className="rounded-lg border border-rule bg-sunk/60 p-3.5">
+          <p className="mb-1.5 text-[12px] font-medium text-ink-3">
             Current
           </p>
-          <p className="text-[13px] leading-relaxed text-white/80">
+          <p className="text-[13.5px] leading-relaxed text-ink">
             <Marked
               text={node.excerpt?.before ?? "—"}
               needle={change.previousValue}
@@ -59,8 +59,8 @@ export function DocumentDiffSurface({
           </p>
         </div>
 
-        <div className="rounded-md border border-emerald-500/25 bg-emerald-500/[0.06] p-3">
-          <p className="mb-1.5 text-[10px] uppercase tracking-wider text-emerald-300/70">
+        <div className="rounded-lg border border-immune/35 bg-immune/[0.07] p-3.5">
+          <p className="mb-1.5 text-[12px] font-medium text-ink-3">
             Proposed
           </p>
           {rewriting ? (
@@ -68,10 +68,10 @@ export function DocumentDiffSurface({
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
               rows={3}
-              className="w-full resize-y rounded border border-white/15 bg-black/40 p-2 text-[13px] leading-relaxed text-white/90 outline-none focus:border-emerald-400/60"
+              className="w-full resize-y rounded-md border border-rule bg-surface p-2.5 text-[13.5px] leading-relaxed text-ink outline-none focus:border-ink"
             />
           ) : (
-            <p className="text-[13px] leading-relaxed text-white/80">
+            <p className="text-[13.5px] leading-relaxed text-ink">
               <Marked text={draft} needle={change.newValue} tone="fresh" />
             </p>
           )}
@@ -89,7 +89,7 @@ export function DocumentDiffSurface({
               onDecide("accept", { text: draft });
             }}
           >
-            Accept change
+            Use the new wording
           </Action>
         )}
         {available.includes("rewrite") && (
@@ -100,7 +100,7 @@ export function DocumentDiffSurface({
               setDecision(null);
             }}
           >
-            {rewriting ? "Done rewriting" : "Rewrite"}
+            {rewriting ? "Done" : "Rewrite"}
           </Action>
         )}
         {available.includes("except") && (
@@ -112,16 +112,16 @@ export function DocumentDiffSurface({
               onDecide("except");
             }}
           >
-            Mark exception
+            Skip this one
           </Action>
         )}
       </div>
 
       {decision && (
-        <p className="mt-3 text-[11px] text-emerald-300/80">
+        <p className="mt-3 text-[12.5px] text-immune-deep">
           {decision === "accept"
-            ? "Queued in the Repair Plan."
-            : "Excluded — this artefact will not be repaired."}
+            ? "Ready to apply."
+            : "Skipped. Nothing will change here."}
         </p>
       )}
 

@@ -1,101 +1,101 @@
 "use client";
 
-import { STATUS_COLOR, DISPOSITION_RING, REVIEW_COLOR } from "./tokens";
+import { STATUS_COLOR, STATUS_DEEP, DISPOSITION_RING, REVIEW_COLOR } from "./tokens";
 
 /**
  * Mandatory, not decorative (ADR-0008): `editable` draws no ring, so the *absence*
- * of a ring carries meaning — and absence is only legible if it is written down.
+ * of a ring carries meaning, and absence is only legible if it is written down.
+ * Phrased as what the reader is looking at, not as field names.
  */
 export function MapLegend() {
   return (
-    <div className="pointer-events-none absolute bottom-4 left-4 flex gap-6 rounded-lg border border-white/10 bg-black/45 px-4 py-3 text-[11px] backdrop-blur">
-      <div>
-        <p className="mb-1.5 uppercase tracking-wider text-white/35">
-          Infection status — fill
-        </p>
-        <ul className="space-y-1">
-          {(
-            [
-              ["infected", "Infected — carries the stale value"],
-              ["exposed", "Exposed — depends on it"],
-              ["immune", "Immune — checked, correct"],
-            ] as const
-          ).map(([key, label]) => (
-            <li key={key} className="flex items-center gap-2 text-white/65">
-              <span
-                className="h-2.5 w-2.5 rounded-full"
-                style={{ background: STATUS_COLOR[key] }}
-              />
-              {label}
-            </li>
-          ))}
-        </ul>
+    <div
+      className="flex flex-wrap items-center gap-x-5 gap-y-2 text-[11.5px] text-ink-2"
+    >
+      <div className="flex flex-wrap items-center gap-x-3.5 gap-y-1.5">
+        <Item>
+          <Disc color={STATUS_COLOR.infected} edge={STATUS_DEEP.infected} />
+          has the old figure
+        </Item>
+        <Item>
+          <Disc color={STATUS_COLOR.exposed} edge={STATUS_DEEP.exposed} />
+          derived from it
+        </Item>
+        <Item>
+          <Disc color={STATUS_COLOR.immune} edge={STATUS_DEEP.immune} />
+          already correct
+        </Item>
       </div>
 
-      <div>
-        <p className="mb-1.5 uppercase tracking-wider text-white/35">
-          Repair disposition — ring
-        </p>
-        <ul className="space-y-1">
-          <li className="flex items-center gap-2 text-white/65">
-            <span
-              className="h-2.5 w-2.5 rounded-full border-2"
-              style={{ borderColor: DISPOSITION_RING.historical! }}
-            />
-            Historical — preserve, annotate only
-          </li>
-          <li className="flex items-center gap-2 text-white/65">
-            <span
-              className="h-2.5 w-2.5 rounded-full border-2"
-              style={{ borderColor: DISPOSITION_RING.irreversible! }}
-            />
-            Irreversible — already sent
-          </li>
-          <li className="flex items-center gap-2 text-white/45">
-            <span className="h-2.5 w-2.5 rounded-full border-2 border-transparent" />
-            <em>No ring</em> — editable
-          </li>
-        </ul>
-      </div>
-
-      <div>
-        <p className="mb-1.5 uppercase tracking-wider text-white/35">
-          Match kind — edge
-        </p>
-        <ul className="space-y-1 text-white/65">
-          <li className="flex items-center gap-2">
-            <Dash pattern="none" /> Exact — literal match
-          </li>
-          <li className="flex items-center gap-2">
-            <Dash pattern="7 5" /> Semantic — meaning match
-          </li>
-          <li className="flex items-center gap-2">
-            <Dash pattern="2 6" /> Inferred — agent reasoning
-          </li>
-        </ul>
-        <p className="mt-2 flex items-center gap-2 text-white/65">
+      <div className="flex flex-wrap items-center gap-x-3.5 gap-y-1.5">
+        <Item>
+          <Ring color={DISPOSITION_RING.historical!} />
+          keep as record
+        </Item>
+        <Item>
+          <Ring color={DISPOSITION_RING.irreversible!} />
+          already sent
+        </Item>
+        <Item>
           <span
-            className="grid h-3 w-3 place-items-center rounded-full text-[8px] font-bold text-black"
-            style={{ background: REVIEW_COLOR }}
+            className="grid h-4 w-4 shrink-0 place-items-center rounded-full border-2 bg-surface text-[9px] font-bold"
+            style={{ borderColor: REVIEW_COLOR, color: "#9A5B06" }}
           >
             !
           </span>
-          Needs human review
-        </p>
+          you decide
+        </Item>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-x-3.5 gap-y-1.5 text-ink-3">
+        <Item>
+          <Dash pattern="none" />
+          written out
+        </Item>
+        <Item>
+          <Dash pattern="6 4" />
+          meaning match
+        </Item>
+        <Item>
+          <Dash pattern="2 5" />
+          agent inferred
+        </Item>
       </div>
     </div>
   );
 }
 
+function Item({ children }: { children: React.ReactNode }) {
+  return <span className="flex items-center gap-2">{children}</span>;
+}
+
+function Disc({ color, edge }: { color: string; edge: string }) {
+  return (
+    <span
+      className="h-3 w-3 shrink-0 rounded-full border"
+      style={{ background: color, borderColor: edge }}
+    />
+  );
+}
+
+function Ring({ color }: { color: string }) {
+  return (
+    <span
+      className="h-3.5 w-3.5 shrink-0 rounded-full border-[2.5px] bg-surface"
+      style={{ borderColor: color }}
+    />
+  );
+}
+
 function Dash({ pattern }: { pattern: string }) {
   return (
-    <svg width={22} height={6} aria-hidden>
+    <svg width={22} height={6} className="shrink-0" aria-hidden>
       <line
         x1={1}
         y1={3}
         x2={21}
         y2={3}
-        stroke="rgba(255,255,255,0.55)"
+        stroke="#828E9B"
         strokeWidth={1.5}
         strokeLinecap="round"
         strokeDasharray={pattern === "none" ? undefined : pattern}

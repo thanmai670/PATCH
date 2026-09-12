@@ -6,7 +6,10 @@ import { Action } from "./atoms";
 
 /**
  * The lasso's exclusions are stated out loud (ADR-0010). Restraint nobody is told
- * about scores nothing — this bar is where PATCH says what it held back and why.
+ * about scores nothing — this is where PATCH says what it held back and why.
+ *
+ * It sits in the footer rather than floating over the map, so it can never cover the
+ * artefacts it is talking about.
  */
 export function ApprovalBar({
   lasso,
@@ -31,20 +34,17 @@ export function ApprovalBar({
 
   if (touched === 0) {
     return (
-      <div className="pointer-events-none absolute right-4 top-4 max-w-[300px] text-right">
+      <div className="flex items-center justify-end text-right">
         {healedCount > 0 ? (
-          <p className="inline-block rounded-md border border-emerald-500/30 bg-emerald-500/10 px-3 py-1.5 text-[11px] text-emerald-200/90">
-            {healedCount} repair{healedCount === 1 ? "" : "s"} approved
+          <p className="text-[12.5px] text-immune-deep">
+            You approved {healedCount} repair{healedCount === 1 ? "" : "s"}.
             {unconfirmedCount > 0 && (
-              <span className="text-white/50">
-                {" · "}
-                {unconfirmedCount} not yet written to workspace
-              </span>
+              <span className="text-ink-3"> Nothing has reached the workspace yet.</span>
             )}
           </p>
         ) : (
-          <p className="inline-block rounded-md border border-white/10 bg-black/40 px-3 py-1.5 text-[11px] text-white/40">
-            Drag across the map to select safe repairs
+          <p className="text-[12.5px] text-ink-3">
+            Drag a box across the map to repair several at once
           </p>
         )}
       </div>
@@ -53,68 +53,52 @@ export function ApprovalBar({
 
   const why = (node: InfectionNode) =>
     node.disposition === "irreversible"
-      ? "already sent"
+      ? "already sent out"
       : node.disposition === "historical"
-        ? "preserve as historical"
-        : "needs human review";
+        ? "a record of what was built"
+        : "PATCH is not confident enough";
 
   return (
-    <div className="absolute right-4 top-4 w-[300px] rounded-lg border border-white/15 bg-black/75 p-3.5 backdrop-blur">
-      <p className="text-[13px] font-semibold">
-        <span className="text-emerald-300">{lasso.safe.length} safe</span>
-        {lasso.excluded.length > 0 && (
-          <span className="text-white/50">
-            {" · "}
-            {lasso.excluded.length} excluded
-          </span>
-        )}
-      </p>
-
-      {lasso.excluded.length > 0 && (
-        <>
-          <p className="mt-1 text-[11px] leading-relaxed text-white/45">
-            Excluded from batch approval — review these individually.
-          </p>
-          <ul className="mt-2 space-y-1">
-            {lasso.excluded.map((id) => {
-              const node = byId.get(id);
-              if (!node) return null;
-              return (
-                <li key={id}>
-                  <button
-                    type="button"
-                    onClick={() => onInspect(id)}
-                    className="w-full rounded px-1.5 py-1 text-left text-[11px] text-white/60 hover:bg-white/10 hover:text-white/90"
-                  >
-                    <span className="block truncate">{node.title}</span>
-                    <span className="text-white/35">{why(node)}</span>
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
-        </>
-      )}
-
-      <div className="mt-3 flex items-center gap-2">
-        {/* No live-looking CTA when there is nothing it could approve. */}
+    <div className="flex flex-col items-end gap-2">
+      <div className="flex items-center gap-3">
+        <p className="text-[13px] font-medium text-ink">
+          {lasso.safe.length === 0
+            ? "None of these can be repaired on their own"
+            : `${lasso.safe.length} of these ${touched} can be repaired now`}
+        </p>
         {lasso.safe.length > 0 && (
           <Action variant="primary" onClick={onApprove} disabled={approving}>
             {approving
-              ? "Approving…"
-              : `Approve ${lasso.safe.length} repair${lasso.safe.length === 1 ? "" : "s"}`}
+              ? "Repairing…"
+              : `Repair ${lasso.safe.length === 1 ? "it" : `all ${lasso.safe.length}`}`}
           </Action>
         )}
         <Action variant="quiet" onClick={onClear}>
-          Clear
+          Cancel
         </Action>
       </div>
 
-      {lasso.safe.length === 0 && (
-        <p className="mt-2 text-[11px] leading-relaxed text-amber-300/80">
-          Nothing in this selection can be repaired without a human decision. Open each
-          artefact above to decide individually.
-        </p>
+      {lasso.excluded.length > 0 && (
+        <div className="flex flex-wrap items-center justify-end gap-1.5">
+          <span className="text-[12px] text-ink-3">
+            Holding back {lasso.excluded.length} for you:
+          </span>
+          {lasso.excluded.map((id) => {
+            const node = byId.get(id);
+            if (!node) return null;
+            return (
+              <button
+                key={id}
+                type="button"
+                onClick={() => onInspect(id)}
+                title={why(node)}
+                className="max-w-[170px] truncate rounded-full border border-rule bg-surface px-2.5 py-1 text-[12px] text-ink hover:bg-sunk"
+              >
+                {node.title}
+              </button>
+            );
+          })}
+        </div>
       )}
     </div>
   );

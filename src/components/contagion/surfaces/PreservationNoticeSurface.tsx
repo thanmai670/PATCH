@@ -25,50 +25,50 @@ export function PreservationNoticeSurface({
   const [decision, setDecision] = useState<string | null>(null);
 
   return (
-    <div className="p-5">
-      <div className="rounded-md border-2 border-violet-500/60 bg-violet-500/10 p-3.5">
-        <p className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-violet-300">
-          <span aria-hidden>🔒</span> Preserve as historical
+    <div className="px-6 py-6">
+      <div className="rounded-lg border-2 border-historical/55 bg-historical/[0.08] p-4">
+        <p className="flex items-center gap-2 text-[14px] font-semibold text-historical-deep">
+          Leave this one alone
         </p>
-        <p className="mt-2 text-[12px] leading-relaxed text-violet-100/80">
+        <p className="mt-2 text-[13px] leading-relaxed text-ink-2">
           {str(
             p,
             "reason",
-            "This record was accurate when written. Editing it would falsify history.",
+            "This was accurate when it was written. Changing it now would misrepresent what was actually built.",
           )}
         </p>
       </div>
 
-      <h2 className="mt-4 text-base font-semibold leading-snug">{node.title}</h2>
+      <h2 className="mt-4 text-[17px] font-semibold leading-snug text-ink">{node.title}</h2>
 
       <div className="mt-3">
-        <p className="mb-1.5 flex items-center gap-1.5 text-[11px] uppercase tracking-wider text-white/35">
-          <span aria-hidden>🔒</span> Original record — locked
+        <p className="mb-1.5 flex items-center gap-1.5 text-[12.5px] text-ink-3">
+          The record, as it stands
         </p>
-        <div className="rounded-md border border-white/10 bg-white/[0.015] p-3">
-          <p className="select-none text-[13px] leading-relaxed text-white/35">
+        <div className="rounded-md border border-rule bg-white/[0.015] p-3">
+          <p className="select-none text-[13.5px] leading-relaxed text-ink-3">
             {node.excerpt?.before ?? "—"}
           </p>
         </div>
-        <p className="mt-1.5 text-[11px] text-white/30">
-          {change.previousValue} stays in this document. It is not a mistake — it is what
-          was installed.
+        <p className="mt-1.5 text-[12px] text-ink-3">
+          {change.previousValue} stays. That is not an error; that is the motor that went into
+          the machine.
         </p>
       </div>
 
       {available.includes("annotate") && (
         <div className="mt-4">
-          <p className="mb-1.5 text-[11px] uppercase tracking-wider text-white/35">
-            Annotation to attach
+          <p className="mb-1.5 text-[12.5px] text-ink-3">
+            A note to attach alongside it
           </p>
           <textarea
             value={notice}
             onChange={(e) => setNotice(e.target.value)}
             rows={4}
-            className="w-full resize-y rounded-md border border-violet-400/30 bg-black/40 p-2.5 text-[12px] leading-relaxed text-white/85 outline-none focus:border-violet-400/70"
+            className="w-full resize-y rounded-md border border-historical/35 bg-surface p-3 text-[13px] leading-relaxed text-ink outline-none focus:border-historical"
           />
-          <p className="mt-1.5 text-[11px] text-white/30">
-            Attached alongside the record. The record itself is untouched.
+          <p className="mt-1.5 text-[12px] text-ink-3">
+            The note sits next to the record. The record itself is never touched.
           </p>
         </div>
       )}
@@ -83,7 +83,7 @@ export function PreservationNoticeSurface({
               onDecide("annotate", { notice });
             }}
           >
-            Annotate only
+            Attach the note
           </Action>
         )}
         {available.includes("except") && (
@@ -95,16 +95,16 @@ export function PreservationNoticeSurface({
               onDecide("except");
             }}
           >
-            Leave untouched
+            Do nothing
           </Action>
         )}
       </div>
 
       {decision && (
-        <p className="mt-3 text-[11px] text-emerald-300/80">
+        <p className="mt-3 text-[12.5px] text-immune-deep">
           {decision === "annotate"
-            ? "Annotation queued. The historical record is unchanged."
-            : "Nothing will be attached. The historical record is unchanged."}
+            ? "Note ready to attach. The record is unchanged."
+            : "Nothing will be attached. The record is unchanged."}
         </p>
       )}
 

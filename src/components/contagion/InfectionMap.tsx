@@ -1,21 +1,28 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { InfectionReport } from "@/contract";
-import { layoutReport, CX, CY, VIEW_W, VIEW_H, RING_MS } from "./layout";
+import {
+  layoutReport,
+  toContent,
+  fitBounds,
+  CX,
+  CY,
+  RING_MS,
+  X_STRETCH,
+} from "./layout";
 import {
   STATUS_COLOR,
+  STATUS_DEEP,
   DISPOSITION_RING,
   MATCH_DASH,
   REVIEW_COLOR,
   HEALED_COLOR,
   isSafe,
 } from "./tokens";
-import { MapLegend } from "./MapLegend";
 
-const NODE_R = 26;
-const RING_R = 35;
-/** Below this the drag was a click, not a lasso. */
+const NODE_R = 30;
+const RING_R = 40;
 const DRAG_THRESHOLD = 6;
 
 export type LassoResult = { safe: string[]; excluded: string[] };
@@ -26,14 +33,37 @@ type Props = {
   lassoed: string[];
   onSelect: (id: string | null) => void;
   onLasso: (result: LassoResult) => void;
-  /** Approved nodes, healed green (ADR-0011). */
   healed?: string[];
-  /** Approved but not yet written to the workspace. */
   unconfirmed?: string[];
 };
 
-function short(title: string, max = 26) {
-  return title.length <= max ? title : `${title.slice(0, max - 1)}…`;
+/**
+ * Two short lines beat one long one: a wide label collides with the neighbouring
+ * artefact on a radial layout, a narrow stack does not.
+ */
+function wrapLabel(title: string, perLine = 19, maxLines = 2): string[] {
+  const words = title.split(" ");
+  const lines: string[] = [];
+  let line = "";
+
+  for (const w of words) {
+    const next = line ? `${line} ${w}` : w;
+    if (next.length <= perLine) {
+      line = next;
+      continue;
+    }
+    if (line) lines.push(line);
+    line = w;
+    if (lines.length === maxLines) break;
+  }
+  if (line && lines.length < maxLines) lines.push(line);
+
+  const used = lines.join(" ").length;
+  if (used < title.replace(/\s+/g, " ").length) {
+    const last = lines[lines.length - 1] ?? "";
+    lines[lines.length - 1] = `${last.slice(0, perLine - 1)}…`;
+  }
+  return lines;
 }
 
 export function InfectionMap({
@@ -45,11 +75,25 @@ export function InfectionMap({
   healed = [],
   unconfirmed = [],
 }: Props) {
-  const { nodes, edges } = useMemo(() => layoutReport(report), [report]);
-  const byId = useMemo(
-    () => new Map(nodes.map((n) => [n.node.id, n])),
-    [nodes],
-  );
+  const { nodes, edges, radii, bounds } = useMemo(() => layoutReport(report), [report]);
+
+  // The stage is wide and short; a fixed viewBox would letterbox the map into the
+  // middle third of it. Measure the box and fit the drawing to what's actually there.
+  const wrapRef = useRef<HTMLDivElement | null>(null);
+  const [view, setView] = useState({ w: 1100, h: 620 });
+  useEffect(() => {
+    const el = wrapRef.current;
+    if (!el || typeof ResizeObserver === "undefined") return;
+    const ro = new ResizeObserver(([entry]) => {
+      const { width, height } = entry.contentRect;
+      setView({ w: Math.max(360, width), h: Math.max(280, height) });
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  const fit = useMemo(() => fitBounds(bounds, view), [bounds, view]);
+  const byId = useMemo(() => new Map(nodes.map((n) => [n.node.id, n])), [nodes]);
   const healedSet = useMemo(() => new Set(healed), [healed]);
   const lassoedSet = useMemo(() => new Set(lassoed), [lassoed]);
   const unconfirmedSet = useMemo(() => new Set(unconfirmed), [unconfirmed]);
@@ -60,13 +104,13 @@ export function InfectionMap({
   );
   const movedRef = useRef(false);
 
-  /** Screen coordinates → viewBox coordinates. */
+  /** Screen coordinates → content coordinates (through the fit transform). */
   function toView(ev: React.PointerEvent): { x: number; y: number } | null {
     const svg = svgRef.current;
     const ctm = svg?.getScreenCTM();
     if (!svg || !ctm) return null;
     const pt = new DOMPoint(ev.clientX, ev.clientY).matrixTransform(ctm.inverse());
-    return { x: pt.x, y: pt.y };
+    return toContent(fit, { x: pt.x, y: pt.y });
   }
 
   function onPointerDown(ev: React.PointerEvent<SVGSVGElement>) {
@@ -90,7 +134,6 @@ export function InfectionMap({
     ev.currentTarget.releasePointerCapture?.(ev.pointerId);
 
     if (!movedRef.current) {
-      // A click on empty space clears the selection.
       setDrag(null);
       onSelect(null);
       return;
@@ -111,10 +154,10 @@ export function InfectionMap({
   }
 
   return (
-    <div className="relative h-full w-full">
+    <div ref={wrapRef} className="patch-stage relative h-full w-full">
       <svg
         ref={svgRef}
-        viewBox={`0 0 ${VIEW_W} ${VIEW_H}`}
+        viewBox={`0 0 ${view.w} ${view.h}`}
         preserveAspectRatio="xMidYMid meet"
         className="h-full w-full touch-none select-none"
         aria-label={`Contagion map: ${nodes.length} affected artefacts`}
@@ -125,212 +168,260 @@ export function InfectionMap({
         onLostPointerCapture={() => setDrag(null)}
       >
         <defs>
-          <filter id="patch-glow" x="-80%" y="-80%" width="260%" height="260%">
-            <feGaussianBlur stdDeviation="7" result="blur" />
-            <feMerge>
-              <feMergeNode in="blur" />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
+          <filter id="patch-lift" x="-60%" y="-60%" width="220%" height="220%">
+            <feDropShadow
+              dx="0"
+              dy="2"
+              stdDeviation="4"
+              floodColor="#16202B"
+              floodOpacity="0.18"
+            />
           </filter>
         </defs>
 
-        {/* ── Edges. matchKind is carried here, never on the node (ADR-0008). ── */}
-        <g>
-          {edges.map((e) => {
-            const len = Math.hypot(e.to.x - e.from.x, e.to.y - e.from.y);
-            const targetId = e.toId;
-            const target = byId.get(targetId);
-            const streak =
-              target && healedSet.has(targetId)
+        <g transform={`translate(${fit.tx},${fit.ty}) scale(${fit.scale})`}>
+          {/* ── Orbit guides: the rings the infection travels through ── */}
+          <g pointerEvents="none">
+            {radii.map((r, i) => (
+              <ellipse
+                key={r}
+                className="patch-reveal"
+                cx={CX}
+                cy={CY}
+                rx={r * X_STRETCH}
+                ry={r}
+                fill="none"
+                stroke="#D5DDE5"
+                strokeWidth={1}
+                strokeDasharray="2 6"
+                style={{ animationDelay: `${i * RING_MS}ms` }}
+              />
+            ))}
+          </g>
+
+          {/* ── Edges. matchKind is carried here, never on the node (ADR-0008). ── */}
+          <g>
+            {edges.map((e) => {
+              const len = Math.hypot(e.to.x - e.from.x, e.to.y - e.from.y);
+              const target = byId.get(e.toId);
+              const streak = healedSet.has(e.toId)
                 ? HEALED_COLOR
                 : target
                   ? STATUS_COLOR[target.node.status]
                   : STATUS_COLOR.infected;
-            const delay = (e.depth - 1) * RING_MS;
+              const delay = (e.depth - 1) * RING_MS;
+              return (
+                <g key={e.id} pointerEvents="none">
+                  <line
+                    className="patch-line"
+                    x1={e.from.x}
+                    y1={e.from.y}
+                    x2={e.to.x}
+                    y2={e.to.y}
+                    stroke="#AEBAC6"
+                    strokeWidth={1.5}
+                    strokeDasharray={MATCH_DASH[e.matchKind]}
+                    strokeLinecap="round"
+                    style={{ animationDelay: `${delay + 200}ms` }}
+                  />
+                  <line
+                    className="patch-edge"
+                    x1={e.from.x}
+                    y1={e.from.y}
+                    x2={e.to.x}
+                    y2={e.to.y}
+                    stroke={streak}
+                    strokeWidth={4}
+                    strokeLinecap="round"
+                    strokeDasharray={len}
+                    style={
+                      {
+                        "--patch-len": `${len}`,
+                        animationDelay: `${delay}ms`,
+                      } as React.CSSProperties
+                    }
+                  />
+                </g>
+              );
+            })}
+          </g>
+
+          {/* ── Patient Zero. An origin, never a target — it is never repaired. ── */}
+          <g transform={`translate(${CX},${CY})`} pointerEvents="none">
+            <circle
+              className="patch-shock"
+              r={56}
+              fill="none"
+              stroke={STATUS_COLOR.infected}
+              strokeWidth={9}
+            />
+            <circle
+              className="patch-shock"
+              r={56}
+              fill="none"
+              stroke={STATUS_COLOR.infected}
+              strokeWidth={6}
+              style={{ animationDelay: "760ms" }}
+            />
+            <circle
+              r={54}
+              fill="none"
+              stroke={STATUS_COLOR.infected}
+              strokeOpacity={0.28}
+              strokeWidth={1.5}
+              strokeDasharray="3 5"
+            />
+            <circle
+              r={42}
+              fill="#FFFFFF"
+              stroke={STATUS_COLOR.infected}
+              strokeWidth={3}
+              filter="url(#patch-lift)"
+            />
+            <text textAnchor="middle" dy={13} fontSize={32}>
+              🩹
+            </text>
+            <text
+              textAnchor="middle"
+              dy={76}
+              fontSize={14}
+              fontWeight={600}
+              fill="#16202B"
+            >
+              Where it started
+            </text>
+            <text textAnchor="middle" dy={96} fontSize={13} fill="#828E9B">
+              {report.change.patientZero?.channel ?? "Nominated in the app"}
+            </text>
+          </g>
+
+          {/* ── Artefacts. Fill = status, ring = disposition (ADR-0008). ── */}
+          {nodes.map(({ node, x, y, depth }) => {
+            const isHealed = healedSet.has(node.id);
+            const flat = isHealed ? HEALED_COLOR : STATUS_COLOR[node.status];
+            const edge = isHealed ? HEALED_COLOR : STATUS_DEEP[node.status];
+            const ring = DISPOSITION_RING[node.disposition];
+            const isSelected = selectedId === node.id;
+            const isLassoed = lassoedSet.has(node.id);
+
             return (
-              <g key={e.id}>
-                <line
-                  className="patch-line"
-                  x1={e.from.x}
-                  y1={e.from.y}
-                  x2={e.to.x}
-                  y2={e.to.y}
-                  stroke="rgba(255,255,255,0.20)"
-                  strokeWidth={1.5}
-                  strokeDasharray={MATCH_DASH[e.matchKind]}
-                  strokeLinecap="round"
-                  style={{ animationDelay: `${delay + 200}ms` }}
-                />
-                <line
-                  className="patch-edge"
-                  x1={e.from.x}
-                  y1={e.from.y}
-                  x2={e.to.x}
-                  y2={e.to.y}
-                  stroke={streak}
-                  strokeWidth={3}
-                  strokeLinecap="round"
-                  strokeDasharray={len}
-                  style={
-                    {
-                      "--patch-len": `${len}`,
-                      animationDelay: `${delay}ms`,
-                    } as React.CSSProperties
-                  }
-                />
+              <g key={node.id} transform={`translate(${x},${y})`}>
+                <g className="patch-node" style={{ animationDelay: `${depth * RING_MS}ms` }}>
+                  <g
+                    role="button"
+                    tabIndex={0}
+                    aria-label={`${node.title} — ${node.status}, ${node.disposition}`}
+                    aria-pressed={isSelected}
+                    style={{ cursor: "pointer", outline: "none" }}
+                    onPointerDown={(ev) => ev.stopPropagation()}
+                    onClick={(ev) => {
+                      ev.stopPropagation();
+                      onSelect(isSelected ? null : node.id);
+                    }}
+                    onKeyDown={(ev) => {
+                      if (ev.key === "Enter" || ev.key === " ") {
+                        ev.preventDefault();
+                        onSelect(isSelected ? null : node.id);
+                      }
+                    }}
+                  >
+                    {(isSelected || isLassoed) && (
+                      <circle
+                        r={RING_R + 11}
+                        fill="none"
+                        stroke={isSelected ? "#16202B" : HEALED_COLOR}
+                        strokeWidth={isSelected ? 2 : 3}
+                        strokeDasharray={isSelected ? undefined : "6 5"}
+                        opacity={isSelected ? 0.95 : 0.9}
+                      />
+                    )}
+
+                    {/* Disposition ring — absent for `editable`, and that absence means something */}
+                    {ring && (
+                      <circle r={RING_R} fill="none" stroke={ring} strokeWidth={3} />
+                    )}
+
+                    <circle
+                      r={NODE_R + 14}
+                      fill={flat}
+                      opacity={0.13}
+                      style={{ transition: "fill 600ms ease" }}
+                    />
+                    <circle
+                      r={NODE_R}
+                      fill={flat}
+                      stroke={edge}
+                      strokeWidth={1.5}
+                      filter="url(#patch-lift)"
+                      style={{ transition: "fill 600ms ease, stroke 600ms ease" }}
+                    />
+
+                    {node.requiresHumanReview && !isHealed && (
+                      <g transform={`translate(${RING_R * 0.72},${-RING_R * 0.72})`}>
+                        <circle r={9} fill="#FFFFFF" stroke={REVIEW_COLOR} strokeWidth={2.5} />
+                        <text
+                          textAnchor="middle"
+                          dy={4}
+                          fontSize={11}
+                          fontWeight={700}
+                          fill="#9A5B06"
+                        >
+                          !
+                        </text>
+                      </g>
+                    )}
+
+                    {/* Approved, but not yet written to the workspace (ADR-0011). */}
+                    {unconfirmedSet.has(node.id) && (
+                      <g transform={`translate(${RING_R * 0.72},${RING_R * 0.72})`}>
+                        <circle r={9} fill="#FFFFFF" stroke="#828E9B" strokeWidth={2} />
+                        <circle r={3} fill="#828E9B" />
+                      </g>
+                    )}
+
+                    {wrapLabel(node.title).map((line, i) => (
+                      <text
+                        key={i}
+                        textAnchor="middle"
+                        dy={RING_R + 26 + i * 17}
+                        fontSize={13.5}
+                        fontWeight={600}
+                        fill="#16202B"
+                      >
+                        {line}
+                      </text>
+                    ))}
+                    <text
+                      textAnchor="middle"
+                      dy={RING_R + 26 + wrapLabel(node.title).length * 17 + 2}
+                      fontSize={11.5}
+                      fill="#828E9B"
+                    >
+                      {node.kind.replace(/_/g, " ")} · {Math.round(node.confidence * 100)}%
+                    </text>
+                  </g>
+                </g>
               </g>
             );
           })}
+
+          {/* ── The lasso itself ── */}
+          {drag && movedRef.current && (
+            <rect
+              x={Math.min(drag.x0, drag.x1)}
+              y={Math.min(drag.y0, drag.y1)}
+              width={Math.abs(drag.x1 - drag.x0)}
+              height={Math.abs(drag.y1 - drag.y0)}
+              fill="rgba(14,159,110,0.10)"
+              stroke={HEALED_COLOR}
+              strokeWidth={2}
+              strokeDasharray="7 5"
+              pointerEvents="none"
+            />
+          )}
         </g>
-
-        {/* ── Patient Zero. An origin, never a target — it is never repaired. ── */}
-        <g transform={`translate(${CX},${CY})`} pointerEvents="none">
-          <circle className="patch-centre" r={52} fill={STATUS_COLOR.infected} />
-          <circle r={30} fill="#18181f" stroke="rgba(255,255,255,0.28)" strokeWidth={1.5} />
-          <text textAnchor="middle" dy={7} fontSize={22}>
-            🩹
-          </text>
-          <text
-            textAnchor="middle"
-            dy={56}
-            fontSize={13}
-            fill="rgba(255,255,255,0.75)"
-            fontWeight={600}
-          >
-            Patient Zero
-          </text>
-          <text textAnchor="middle" dy={74} fontSize={11.5} fill="rgba(255,255,255,0.42)">
-            {report.change.patientZero?.channel ?? "Nominated in the UI"}
-          </text>
-        </g>
-
-        {/* ── Artefacts. Fill = status, ring = disposition (ADR-0008). ── */}
-        {nodes.map(({ node, x, y, depth }) => {
-          const isHealed = healedSet.has(node.id);
-          const fill = isHealed ? HEALED_COLOR : STATUS_COLOR[node.status];
-          const ring = DISPOSITION_RING[node.disposition];
-          const isSelected = selectedId === node.id;
-          const isLassoed = lassoedSet.has(node.id);
-
-          return (
-            <g key={node.id} transform={`translate(${x},${y})`}>
-              <g className="patch-node" style={{ animationDelay: `${depth * RING_MS}ms` }}>
-                <g
-                  role="button"
-                  tabIndex={0}
-                  aria-label={`${node.title} — ${node.status}, ${node.disposition}`}
-                  aria-pressed={isSelected}
-                  style={{ cursor: "pointer", outline: "none" }}
-                  onPointerDown={(ev) => ev.stopPropagation()}
-                  onClick={(ev) => {
-                    ev.stopPropagation();
-                    onSelect(isSelected ? null : node.id);
-                  }}
-                  onKeyDown={(ev) => {
-                    if (ev.key === "Enter" || ev.key === " ") {
-                      ev.preventDefault();
-                      onSelect(isSelected ? null : node.id);
-                    }
-                  }}
-                >
-                  {(isSelected || isLassoed) && (
-                    <circle
-                      r={RING_R + 8}
-                      fill="none"
-                      stroke={isSelected ? "#ffffff" : HEALED_COLOR}
-                      strokeWidth={isSelected ? 2 : 2.5}
-                      strokeDasharray={isSelected ? undefined : "5 4"}
-                      opacity={isSelected ? 0.9 : 0.85}
-                    />
-                  )}
-
-                  {/* Disposition ring — absent for `editable`, and that absence means something */}
-                  {ring && <circle r={RING_R} fill="none" stroke={ring} strokeWidth={2.5} />}
-
-                  <circle
-                    r={NODE_R + 9}
-                    fill={fill}
-                    opacity={0.16}
-                    style={{ transition: "fill 600ms ease" }}
-                  />
-                  <circle
-                    r={NODE_R}
-                    fill={fill}
-                    opacity={0.92}
-                    filter="url(#patch-glow)"
-                    style={{ transition: "fill 600ms ease" }}
-                  />
-                  <circle r={NODE_R} fill="none" stroke="rgba(0,0,0,0.35)" strokeWidth={1} />
-
-                  {node.requiresHumanReview && !isHealed && (
-                    <g transform={`translate(${RING_R * 0.72},${-RING_R * 0.72})`}>
-                      <circle r={7} fill={REVIEW_COLOR} stroke="#0a0a0f" strokeWidth={2} />
-                      <text
-                        textAnchor="middle"
-                        dy={3.5}
-                        fontSize={9}
-                        fontWeight={700}
-                        fill="#0a0a0f"
-                      >
-                        !
-                      </text>
-                    </g>
-                  )}
-
-                  {/* Approved, but not yet written to the workspace (ADR-0011). */}
-                  {unconfirmedSet.has(node.id) && (
-                    <g transform={`translate(${RING_R * 0.72},${RING_R * 0.72})`}>
-                      <circle
-                        r={7}
-                        fill="#3f3f46"
-                        stroke="#0a0a0f"
-                        strokeWidth={2}
-                        opacity={0.95}
-                      />
-                      <circle r={2.5} fill="rgba(255,255,255,0.55)" />
-                    </g>
-                  )}
-
-                  <text
-                    textAnchor="middle"
-                    dy={RING_R + 22}
-                    fontSize={12.5}
-                    fontWeight={600}
-                    fill="rgba(255,255,255,0.88)"
-                  >
-                    {short(node.title)}
-                  </text>
-                  <text
-                    textAnchor="middle"
-                    dy={RING_R + 38}
-                    fontSize={11}
-                    fill="rgba(255,255,255,0.40)"
-                  >
-                    {node.kind.replace(/_/g, " ")} · {Math.round(node.confidence * 100)}%
-                  </text>
-                </g>
-              </g>
-            </g>
-          );
-        })}
-
-        {/* ── The lasso itself ── */}
-        {drag && movedRef.current && (
-          <rect
-            x={Math.min(drag.x0, drag.x1)}
-            y={Math.min(drag.y0, drag.y1)}
-            width={Math.abs(drag.x1 - drag.x0)}
-            height={Math.abs(drag.y1 - drag.y0)}
-            fill="rgba(16,185,129,0.08)"
-            stroke={HEALED_COLOR}
-            strokeWidth={1.5}
-            strokeDasharray="6 4"
-            pointerEvents="none"
-          />
-        )}
       </svg>
 
-      <MapLegend />
     </div>
   );
 }

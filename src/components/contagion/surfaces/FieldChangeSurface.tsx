@@ -33,25 +33,25 @@ export function FieldChangeSurface({
   const [decision, setDecision] = useState<string | null>(null);
 
   return (
-    <div className="p-5">
-      <p className="text-[11px] uppercase tracking-wider text-white/35">Field change</p>
-      <h2 className="mt-1 text-base font-semibold leading-snug">{node.title}</h2>
+    <div className="px-6 py-6">
+      <p className="text-[12.5px] text-ink-3">Record field</p>
+      <h2 className="mt-1 text-[17px] font-semibold leading-snug text-ink">{node.title}</h2>
 
       <table className="mt-4 w-full border-separate border-spacing-0 text-[13px]">
         <tbody>
           <tr>
-            <td className="w-[36%] rounded-l-md border border-r-0 border-white/10 bg-white/[0.03] px-3 py-2 align-middle font-mono text-[11px] text-white/50">
+            <td className="w-[36%] rounded-l-md border border-r-0 border-rule bg-sunk/50 px-3 py-2 align-middle font-mono text-[12.5px] text-ink-2">
               {node.excerpt?.field ?? "field"}
             </td>
-            <td className="border-y border-white/10 bg-white/[0.03] px-3 py-2 align-middle">
-              <span className="text-red-300/90 line-through">
+            <td className="border-y border-rule bg-sunk/50 px-3 py-2 align-middle">
+              <span className="font-mono text-ink-3 line-through decoration-infected/70">
                 {node.excerpt?.before ?? change.previousValue}
               </span>
             </td>
-            <td className="w-7 border-y border-white/10 bg-white/[0.03] text-center text-white/30">
+            <td className="w-7 border-y border-rule bg-sunk/50 text-center text-ink-3">
               →
             </td>
-            <td className="rounded-r-md border border-l-0 border-white/10 bg-white/[0.03] px-3 py-2 align-middle font-medium text-emerald-300">
+            <td className="rounded-r-md border border-l-0 border-rule bg-sunk/50 px-3 py-2 align-middle font-mono font-semibold text-immune-deep">
               {node.excerpt?.after ?? change.newValue}
             </td>
           </tr>
@@ -59,7 +59,7 @@ export function FieldChangeSurface({
       </table>
 
       <div className="mt-3 flex flex-wrap items-center gap-2">
-        <span className="text-[11px] text-white/40">Verified by</span>
+        <span className="text-[12.5px] text-ink-3">Checked against</span>
         {verifiedBy ? (
           <Chip tone={SOURCE_TONE[verifiedBy.sourceStatus]}>
             {verifiedBy.sourceStatus} · {verifiedBy.title}
@@ -70,8 +70,8 @@ export function FieldChangeSurface({
       </div>
 
       {opportunities.length > 0 && (
-        <div className="mt-4 rounded-md border border-white/10 bg-white/[0.02] p-3">
-          <p className="text-[11px] text-white/45">
+        <div className="mt-4 rounded-lg border border-rule bg-sunk/50 p-3.5">
+          <p className="text-[12.5px] text-ink-2">
             {opportunities.length} connected{" "}
             {opportunities.length === 1
               ? "opportunity references"
@@ -96,7 +96,7 @@ export function FieldChangeSurface({
               onDecide("accept", { field: node.excerpt?.field, value: change.newValue });
             }}
           >
-            Update field
+            Update the record
           </Action>
         )}
         {available.includes("except") && (
@@ -108,16 +108,16 @@ export function FieldChangeSurface({
               onDecide("except");
             }}
           >
-            Mark exception
+            Skip this one
           </Action>
         )}
       </div>
 
       {decision && (
-        <p className="mt-3 text-[11px] text-emerald-300/80">
+        <p className="mt-3 text-[12.5px] text-immune-deep">
           {decision === "accept"
-            ? "Queued in the Repair Plan."
-            : "Excluded — this record will not be updated."}
+            ? "Ready to apply."
+            : "Skipped. The record stays as it is."}
         </p>
       )}
 

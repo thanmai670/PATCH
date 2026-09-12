@@ -2,50 +2,77 @@
 @tailwind components;
 @tailwind utilities;
 
-:root { color-scheme: dark; }
-body { background: #0a0a0f; color: #e5e7eb; }
+:root {
+  color-scheme: light;
+}
 
-/* ── Contagion View: the infection spreads outward from Patient Zero (ADR-0007) ── */
+body {
+  background: #eff2f5;
+  color: #16202b;
+  /* Lining figures so measured values line up down a column. */
+  font-feature-settings: "tnum" 1, "cv05" 1;
+}
+
+/*
+ * The stage the contagion is drawn on: drafting paper under a drawing lamp.
+ * The light falls on Patient Zero, which is where the change entered the project.
+ */
+.patch-stage {
+  background:
+    radial-gradient(760px 520px at 50% 44%, #ffffff 0%, rgba(255, 255, 255, 0) 72%),
+    linear-gradient(#eff2f5, #e7ecf1);
+}
+
+/* ── The spread: one orchestrated page-load sequence, and nothing else. ────── */
 
 @keyframes patch-ignite {
-  from { opacity: 0; transform: scale(0.4); }
-  60%  { opacity: 1; transform: scale(1.14); }
+  from { opacity: 0; transform: scale(0.45); }
+  62%  { opacity: 1; transform: scale(1.1); }
   to   { opacity: 1; transform: scale(1); }
 }
 
-/* The colored streak that sweeps outward, then clears. */
 @keyframes patch-travel {
   from { stroke-dashoffset: var(--patch-len); opacity: 1; }
   70%  { stroke-dashoffset: 0; opacity: 1; }
   to   { stroke-dashoffset: 0; opacity: 0; }
 }
 
-/* The calm edge it leaves behind. */
 @keyframes patch-edge-fade {
   from { opacity: 0; }
   to   { opacity: 1; }
 }
 
-@keyframes patch-pulse {
-  0%, 100% { opacity: 0.30; transform: scale(1); }
-  50%      { opacity: 0.08; transform: scale(1.35); }
+@keyframes patch-shock {
+  from { transform: scale(0.14); opacity: 0.34; }
+  to   { transform: scale(8);    opacity: 0; }
 }
 
-/* transform-box defaults to view-box for SVG, which would scale each node about a
-   point hundreds of units away. fill-box pins the origin to the node itself. */
-.patch-node   {
-  animation: patch-ignite 520ms cubic-bezier(.2,.9,.3,1.4) both;
+@keyframes patch-reveal {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.patch-node {
+  animation: patch-ignite 500ms cubic-bezier(.2, .9, .3, 1.35) both;
   transform-box: fill-box;
   transform-origin: center;
 }
 .patch-edge   { animation: patch-travel 620ms ease-out both; }
 .patch-line   { animation: patch-edge-fade 400ms ease-out both; }
-.patch-centre { animation: patch-pulse 2.6s ease-in-out infinite; }
+.patch-reveal { animation: patch-reveal 500ms ease-out both; }
+.patch-shock  {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: patch-shock 1900ms cubic-bezier(.15, .7, .3, 1) both;
+}
 
 @media (prefers-reduced-motion: reduce) {
-  .patch-node, .patch-edge, .patch-line {
+  .patch-node,
+  .patch-edge,
+  .patch-line,
+  .patch-reveal {
     animation-duration: 1ms;
     animation-delay: 0ms !important;
   }
-  .patch-centre { animation: none; opacity: 0.22; }
+  .patch-shock { animation: none; opacity: 0; }
 }

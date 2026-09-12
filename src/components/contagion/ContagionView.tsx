@@ -12,6 +12,8 @@ import { RepairSurface } from "./RepairSurface";
 import { TracePanel } from "./TracePanel";
 import { EvidenceRail } from "./EvidenceRail";
 import { ApprovalBar } from "./ApprovalBar";
+import { MapLegend } from "./MapLegend";
+import { Header } from "./Header";
 import { actions as offeredActions } from "./surfaceProps";
 
 /** Decisions that decline to act. They are recorded, and they never heal a node. */
@@ -125,19 +127,10 @@ export function ContagionView({ report }: { report: InfectionReport }) {
   }
 
   return (
-    <main className="grid h-screen grid-cols-[1fr_420px] grid-rows-[auto_1fr]">
-      <header className="col-span-2 border-b border-white/10 px-6 py-4">
-        <h1 className="text-lg font-semibold">{report.change.subject}</h1>
-        <p className="text-sm text-white/60">
-          <span className="text-infected line-through">{report.change.previousValue}</span>
-          {" → "}
-          <span className="text-immune">{report.change.newValue}</span>
-          {" · "}
-          {report.summary.safeToUpdate} safe · {report.summary.requiresReview} need review ·{" "}
-          {report.summary.alreadyCommunicated} already sent ·{" "}
-          {report.summary.preserveAsHistorical} historical
-        </p>
-      </header>
+    <main className="grid h-screen grid-cols-[1fr_440px] grid-rows-[auto_1fr_auto] bg-paper">
+      <div className="col-span-2">
+        <Header report={report} />
+      </div>
 
       <section className="relative overflow-hidden">
         <InfectionMap
@@ -150,19 +143,9 @@ export function ContagionView({ report }: { report: InfectionReport }) {
           unconfirmed={unconfirmed}
         />
 
-        <ApprovalBar
-          lasso={lasso}
-          byId={byId}
-          approving={approving}
-          healedCount={healed.length}
-          unconfirmedCount={unconfirmed.length}
-          onApprove={approveLasso}
-          onClear={() => setLasso({ safe: [], excluded: [] })}
-          onInspect={(id) => setSelectedId(id)}
-        />
       </section>
 
-      <aside className="overflow-y-auto border-l border-white/10">
+      <aside className="row-span-2 overflow-y-auto border-l border-rule bg-surface">
         {selected ? (
           // Keyed by artefact: two nodes can share a surface kind (n_proposal and
           // n_techdoc are both document_diff) and must not share its draft state.
@@ -178,6 +161,20 @@ export function ContagionView({ report }: { report: InfectionReport }) {
         )}
         <TracePanel trace={report.trace} />
       </aside>
+
+      <footer className="flex items-center justify-between gap-8 border-t border-rule bg-surface px-6 py-3">
+        <MapLegend />
+        <ApprovalBar
+          lasso={lasso}
+          byId={byId}
+          approving={approving}
+          healedCount={healed.length}
+          unconfirmedCount={unconfirmed.length}
+          onApprove={approveLasso}
+          onClear={() => setLasso({ safe: [], excluded: [] })}
+          onInspect={(id) => setSelectedId(id)}
+        />
+      </footer>
     </main>
   );
 }

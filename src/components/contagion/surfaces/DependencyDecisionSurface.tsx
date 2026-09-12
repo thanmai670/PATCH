@@ -28,43 +28,43 @@ export function DependencyDecisionSurface({
   const [decision, setDecision] = useState<string | null>(null);
 
   return (
-    <div className="p-5">
+    <div className="px-6 py-6">
       {node.requiresHumanReview && <ReviewBanner change={change} />}
 
-      <p className="text-[11px] uppercase tracking-wider text-white/35">
-        Dependency decision
+      <p className="text-[12.5px] text-ink-3">
+        Work that depends on this
       </p>
-      <h2 className="mt-1 text-base font-semibold leading-snug">{node.title}</h2>
+      <h2 className="mt-1 text-[17px] font-semibold leading-snug text-ink">{node.title}</h2>
 
-      <div className="mt-3 rounded-md border border-amber-500/30 bg-amber-500/[0.07] p-3">
-        <p className="text-[11px] font-medium uppercase tracking-wider text-amber-300/80">
-          Exposed — no literal match
+      <div className="mt-3 rounded-lg border border-exposed/40 bg-exposed/[0.08] p-3.5">
+        <p className="text-[13px] font-semibold text-exposed-deep">
+          The old figure was never written here
         </p>
-        <p className="mt-1.5 text-[13px] leading-relaxed text-white/80">
+        <p className="mt-1.5 text-[13.5px] leading-relaxed text-ink">
           {str(p, "impactStatement", "Downstream work may depend on the previous value.")}
         </p>
       </div>
 
-      <p className="mt-4 text-[11px] leading-relaxed text-white/45">
-        This artefact never contained &ldquo;{change.previousValue}&rdquo;, so there is
-        nothing to rewrite. The decision is who checks the downstream work.
+      <p className="mt-4 text-[12.5px] leading-relaxed text-ink-2">
+        Nobody typed &ldquo;{change.previousValue}&rdquo; into this task, but the work was sized
+        around it. There is no text to fix — only a question of who checks it.
       </p>
 
       <div className="mt-4 space-y-3">
         <label className="block">
-          <span className="mb-1 block text-[11px] uppercase tracking-wider text-white/35">
-            Assign to
+          <span className="mb-1 block text-[12.5px] text-ink-3">
+            Who should check it
           </span>
           <input
             value={assignee}
             onChange={(e) => setAssignee(e.target.value)}
-            className="w-full rounded-md border border-white/15 bg-black/40 px-3 py-1.5 text-[13px] text-white/85 outline-none focus:border-white/40"
+            className="w-full rounded-md border border-rule bg-surface px-3 py-2 text-[13.5px] text-ink outline-none focus:border-ink"
           />
         </label>
 
         <div>
-          <span className="mb-1.5 block text-[11px] uppercase tracking-wider text-white/35">
-            Urgency
+          <span className="mb-1.5 block text-[12.5px] text-ink-3">
+            How soon
           </span>
           <div className="flex gap-1.5">
             {URGENCIES.map((u) => (
@@ -72,10 +72,10 @@ export function DependencyDecisionSurface({
                 key={u}
                 type="button"
                 onClick={() => setUrgency(u)}
-                className={`rounded-md border px-3 py-1 text-[11px] capitalize transition-colors ${
+                className={`rounded-md border px-3.5 py-1.5 text-[12.5px] capitalize transition-colors ${
                   urgency === u
-                    ? "border-amber-400/70 bg-amber-500/20 text-amber-200"
-                    : "border-white/15 text-white/50 hover:bg-white/5"
+                    ? "border-ink bg-ink text-white"
+                    : "border-rule bg-surface text-ink-2 hover:bg-sunk"
                 }`}
               >
                 {u}
@@ -95,7 +95,7 @@ export function DependencyDecisionSurface({
               onDecide("create_review", { assignee, urgency });
             }}
           >
-            Create review task
+            Ask them to check it
           </Action>
         )}
         {available.includes("preserve_original") && (
@@ -106,16 +106,16 @@ export function DependencyDecisionSurface({
               onDecide("preserve_original");
             }}
           >
-            Preserve original
+            Leave the task alone
           </Action>
         )}
       </div>
 
       {decision && (
-        <p className="mt-3 text-[11px] text-emerald-300/80">
+        <p className="mt-3 text-[12.5px] text-immune-deep">
           {decision === "create_review"
-            ? `Review task queued for ${assignee} · ${urgency} urgency. The original task is untouched.`
-            : "Original preserved — no downstream work is created."}
+            ? `${assignee} will be asked to check the cable sizing. The task itself is unchanged.`
+            : "Left alone. Nobody will be asked to check it."}
         </p>
       )}
 
