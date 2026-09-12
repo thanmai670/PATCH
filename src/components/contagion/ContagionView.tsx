@@ -16,9 +16,7 @@ import { MapLegend } from "./MapLegend";
 import { ArtefactList } from "./ArtefactList";
 import { Header } from "./Header";
 import { actions as offeredActions } from "./surfaceProps";
-
-/** Decisions that decline to act. They are recorded, and they never heal a node. */
-const REFUSALS = new Set(["except", "preserve_original"]);
+import { REFUSALS, REPAIR_DECISIONS } from "./plainLanguage";
 
 type Decision = { decision: string; payload: Record<string, unknown> };
 
@@ -44,6 +42,15 @@ export function ContagionView({ report }: { report: InfectionReport }) {
     [report.nodes],
   );
 
+  /** What the human decided about each artefact, for the map and the list to show. */
+  const outcomes = useMemo(
+    () =>
+      Object.fromEntries(
+        Object.entries(decisions).map(([id, d]) => [id, d.decision]),
+      ) as Record<string, string>,
+    [decisions],
+  );
+
   /**
    * Heal first, ask the network second (ADR-0011). A dead route degrades the
    * repairs to Unconfirmed; it never turns the screen into an error.
@@ -51,6 +58,11 @@ export function ContagionView({ report }: { report: InfectionReport }) {
   async function submit(actions: RepairAction[]) {
     if (actions.length === 0) return;
     const ids = actions.map((a) => a.nodeId);
+    // Only a decision that changes the artefact heals it. A queued correction or an
+    // annotation is a decision about an artefact that stays exactly as it was.
+    const repaired = actions
+      .filter((a) => REPAIR_DECISIONS.has(a.decision))
+      .map((a) => a.nodeId);
 
     const plan: RepairPlan = {
       reportId: report.reportId,
@@ -59,7 +71,7 @@ export function ContagionView({ report }: { report: InfectionReport }) {
     };
 
     setApproving(true);
-    setHealed((h) => [...new Set([...h, ...ids])]);
+    if (repaired.length > 0) setHealed((h) => [...new Set([...h, ...repaired])]);
     console.info("[PATCH] RepairPlan", plan);
 
     try {
@@ -72,10 +84,9 @@ export function ContagionView({ report }: { report: InfectionReport }) {
       setUnconfirmed((u) => u.filter((id) => !ids.includes(id)));
     } catch {
       // Approved, not applied. The distinction stays on screen.
-      setUnconfirmed((u) => [...new Set([...u, ...ids])]);
+      setUnconfirmed((u) => [...new Set([...u, ...repaired])]);
     } finally {
       setApproving(false);
-      setLasso({ safe: [], excluded: [] });
     }
   }
 
@@ -123,8 +134,12 @@ export function ContagionView({ report }: { report: InfectionReport }) {
 
   function approveLasso() {
     const actions = lasso.safe
+      // Someone who opened an artefact and declined it must not have that reversed
+      // by a later batch that happens to enclose it.
+      .filter((id) => !REFUSALS.has(decisions[id]?.decision ?? ""))
       .map(buildAction)
       .filter((a): a is RepairAction => a !== null);
+    setLasso({ safe: [], excluded: [] });
     void submit(actions);
   }
 
@@ -141,6 +156,8 @@ export function ContagionView({ report }: { report: InfectionReport }) {
           selectedId={selectedId}
           hoveredId={hoveredId}
           healed={healed}
+          unconfirmed={unconfirmed}
+          outcomes={outcomes}
           onSelect={setSelectedId}
           onHover={setHoveredId}
         />
@@ -154,9 +171,19 @@ export function ContagionView({ report }: { report: InfectionReport }) {
           lassoed={lasso.safe}
           onSelect={setSelectedId}
           onHover={setHoveredId}
-          onLasso={setLasso}
+          onLasso={(result) => {
+            // An artefact the human already declined is held back like any other,
+            // rather than silently counted into the batch that encloses it.
+            const refused = (id: string) =>
+              REFUSALS.has(decisions[id]?.decision ?? "");
+            setLasso({
+              safe: result.safe.filter((id) => !refused(id)),
+              excluded: [...result.excluded, ...result.safe.filter(refused)],
+            });
+          }}
           healed={healed}
           unconfirmed={unconfirmed}
+          outcomes={outcomes}
         />
 
       </section>
@@ -183,6 +210,7 @@ export function ContagionView({ report }: { report: InfectionReport }) {
         <ApprovalBar
           lasso={lasso}
           byId={byId}
+          outcomes={outcomes}
           approving={approving}
           healedCount={healed.length}
           unconfirmedCount={unconfirmed.length}

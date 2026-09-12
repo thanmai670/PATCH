@@ -45,7 +45,7 @@ export function PreservationNoticeSurface({
         <p className="mb-1.5 flex items-center gap-1.5 text-[12.5px] text-ink-3">
           The record, as it stands
         </p>
-        <div className="rounded-md border border-rule bg-white/[0.015] p-3">
+        <div className="rounded-md border border-rule bg-sunk/50 p-3">
           <p className="select-none text-[13.5px] leading-relaxed text-ink-3">
             {node.excerpt?.before ?? "—"}
           </p>

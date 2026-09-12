@@ -74,7 +74,7 @@ export function DependencyDecisionSurface({
                 onClick={() => setUrgency(u)}
                 className={`rounded-md border px-3.5 py-1.5 text-[12.5px] capitalize transition-colors ${
                   urgency === u
-                    ? "border-ink bg-ink text-white"
+                    ? "border-ink bg-ink text-paper"
                     : "border-rule bg-surface text-ink-2 hover:bg-sunk"
                 }`}
               >
@@ -114,7 +114,7 @@ export function DependencyDecisionSurface({
       {decision && (
         <p className="mt-3 text-[12.5px] text-immune-deep">
           {decision === "create_review"
-            ? `${assignee} will be asked to check the cable sizing. The task itself is unchanged.`
+            ? `${assignee} will be asked to check this. The task itself is unchanged.`
             : "Left alone. Nobody will be asked to check it."}
         </p>
       )}

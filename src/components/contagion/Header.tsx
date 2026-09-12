@@ -18,6 +18,18 @@ export function Header({ report }: { report: InfectionReport }) {
   const needsYou =
     summary.requiresReview + summary.alreadyCommunicated + summary.preserveAsHistorical;
 
+  // Not every affected artefact contains the old figure — an Exposed one was merely
+  // worked out from it, and saying otherwise contradicts the list and the map.
+  const carrying = nodes.filter((n) => n.status === "infected").length;
+  const derived = nodes.filter((n) => n.status === "exposed").length;
+
+  const because = [
+    summary.alreadyCommunicated > 0 &&
+      `${summary.alreadyCommunicated === 1 ? "one has" : `${word(summary.alreadyCommunicated)} have`} already gone to the customer`,
+    summary.preserveAsHistorical > 0 &&
+      `${summary.preserveAsHistorical === 1 ? "one records" : `${word(summary.preserveAsHistorical)} record`} what was actually built`,
+  ].filter(Boolean) as string[];
+
   return (
     <div className="border-b border-rule bg-surface px-8 pb-4 pt-3">
       {/* The subject is the first thing on the page; the brand sits opposite it. */}
@@ -49,7 +61,11 @@ export function Header({ report }: { report: InfectionReport }) {
 
         <div className="flex flex-wrap items-end justify-end gap-x-6 gap-y-3">
           <p className="max-w-[52ch] text-[13.5px] leading-relaxed text-ink-2">
-            {word(nodes.length)} artefacts still carry the old figure.{" "}
+            {word(carrying)} {carrying === 1 ? "artefact" : "artefacts"} still{" "}
+            {carrying === 1 ? "carries" : "carry"} the old figure
+            {derived > 0 &&
+              `, and ${derived === 1 ? "one more was" : `${word(derived).toLowerCase()} more were`} worked out from it`}
+            .{" "}
             <span className="font-medium text-immune-deep">
               {word(summary.safeToUpdate)} {summary.safeToUpdate === 1 ? "is" : "are"}{" "}
               safe to repair
@@ -57,8 +73,8 @@ export function Header({ report }: { report: InfectionReport }) {
             without asking you.{" "}
             <span className="font-medium text-ink">
               {word(needsYou)} {needsYou === 1 ? "needs" : "need"} your judgement
-            </span>{" "}
-            — one already went to the customer, one records what was actually built.
+            </span>
+            {because.length > 0 && ` — ${because.join(", ")}`}.
           </p>
 
           <div className="flex shrink-0 items-center gap-2.5">

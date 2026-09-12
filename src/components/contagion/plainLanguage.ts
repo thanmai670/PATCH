@@ -51,6 +51,37 @@ export function plainMatch(node: InfectionNode): string {
   return "Worked out by the agent, not found in the text";
 }
 
+/**
+ * Which decisions actually repair the artefact. Only these turn a node green — an
+ * annotation, a corrective message and a review task all leave the artefact exactly
+ * as it was, which is the whole point of ADR-0009's two refusing surfaces.
+ */
+export const REPAIR_DECISIONS = new Set(["accept", "rewrite"]);
+
+/** Decisions that decline to act. They are recorded and never heal anything. */
+export const REFUSALS = new Set(["except", "preserve_original"]);
+
+/** What a recorded decision means, said the way the surface said it. */
+export function plainOutcome(decision: string): string {
+  switch (decision) {
+    case "accept":
+    case "rewrite":
+      return "Repair approved";
+    case "annotate":
+      return "Note ready to attach";
+    case "draft_correction":
+      return "Correction ready to send";
+    case "create_review":
+      return "Review task queued";
+    case "preserve_original":
+      return "Left alone";
+    case "except":
+      return "Skipped";
+    default:
+      return "Decided";
+  }
+}
+
 /** The one action offered, phrased as the thing that will happen. */
 export function plainAction(node: InfectionNode): string {
   switch (node.surface) {
