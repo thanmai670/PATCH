@@ -1,7 +1,8 @@
 "use client";
 
-import type { InfectionReport } from "@/contract";
+import type { InfectionReport, TruthChange } from "@/contract";
 import { ThemeToggle } from "./ThemeToggle";
+import { Bandage } from "./Bandage";
 
 const WORDS = ["No", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight"];
 const word = (n: number) => WORDS[n] ?? String(n);
@@ -19,19 +20,19 @@ export function Header({ report }: { report: InfectionReport }) {
 
   return (
     <div className="border-b border-rule bg-surface px-8 pb-4 pt-3.5">
-      <div className="flex items-center gap-2.5">
-        <span className="text-[14px]" aria-hidden>
-          🩹
+      <div className="flex items-center gap-3">
+        <span className="flex shrink-0 items-center gap-2">
+          <span className="grid h-7 w-7 place-items-center rounded-full bg-infected/15">
+            <Bandage size={15} />
+          </span>
+          <span className="font-mono text-[12px] font-semibold tracking-[0.18em] text-ink">
+            PATCH
+          </span>
         </span>
-        <span className="font-mono text-[11.5px] font-medium tracking-[0.16em] text-ink-3">
-          PATCH
-        </span>
+
         <span className="h-px flex-1 bg-rule" />
-        <span className="text-[12px] text-ink-3">
-          {change.patientZero
-            ? `Raised by ${change.announcedBy} in ${change.patientZero.channel}`
-            : `Raised by ${change.announcedBy}`}
-        </span>
+
+        <NominationStamp change={change} />
         <ThemeToggle />
       </div>
 
@@ -64,6 +65,50 @@ export function Header({ report }: { report: InfectionReport }) {
         </p>
       </div>
     </div>
+  );
+}
+
+/**
+ * The nomination (ADR-0006). PATCH does not watch channels and it does not start on
+ * its own — a person reacted with 🩹 and that is the only reason any of this exists.
+ * It is the trust argument the whole product rests on, so it is stamped rather than
+ * mentioned, and it links back to the message it came from.
+ */
+function NominationStamp({ change }: { change: TruthChange }) {
+  const zero = change.patientZero;
+  const href = zero?.permalink ?? undefined;
+  const Tag = href ? "a" : "div";
+
+  return (
+    <Tag
+      {...(href ? { href, target: "_blank", rel: "noreferrer" } : {})}
+      title={
+        zero
+          ? `PATCH never starts on its own. ${change.announcedBy} reacted with the bandage in ${zero.channel}, and that is the only reason it ran.`
+          : "PATCH never starts on its own. A person asked it to run."
+      }
+      className={`flex shrink-0 items-center gap-2.5 rounded-lg border border-infected/30 bg-infected/[0.07] py-1.5 pl-2 pr-3 ${
+        href ? "transition-colors hover:bg-infected/[0.13]" : ""
+      }`}
+    >
+      <Bandage size={17} />
+      <span className="leading-tight">
+        <span className="block text-[12.5px] text-ink-2">
+          <span className="font-semibold text-ink">{change.announcedBy}</span> flagged
+          this
+          {zero && (
+            <>
+              {" in "}
+              <span className="font-mono text-ink">{zero.channel}</span>
+            </>
+          )}
+          {href && <span className="text-ink-3"> ↗</span>}
+        </span>
+        <span className="block text-[11.5px] text-ink-3">
+          PATCH never starts on its own
+        </span>
+      </span>
+    </Tag>
   );
 }
 

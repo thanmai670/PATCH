@@ -21,6 +21,7 @@ import {
   isSafe,
 } from "./tokens";
 import { ArtefactIcon } from "./ArtefactIcon";
+import { BandageGlyph } from "./Bandage";
 import {
   KIND_LABEL,
   TONE_COLOR,
@@ -385,9 +386,7 @@ export function InfectionMap({
               strokeWidth={3}
               filter="url(#patch-lift)"
             />
-            <text textAnchor="middle" dy={13} fontSize={32}>
-              🩹
-            </text>
+            <BandageGlyph size={40} />
             <text textAnchor="middle" dy={76} fontSize={14} fontWeight={600} fill="rgb(var(--ink))">
               Someone flagged it here
             </text>
