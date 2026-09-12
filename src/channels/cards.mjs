@@ -255,3 +255,60 @@ export function modelSetCard({ agent, model, pricing }) {
     ],
   });
 }
+
+/* ── Workspace-originated detections ───────────────────────────────────────── */
+
+/**
+ * Someone edited a document in Ambiguous and PATCH noticed. It has NOT searched
+ * or propagated anything — this card is the nomination gate (ADR-0006), the same
+ * gate a Slack mention goes through, just reached from the other direction.
+ */
+export function workspaceChangeCard({ detections, onNominate, onDismiss }) {
+  return Message({
+    accent: "#f59e0b",
+    fallbackText: `${detections.length} workspace edit(s) look like truth changes`,
+    children: [
+      Header({
+        children: detections.length === 1
+          ? "A workspace edit looks like a truth change"
+          : `${detections.length} workspace edits look like truth changes`,
+      }),
+      Section({
+        children: Markdown({
+          children: "Edited directly in Ambiguous. Nothing has been searched or propagated.",
+        }),
+      }),
+
+      Table({
+        columns: [{ header: "Document" }, { header: "Change" }, { header: "Conf." }],
+        children: detections.map((d) =>
+          Row({
+            children: [
+              Cell({ children: d.docTitle.slice(0, 34) }),
+              Cell({ children: `${d.previousValue} → ${d.newValue}` }),
+              Cell({ children: `${Math.round(d.confidence * 100)}%` }),
+            ],
+          }),
+        ),
+      }),
+
+      Divider({}),
+      Section({ children: Markdown({ children: "*Nominate one to see where the old value spread*" }) }),
+      Select({
+        name: "detection",
+        placeholder: "Choose a change…",
+        onSelect: onNominate,
+        options: detections.slice(0, 100).map((d) => ({
+          label: `${d.previousValue} → ${d.newValue}  ·  ${d.docTitle}`.slice(0, 74),
+          value: d.id,
+        })),
+      }),
+      Actions({
+        children: [Button({ value: "dismiss", onClick: onDismiss, children: "Dismiss all" })],
+      }),
+      Context({
+        children: "PATCH watches the workspace but never repairs on its own — a human nominates.",
+      }),
+    ],
+  });
+}

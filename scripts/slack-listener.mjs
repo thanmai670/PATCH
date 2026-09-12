@@ -17,6 +17,7 @@ import { readFileSync } from "node:fs";
 import { promisify } from "node:util";
 import {
   confirmationCard, summaryCard, auditCard, modelPickerCard, modelSetCard,
+  workspaceChangeCard,
 } from "../src/channels/cards.mjs";
 import { writeFileSync } from "node:fs";
 
@@ -35,6 +36,43 @@ async function interpretMessage(text, author, channel) {
     { cwd: process.cwd(), maxBuffer: 1024 * 1024 * 8 },
   );
   return JSON.parse(stdout.trim().split("\n").pop());
+}
+
+const PENDING_PATH = ".patch-pending.json";
+const WATCH_INTERVAL_MS = Number(process.env.WORKSPACE_POLL_MS ?? 30_000);
+
+const readPending = () => {
+  try { return JSON.parse(readFileSync(PENDING_PATH, "utf8")); } catch { return []; }
+};
+const writePending = (v) => writeFileSync(PENDING_PATH, JSON.stringify(v, null, 2));
+
+/**
+ * Ambiguous as a SOURCE: poll the workspace for edited documents. The detector
+ * only NOMINATES - it writes candidates and announces them in workspace chat.
+ * A human still confirms in Slack before anything is searched or written
+ * (ADR-0006), which is what keeps this from being an agent that rewrites your
+ * CRM because someone fixed a typo.
+ */
+function startWorkspaceWatch() {
+  let running = false;
+  const tick = async () => {
+    if (running) return;
+    running = true;
+    try {
+      const { stdout } = await run(
+        "npx", ["tsx", "--env-file=.env.local", "scripts/detect-edits.ts"],
+        { cwd: process.cwd(), maxBuffer: 1024 * 1024 * 8 },
+      );
+      const found = stdout.split("\n").filter((l) => l.includes("-> truth change"));
+      if (found.length) console.log(`[workspace] ${found.length} detection(s); say "@patch changes" in Slack`);
+    } catch (e) {
+      console.error("[workspace] detect failed:", String(e?.message ?? e).slice(0, 160));
+    } finally {
+      running = false;
+    }
+  };
+  setInterval(tick, WATCH_INTERVAL_MS);
+  console.log(`workspace watch: polling every ${WATCH_INTERVAL_MS / 1000}s`);
 }
 
 const OVERRIDE_PATH = ".patch-models.json";
@@ -283,6 +321,36 @@ channel.onMention(async (evt) => {
   const text = textOf(evt).replace(/<@[^>]+>/g, "").trim();
   console.log(`[mention] from=${who(evt)} text=${text.slice(0, 90)}`);
 
+  if (/^(changes?|workspace|what.?s changed|pending)/i.test(text)) {
+    const pending = readPending();
+    console.log(`   -> workspace changes (${pending.length} pending)`);
+    if (pending.length === 0) {
+      await evt.thread.post("No workspace edits are waiting. I am watching Ambiguous and will flag one when it looks like a truth change.");
+      return;
+    }
+    await evt.thread.post(
+      workspaceChangeCard({
+        detections: pending,
+        onDismiss: async (ctx) => {
+          writePending([]);
+          await ctx.thread.post("Dismissed. Nothing was searched or changed.");
+        },
+        onNominate: async (ctx) => {
+          const id = String(ctx.action.value);
+          const d = readPending().find((x) => x.id === id);
+          if (!d) { await ctx.thread.post("That detection is no longer pending."); return; }
+          writePending(readPending().filter((x) => x.id !== id));
+          await handleNomination(ctx, {
+            nominator: who(ctx),
+            text: `The document "${d.docTitle}" was edited: ${d.subject} changed from ${d.previousValue} to ${d.newValue}.`,
+            trigger: "Ambiguous workspace edit",
+          });
+        },
+      }),
+    );
+    return;
+  }
+
   if (/^(models?|model routing|which model)/i.test(text)) {
     console.log("   -> model picker");
     try {
@@ -331,6 +399,7 @@ const listener = createCopilotNodeListener({ runtime, basePath: "/api/copilotkit
 const server = createServer(listener);
 server.listen(PORT, () => console.log(`listener http on :${PORT}`));
 
+startWorkspaceWatch();
 console.log(`channel "${CHANNEL_NAME}" declared; waiting for activation…`);
 await listener.channels.ready({ timeoutMs: 30_000 });
 console.log("✓ channel ONLINE — react 🩹 on a message in #project-atlas now\n");

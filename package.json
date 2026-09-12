@@ -10,7 +10,9 @@
     "typecheck": "tsc --noEmit",
     "seed": "tsx --env-file=.env.local scripts/seed-workspace.ts",
     "seed:reset": "tsx --env-file=.env.local scripts/seed-workspace.ts --reset",
-    "fixture:check": "tsx scripts/validate-fixture.ts"
+    "fixture:check": "tsx scripts/validate-fixture.ts",
+    "watch:baseline": "tsx --env-file=.env.local scripts/detect-edits.ts --snapshot",
+    "watch:detect": "tsx --env-file=.env.local scripts/detect-edits.ts"
   },
   "dependencies": {
     "@copilotkit/channels": "0.9.2",

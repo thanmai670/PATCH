@@ -164,3 +164,11 @@ export const idOf = (r: unknown): string => {
   const o = r as Record<string, any>;
   return String(o?.id ?? o?.task?.id ?? o?.deal?.id ?? o?.contact?.id ?? o?.page?.id ?? o?.space?.id ?? o?.event?.id ?? o?.draft?.id ?? "");
 };
+
+/* ── Workspace chat, so PATCH can speak where the work happens ─────────────── */
+
+export type ChatChannel = { id: string; name: string; type: string };
+/** Verified 2026-09-12: it is /api/channels, not /api/chat/channels (404). */
+export const listChatChannels = () => get<{ data: ChatChannel[] }>("/channels");
+export const sendChatMessage = (channelId: string, content: string) =>
+  post<{ id: string }>(`/channels/${channelId}/messages`, { content });
