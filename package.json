@@ -13,7 +13,8 @@
     "fixture:check": "tsx scripts/validate-fixture.ts",
     "watch:baseline": "tsx --env-file=.env.local scripts/detect-edits.ts --snapshot",
     "watch:detect": "tsx --env-file=.env.local scripts/detect-edits.ts",
-    "test:repair": "tsx --env-file=.env.local scripts/test-all-scenarios.ts"
+    "test:repair": "tsx --env-file=.env.local scripts/test-all-scenarios.ts",
+    "listener": "node --env-file=.env --env-file=.env.local scripts/slack-listener.mjs"
   },
   "dependencies": {
     "@copilotkit/channels": "0.9.2",

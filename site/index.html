@@ -1,0 +1,470 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PATCH — when truth changes, patch everywhere it spread</title>
+<meta name="description" content="PATCH detects when a fact changes, finds everywhere the old value spread, and generates the right repair interface for every affected artefact.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🩹</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --patch-background: #F5F5F3;
+  --patch-surface: #FFFFFF;
+  --patch-text: #101114;
+  --patch-muted: #6E7075;
+  --patch-blue: #2457D6;
+  --patch-blue-hover: #1A46B8;
+  --patch-blue-soft: #D9E2FA;
+  --patch-border: #DDE2E8;
+
+  --patch-update: #2B8A62;
+  --patch-review: #B27A18;
+  --patch-correct: #BA554C;
+  --patch-preserve: #607087;
+
+  --sans: "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  --measure: 46rem;
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; scroll-padding-top: 5rem; }
+body {
+  margin: 0;
+  background: var(--patch-background);
+  color: var(--patch-text);
+  font-family: var(--sans);
+  font-size: 17px;
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+}
+
+.wrap { max-width: var(--measure); margin: 0 auto; padding: 0 1.5rem; }
+
+/* ── Header ─────────────────────────────────────────────── */
+header.site {
+  position: sticky; top: 0; z-index: 20;
+  background: color-mix(in srgb, var(--patch-background) 88%, transparent);
+  backdrop-filter: saturate(180%) blur(12px);
+  border-bottom: 1px solid var(--patch-border);
+}
+header.site .wrap {
+  display: flex; align-items: center; justify-content: space-between;
+  height: 3.75rem; gap: 1rem;
+}
+.brand { display: flex; align-items: center; gap: .55rem; font-weight: 700; letter-spacing: -.02em; text-decoration: none; color: inherit; }
+.brand .mark { font-size: 1.15rem; line-height: 1; }
+nav.top { display: flex; gap: 1.25rem; font-size: .9rem; }
+nav.top a { color: var(--patch-muted); text-decoration: none; }
+nav.top a:hover { color: var(--patch-text); }
+@media (max-width: 640px) { nav.top a.hide-sm { display: none; } }
+
+/* ── Hero ───────────────────────────────────────────────── */
+.hero { padding: 5rem 0 3.5rem; }
+.hero h1 {
+  font-size: clamp(2.4rem, 6vw, 3.6rem);
+  line-height: 1.08; letter-spacing: -.035em; margin: 0 0 1.1rem; font-weight: 700;
+}
+.hero .lede { font-size: 1.2rem; color: var(--patch-muted); margin: 0 0 2rem; max-width: 38rem; }
+.hero .lede strong { color: var(--patch-text); font-weight: 600; }
+.cta { display: flex; flex-wrap: wrap; gap: .7rem; }
+.btn {
+  display: inline-flex; align-items: center; gap: .45rem;
+  padding: .6rem 1.05rem; border-radius: .5rem; font-size: .93rem; font-weight: 500;
+  text-decoration: none; border: 1px solid transparent; transition: background .15s, border-color .15s;
+}
+.btn-primary { background: var(--patch-blue); color: #fff; }
+.btn-primary:hover { background: var(--patch-blue-hover); }
+.btn-ghost { border-color: var(--patch-border); color: var(--patch-text); background: var(--patch-surface); }
+.btn-ghost:hover { border-color: var(--patch-muted); }
+
+/* ── Sections ───────────────────────────────────────────── */
+section { padding: 3rem 0; border-top: 1px solid var(--patch-border); }
+section:first-of-type { border-top: none; }
+h2 { font-size: 1.6rem; letter-spacing: -.022em; margin: 0 0 .35rem; font-weight: 650; }
+h2 + .sub { color: var(--patch-muted); margin: 0 0 1.8rem; }
+h3 { font-size: 1.06rem; margin: 2rem 0 .5rem; font-weight: 600; letter-spacing: -.01em; }
+p { margin: 0 0 1rem; }
+a { color: var(--patch-blue); text-decoration-color: color-mix(in srgb, var(--patch-blue) 35%, transparent); text-underline-offset: 2px; }
+
+/* ── Code ───────────────────────────────────────────────── */
+code {
+  font-family: var(--mono); font-size: .87em;
+  background: var(--patch-surface); border: 1px solid var(--patch-border);
+  padding: .1em .38em; border-radius: .3rem;
+}
+pre {
+  background: var(--patch-surface); border: 1px solid var(--patch-border);
+  border-radius: .6rem; padding: 1rem 1.1rem; overflow-x: auto; margin: 0 0 1.25rem;
+}
+pre code { background: none; border: none; padding: 0; font-size: .86rem; line-height: 1.6; }
+.tok-c { color: var(--patch-muted); }
+.tok-k { color: var(--patch-blue); }
+
+/* ── Tables ─────────────────────────────────────────────── */
+.table-scroll { overflow-x: auto; margin: 0 0 1.25rem; }
+table { width: 100%; border-collapse: collapse; font-size: .92rem; min-width: 30rem; }
+th, td { text-align: left; padding: .6rem .75rem; border-bottom: 1px solid var(--patch-border); vertical-align: top; }
+th { font-weight: 600; color: var(--patch-muted); font-size: .8rem; text-transform: uppercase; letter-spacing: .04em; }
+tbody tr:last-child td { border-bottom: none; }
+
+/* ── Cards / callouts ───────────────────────────────────── */
+.card {
+  background: var(--patch-surface); border: 1px solid var(--patch-border);
+  border-radius: .7rem; padding: 1.1rem 1.25rem; margin: 0 0 1rem;
+}
+.card h4 { margin: 0 0 .3rem; font-size: .98rem; font-weight: 600; }
+.card p { margin: 0; color: var(--patch-muted); font-size: .93rem; }
+.grid-2 { display: grid; gap: .85rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr)); }
+
+.note {
+  border-left: 3px solid var(--patch-blue); background: var(--patch-blue-soft);
+  border-radius: .3rem; padding: .85rem 1.1rem; margin: 0 0 1.25rem; font-size: .94rem;
+}
+.note strong { font-weight: 600; }
+
+/* ── Disposition pills ──────────────────────────────────── */
+.pill {
+  display: inline-flex; align-items: center; gap: .35rem;
+  font-size: .78rem; font-weight: 500; padding: .12rem .5rem;
+  border-radius: 1rem; white-space: nowrap;
+}
+.dot { width: .5rem; height: .5rem; border-radius: 50%; flex: none; }
+.p-update  { color: var(--patch-update);   background: color-mix(in srgb, var(--patch-update) 12%, transparent); }
+.p-review  { color: var(--patch-review);   background: color-mix(in srgb, var(--patch-review) 14%, transparent); }
+.p-correct { color: var(--patch-correct);  background: color-mix(in srgb, var(--patch-correct) 12%, transparent); }
+.p-preserve{ color: var(--patch-preserve); background: color-mix(in srgb, var(--patch-preserve) 14%, transparent); }
+.p-update .dot  { background: var(--patch-update); }
+.p-review .dot  { background: var(--patch-review); }
+.p-correct .dot { background: var(--patch-correct); }
+.p-preserve .dot{ background: var(--patch-preserve); }
+
+/* ── Flow diagram ───────────────────────────────────────── */
+.flow { display: grid; gap: .5rem; margin: 0 0 1.25rem; }
+.step {
+  display: grid; grid-template-columns: 1.9rem 1fr; gap: .8rem; align-items: start;
+  background: var(--patch-surface); border: 1px solid var(--patch-border);
+  border-radius: .6rem; padding: .8rem 1rem;
+}
+.step .n {
+  width: 1.9rem; height: 1.9rem; border-radius: 50%;
+  background: var(--patch-blue-soft); color: var(--patch-blue);
+  display: grid; place-items: center; font-size: .82rem; font-weight: 600;
+}
+.step .t { font-weight: 600; font-size: .96rem; }
+.step .d { color: var(--patch-muted); font-size: .9rem; }
+
+/* ── Agent list ─────────────────────────────────────────── */
+.agents { display: grid; gap: .5rem; }
+.agent {
+  display: grid; grid-template-columns: minmax(0,8rem) 1fr; gap: 1rem;
+  padding: .7rem .9rem; background: var(--patch-surface);
+  border: 1px solid var(--patch-border); border-radius: .55rem; align-items: baseline;
+}
+.agent .name { font-family: var(--mono); font-size: .88rem; color: var(--patch-blue); font-weight: 500; }
+.agent .what { color: var(--patch-muted); font-size: .92rem; }
+@media (max-width: 560px) { .agent { grid-template-columns: 1fr; gap: .15rem; } }
+
+footer.site {
+  border-top: 1px solid var(--patch-border); padding: 2.5rem 0 3.5rem;
+  color: var(--patch-muted); font-size: .9rem;
+}
+footer.site a { color: var(--patch-muted); }
+</style>
+</head>
+<body>
+
+<header class="site">
+  <div class="wrap">
+    <a class="brand" href="#top"><span class="mark">🩹</span> PATCH</a>
+    <nav class="top">
+      <a href="#how">How it works</a>
+      <a href="#surfaces" class="hide-sm">Repair surfaces</a>
+      <a href="#agents" class="hide-sm">Agents</a>
+      <a href="#start">Get started</a>
+    </nav>
+  </div>
+</header>
+
+<main id="top">
+
+<div class="wrap hero">
+  <h1>When truth changes,<br>patch everywhere it spread.</h1>
+  <p class="lede">
+    Every organisation has one source of truth and hundreds of copies of yesterday's truth.
+    The dangerous part isn't that a fact changed — it's that <strong>the old fact is still alive</strong>
+    in a draft proposal, a CRM record, an open task, and an email you already sent.
+  </p>
+  <div class="cta">
+    <a class="btn btn-primary" href="#start">Get started</a>
+    <a class="btn btn-ghost" href="https://github.com/thanmai670/PATCH">View on GitHub</a>
+  </div>
+</div>
+
+<section class="wrap" id="what">
+  <h2>What PATCH does</h2>
+  <p class="sub">Detect the change, find the spread, generate the right repair for each artefact.</p>
+
+  <p>
+    A supplier revises a motor specification from <code>22 kW</code> to <code>18.5 kW</code>.
+    Someone announces it in Slack. That fact already exists in nine other places, and nothing
+    systematically finds and repairs them.
+  </p>
+  <p>
+    PATCH takes the announcement, verifies it against external evidence, searches the workspace,
+    and classifies every affected artefact. Then it generates <strong>a different repair interface
+    for each one</strong> — because repairing a draft and repairing a sent email are not the same problem.
+  </p>
+
+  <div class="note">
+    <strong>PATCH never starts on its own, and never writes without approval.</strong>
+    A human nominates a change, and a human approves every repair. Without those two gates this
+    is an agent that rewrites your CRM because someone fixed a typo.
+  </div>
+</section>
+
+<section class="wrap" id="axes">
+  <h2>The two axes</h2>
+  <p class="sub">The idea the whole product rests on.</p>
+
+  <p>
+    It is tempting to classify an artefact once: infected, exposed, historical, irreversible.
+    That is wrong. A sent customer email is <em>infected</em> <strong>and</strong> <em>irreversible</em>.
+    A 2024 as-built document is <em>infected</em> <strong>and</strong> <em>historical</em>.
+    They are two independent questions.
+  </p>
+
+  <div class="grid-2">
+    <div class="card">
+      <h4>Infection status</h4>
+      <p>Does this artefact carry the stale fact?
+      <br><code>infected</code> — contains the stale value literally
+      <br><code>exposed</code> — depends on it without naming it
+      <br><code>immune</code> — checked, clean</p>
+    </div>
+    <div class="card">
+      <h4>Repair disposition</h4>
+      <p>What are we permitted to do about it?
+      <br><code>editable</code> — safe to modify in place
+      <br><code>historical</code> — preserve, annotate only
+      <br><code>irreversible</code> — already delivered</p>
+    </div>
+  </div>
+
+  <p style="margin-top:1.25rem">
+    Status decides whether a node lights up on the map. Disposition decides which repair interface
+    is generated. That is what makes “the interface is generated around the remediation” mechanical
+    rather than hand-waved.
+  </p>
+</section>
+
+<section class="wrap" id="surfaces">
+  <h2>Five repair surfaces</h2>
+  <p class="sub">Generated from artefact kind × disposition. Not one modal with different text.</p>
+
+  <div class="table-scroll">
+  <table>
+    <thead><tr><th>Surface</th><th>Generated when</th><th>What it offers</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><span class="pill p-update"><span class="dot"></span>Document diff</span></td>
+        <td>Editable prose containing the stale value</td>
+        <td>Before/after diff · accept · rewrite · mark exception</td>
+      </tr>
+      <tr>
+        <td><span class="pill p-update"><span class="dot"></span>Field change</span></td>
+        <td>A structured record field (CRM)</td>
+        <td>Current → verified value · source · connected deals</td>
+      </tr>
+      <tr>
+        <td><span class="pill p-review"><span class="dot"></span>Dependency decision</span></td>
+        <td>Exposed artefact whose downstream work may break</td>
+        <td>Impact statement · create review · assign · set urgency</td>
+      </tr>
+      <tr>
+        <td><span class="pill p-correct"><span class="dot"></span>Corrective message</span></td>
+        <td>Already delivered to someone outside the edit boundary</td>
+        <td><strong>Refuses to edit.</strong> Drafts a correction instead</td>
+      </tr>
+      <tr>
+        <td><span class="pill p-preserve"><span class="dot"></span>Preservation notice</span></td>
+        <td>Accurate when written; a record of what happened</td>
+        <td><strong>Refuses to edit.</strong> Appends an annotation</td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="note">
+    Two of the five <strong>refuse to apply the change</strong>. That refusal is the product, not a
+    limitation — blindly replacing every occurrence would falsify an installation record and
+    silently rewrite history.
+  </div>
+</section>
+
+<section class="wrap" id="how">
+  <h2>How it works</h2>
+  <p class="sub">Announcement → verification → impact → decision → action → audit.</p>
+
+  <div class="flow">
+    <div class="step"><div class="n">1</div><div>
+      <div class="t">A truth change is nominated</div>
+      <div class="d">Someone mentions <code>@patch</code> with the correction in Slack, or edits a document directly in the workspace and PATCH notices.</div>
+    </div></div>
+    <div class="step"><div class="n">2</div><div>
+      <div class="t">PATCH asks before it acts</div>
+      <div class="d">A card shows the subject, previous value, new value and confidence, with <em>Confirm</em>, <em>Edit interpretation</em> and <em>Not a factual change</em>. Nothing has been searched yet.</div>
+    </div></div>
+    <div class="step"><div class="n">3</div><div>
+      <div class="t">Evidence is retrieved, not assumed</div>
+      <div class="d">External sources are checked and labelled <code>live</code>, <code>cached</code> or <code>unverified</code>. A contradicting source is shown, never hidden. No relevant source means “internally confirmed only”.</div>
+    </div></div>
+    <div class="step"><div class="n">4</div><div>
+      <div class="t">The spread is traced</div>
+      <div class="d">Documents, sheets, wiki pages, tasks, CRM records and mail are searched — including a direct scan of CRM custom fields, which full-text search does not index.</div>
+    </div></div>
+    <div class="step"><div class="n">5</div><div>
+      <div class="t">Each artefact is classified and given an interface</div>
+      <div class="d">Both axes, independently. Then a repair surface is generated per artefact, with the mapping from disposition enforced rather than suggested.</div>
+    </div></div>
+    <div class="step"><div class="n">6</div><div>
+      <div class="t">A human approves; PATCH executes</div>
+      <div class="d">Safe repairs can be approved as a batch; risky ones are handled one at a time. Writes land in the real workspace and an audit record returns to the thread where it started.</div>
+    </div></div>
+  </div>
+</section>
+
+<section class="wrap" id="agents">
+  <h2>Six agents</h2>
+  <p class="sub">Each one a typed function with its own prompt, model and output schema.</p>
+
+  <div class="agents">
+    <div class="agent"><div class="name">interpreter</div><div class="what">Reads the nominated message and extracts a truth change, or declines when it is not a durable fact change.</div></div>
+    <div class="agent"><div class="name">evidence</div><div class="what">Retrieves external sources and judges each as supporting or contradicting. Strict about relevance — an unrelated source with the same number is worse than none.</div></div>
+    <div class="agent"><div class="name">tracer</div><div class="what">Mechanical retrieval, no model. Literal search, a subject pass for dependencies, and a direct CRM field scan.</div></div>
+    <div class="agent"><div class="name">classifier</div><div class="what">The agent that carries the product. Emits both axes per artefact, and decides what must not be edited.</div></div>
+    <div class="agent"><div class="name">planner</div><div class="what">Chooses the repair surface and its props. The disposition mapping is enforced in code, not left to the model.</div></div>
+    <div class="agent"><div class="name">executor</div><div class="what">Applies the approved plan. Refuses in-place edits to historical and irreversible artefacts even if asked.</div></div>
+  </div>
+
+  <p style="margin-top:1.25rem">
+    Every model call is routed through a single gateway with per-agent model selection, so cheap fast
+    models handle extraction and stronger models handle judgement. The model that actually ran is
+    recorded in the trace and shown in the interface.
+  </p>
+</section>
+
+<section class="wrap" id="triggers">
+  <h2>Two ways a change arrives</h2>
+  <p class="sub">Truth changes where work happens, so PATCH listens in both places.</p>
+
+  <h3>From chat</h3>
+  <pre><code><span class="tok-c">// in your project channel</span>
+@patch Supplier update: lead time is now <span class="tok-k">22 weeks</span>, not <span class="tok-k">14 weeks</span></code></pre>
+  <p>Naming both values matters — the previous one is what the search looks for.</p>
+
+  <h3>From the workspace</h3>
+  <p>
+    Edit a document, sheet or wiki page directly and PATCH notices the change, interprets it, and
+    announces it where the work happened. It offers the change for nomination; it does not act on it.
+  </p>
+  <pre><code>@patch changes   <span class="tok-c">// pending workspace detections</span></code></pre>
+
+  <div class="note">
+    An edit with no number, unit, standard or reference is prose, not a fact change, and never
+    reaches the interpreter. The watcher stays quiet rather than chatty.
+  </div>
+</section>
+
+<section class="wrap" id="permissions">
+  <h2>Roles and permissions</h2>
+  <p class="sub">Everyone sees. Only the people you name act.</p>
+
+  <p>
+    Being in a channel should not be enough to start a workspace-wide search or cause a write.
+    Viewing is deliberately open — the audit trail is only useful if the team can read it.
+  </p>
+
+  <div class="table-scroll">
+  <table>
+    <thead><tr><th>Action</th><th>viewer</th><th>operator</th><th>admin</th></tr></thead>
+    <tbody>
+      <tr><td>See every card and result</td><td>✓</td><td>✓</td><td>✓</td></tr>
+      <tr><td>Nominate a truth change</td><td>—</td><td>✓</td><td>✓</td></tr>
+      <tr><td>Confirm and run the pipeline</td><td>—</td><td>✓</td><td>✓</td></tr>
+      <tr><td>Approve repairs</td><td>—</td><td>—</td><td>✓</td></tr>
+      <tr><td>Change model routing</td><td>—</td><td>—</td><td>✓</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <pre><code><span class="tok-c">// patch.config.json</span>
+{
+  <span class="tok-k">"roles"</span>: {
+    <span class="tok-k">"admin"</span>:    { <span class="tok-k">"members"</span>: [<span class="tok-k">"U0123ABCD"</span>, <span class="tok-k">"lead@company.com"</span>] },
+    <span class="tok-k">"operator"</span>: { <span class="tok-k">"members"</span>: [<span class="tok-k">"U0456EFGH"</span>] }
+  }
+}</code></pre>
+  <p>
+    Members match on user id, email or display name. A missing or unreadable config
+    <strong>fails closed</strong> — nobody can act. Run <code>@patch whoami</code> to see your role
+    and the id to add.
+  </p>
+</section>
+
+<section class="wrap" id="start">
+  <h2>Get started</h2>
+  <p class="sub">Clone, install, seed, run.</p>
+
+  <pre><code>git clone https://github.com/thanmai670/PATCH.git
+cd PATCH
+npm install
+cp .env.example .env.local   <span class="tok-c"># fill in your keys</span></code></pre>
+
+  <h3>Run it</h3>
+  <pre><code>npm run seed        <span class="tok-c"># populate the workspace</span>
+npm run dev         <span class="tok-c"># the repair interface, on :3000</span>
+npm run listener    <span class="tok-c"># the chat agent</span></code></pre>
+
+  <h3>Verify it</h3>
+  <pre><code>npm run typecheck    <span class="tok-c"># types</span>
+npm run test:repair  <span class="tok-c"># every scenario repairs without damaging a document</span>
+npm run seed:reset   <span class="tok-c"># restore a clean workspace</span></code></pre>
+
+  <div class="note">
+    The repair interface renders from a committed fixture by default, so it works with
+    <strong>no API keys and no network</strong>. That is deliberate: it is also the fallback if the
+    live pipeline is unavailable.
+  </div>
+
+  <h3>Configuration</h3>
+  <div class="table-scroll">
+  <table>
+    <thead><tr><th>File</th><th>Controls</th></tr></thead>
+    <tbody>
+      <tr><td><code>patch.config.json</code></td><td>Roles and per-action permissions</td></tr>
+      <tr><td><code>src/lib/models.ts</code></td><td>Default model per agent</td></tr>
+      <tr><td><code>.patch-models.json</code></td><td>Runtime model overrides, written from chat</td></tr>
+      <tr><td><code>scripts/seed/company.ts</code></td><td>Workspace content and scenarios</td></tr>
+      <tr><td><code>src/contract/schema.ts</code></td><td>The shapes agents emit and the interface renders</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+</main>
+
+<footer class="site">
+  <div class="wrap">
+    <p style="margin:0 0 .35rem"><strong style="color:var(--patch-text)">PATCH</strong> — React 🩹 when reality changes.</p>
+    <p style="margin:0">
+      <a href="https://github.com/thanmai670/PATCH">Source on GitHub</a>
+    </p>
+  </div>
+</footer>
+
+</body>
+</html>

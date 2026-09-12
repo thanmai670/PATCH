@@ -17,3 +17,4 @@ next-env.d.ts
 .patch-models.json
 .patch-snapshots.json
 .patch-pending.json
+site/.vercel/
