@@ -11,7 +11,7 @@
  */
 import { createServer } from "node:http";
 import { createChannel } from "@copilotkit/channels";
-import { CopilotKitIntelligence, CopilotRuntime } from "@copilotkit/runtime/v2";
+import { CopilotKitIntelligence, CopilotRuntime, BuiltInAgent } from "@copilotkit/runtime/v2";
 import { createCopilotNodeListener } from "@copilotkit/runtime/v2/node";
 
 const BANDAGE = new Set(["adhesive_bandage", "bandage", "🩹"]);
@@ -77,7 +77,9 @@ const intelligence = new CopilotKitIntelligence({ apiKey: API_KEY });
 // events never arrive and nothing errors. `copilotkit verify` names this exact
 // signature: "no agents and no gateway URL while still reporting a license".
 const runtime = new CopilotRuntime({
-  agents: {},
+  // `copilotkit verify` fails on an empty agents map. The Channel needs an agent to
+  // hand a turn to even when our own handlers do the real work.
+  agents: { default: new BuiltInAgent({ model: "openai/gpt-4o-mini" }) },
   intelligence,
   channels: [channel],
   identifyUser: (request) => {
