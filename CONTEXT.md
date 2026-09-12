@@ -85,6 +85,19 @@ is chosen from the artefact's kind and disposition. Five exist:
 The set of repairs a human has approved, awaiting execution. Nothing is written to the
 workspace without an approved Repair Plan.
 
+## Safe Set
+
+The subset of a report's artefacts that may be repaired as one batch without individual
+human judgement: **Editable** and not flagged for human review. The Safe Set is what a
+lasso selection resolves to; everything outside it is repaired one artefact at a time.
+
+## Unconfirmed Repair
+
+A repair the human has approved but which has not yet been written to the workspace —
+because the executor has not run, or could not be reached. It is approved, not applied.
+The distinction is permanent vocabulary, not a loading state: an approved Repair Plan and
+a completed one are different claims and the interface must never blur them.
+
 ## Evidence
 
 External or internal support for a Truth Change, carrying a **source status** of
