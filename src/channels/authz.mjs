@@ -48,9 +48,21 @@ export function adminsFor(perm, cfg = loadConfig()) {
 export const describeRole = (who, cfg = loadConfig()) =>
   rolesOf(who, cfg).join(", ") || "viewer";
 
-/** Identity as the channel reports it. */
-export const identityOf = (evt) => ({
-  id: evt?.actor?.id ?? evt?.user?.id ?? null,
-  name: evt?.user?.name ?? evt?.actor?.name ?? null,
-  email: evt?.actor?.email ?? null,
-});
+/**
+ * Identity as the channel reports it.
+ *
+ * Message-shaped events carry it at evt.message.user / evt.message.actor;
+ * interaction and reaction events carry it at the top level. Reading only the
+ * top level made every mention look anonymous, which denied the workspace owner
+ * their own admin rights.
+ */
+export const identityOf = (evt) => {
+  const m = evt?.message ?? {};
+  const user = evt?.user ?? m.user ?? null;
+  const actor = evt?.actor ?? m.actor ?? null;
+  return {
+    id: actor?.id ?? user?.id ?? null,
+    name: user?.name ?? actor?.name ?? actor?.handle ?? null,
+    email: actor?.email ?? user?.email ?? null,
+  };
+};

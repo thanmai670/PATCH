@@ -314,7 +314,10 @@ async function handleNomination(evt, { nominator, text, trigger }) {
   }
 }
 
-const who = (evt) => evt.user?.name ?? evt.actor?.id ?? "someone";
+const who = (evt) => {
+  const i = identityOf(evt);
+  return i.name ?? i.id ?? "someone";
+};
 
 /**
  * Gate one action. Viewing is never gated - the whole point is that the team can
