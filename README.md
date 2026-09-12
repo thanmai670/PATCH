@@ -14,6 +14,8 @@ record are five different problems.
 
 *Codependents presents PATCH. React 🩹 when reality changes.*
 
+**Docs and overview: [patch-agent-zeta.vercel.app](https://patch-agent-zeta.vercel.app)** — source in [`site/`](site/).
+
 ---
 
 ## Quickstart
