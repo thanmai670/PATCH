@@ -3,7 +3,14 @@
 import type { InfectionNode, TruthChange } from "@/contract";
 import { ArtefactIcon } from "./ArtefactIcon";
 import { STATUS_COLOR, STATUS_DEEP, HEALED_COLOR, isSafe } from "./tokens";
-import { KIND_LABEL, TONE_COLOR, plainAction, plainStatus, plainWhy } from "./plainLanguage";
+import {
+  KIND_LABEL,
+  TONE_COLOR,
+  plainAction,
+  plainOutcome,
+  plainStatus,
+  plainWhy,
+} from "./plainLanguage";
 
 /**
  * The list is the readable view; the map is the one that shows how far it travelled.
@@ -16,6 +23,8 @@ export function ArtefactList({
   selectedId,
   hoveredId,
   healed,
+  unconfirmed,
+  outcomes,
   onSelect,
   onHover,
 }: {
@@ -24,6 +33,8 @@ export function ArtefactList({
   selectedId: string | null;
   hoveredId: string | null;
   healed: string[];
+  unconfirmed: string[];
+  outcomes: Record<string, string>;
   onSelect: (id: string | null) => void;
   onHover: (id: string | null) => void;
 }) {
@@ -43,6 +54,7 @@ export function ArtefactList({
         {order.map((node) => {
           const status = plainStatus(node);
           const isHealed = healed.includes(node.id);
+          const decided = outcomes[node.id];
           const tone = isHealed ? TONE_COLOR.done : TONE_COLOR[status.tone];
           const selected = selectedId === node.id;
           const hovered = hoveredId === node.id;
@@ -84,7 +96,7 @@ export function ArtefactList({
                     {node.title}
                   </span>
                   <span className="mt-1 block text-[12.5px] leading-snug text-ink-2">
-                    {isHealed ? "You approved this repair" : plainWhy(node, change)}
+                    {decided ? plainOutcome(decided) : plainWhy(node, change)}
                   </span>
                   <span className="mt-1 block text-[12.5px] leading-snug text-ink-3">
                     PATCH suggests: {plainAction(node).toLowerCase()}
@@ -96,7 +108,11 @@ export function ArtefactList({
                       className="h-2 w-2 shrink-0 rounded-full"
                       style={{ background: tone.dot }}
                     />
-                    {isHealed ? "Waiting to be written" : status.label}
+                    {isHealed
+                      ? unconfirmed.includes(node.id)
+                        ? "Waiting to be written"
+                        : "Written to the workspace"
+                      : status.label}
                   </span>
                 </span>
               </button>

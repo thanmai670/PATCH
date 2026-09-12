@@ -18,53 +18,64 @@ export function Header({ report }: { report: InfectionReport }) {
   const needsYou =
     summary.requiresReview + summary.alreadyCommunicated + summary.preserveAsHistorical;
 
+  // Not every affected artefact contains the old figure — an Exposed one was merely
+  // worked out from it, and saying otherwise contradicts the list and the map.
+  const carrying = nodes.filter((n) => n.status === "infected").length;
+  const derived = nodes.filter((n) => n.status === "exposed").length;
+
+  const because = [
+    summary.alreadyCommunicated > 0 &&
+      `${summary.alreadyCommunicated === 1 ? "one has" : `${word(summary.alreadyCommunicated)} have`} already gone to the customer`,
+    summary.preserveAsHistorical > 0 &&
+      `${summary.preserveAsHistorical === 1 ? "one records" : `${word(summary.preserveAsHistorical)} record`} what was actually built`,
+  ].filter(Boolean) as string[];
+
   return (
-    <div className="border-b border-rule bg-surface px-8 pb-4 pt-3">
-      {/* The subject is the first thing on the page; the brand sits opposite it. */}
-      <div className="flex items-center gap-6">
-        <h1 className="min-w-0 flex-1 truncate text-[23px] font-semibold leading-tight tracking-tight text-ink">
+    <div className="flex items-start gap-8 border-b border-rule bg-surface px-8 py-3.5">
+      {/* The subject and its figures are one statement, so they sit as one block. */}
+      <div className="min-w-0 flex-1">
+        <h1 className="truncate text-[24px] font-semibold leading-tight tracking-tight text-ink">
           {change.subject}
         </h1>
-
-        <span className="flex shrink-0 items-center gap-2.5">
-          <span className="grid h-9 w-9 place-items-center rounded-full bg-infected/15">
-            <Bandage size={20} />
+        <div className="mt-1.5 flex flex-wrap items-baseline gap-x-6 gap-y-1">
+          <Revision label="was" value={change.previousValue} struck />
+          <Revision label="now" value={change.newValue} />
+          <span className="text-[12.5px] text-ink-3">
+            {Math.round(change.confidence * 100)}% confidence
           </span>
-          <span className="font-mono text-[17px] font-semibold tracking-[0.2em] text-ink">
+        </div>
+      </div>
+
+      <p className="max-w-[46ch] shrink-0 text-[13.5px] leading-relaxed text-ink-2">
+        {word(carrying)} {carrying === 1 ? "artefact" : "artefacts"} still{" "}
+        {carrying === 1 ? "carries" : "carry"} the old figure
+        {derived > 0 &&
+          `, and ${derived === 1 ? "one more was" : `${word(derived).toLowerCase()} more were`} worked out from it`}
+        .{" "}
+        <span className="font-medium text-immune-deep">
+          {word(summary.safeToUpdate)} {summary.safeToUpdate === 1 ? "is" : "are"} safe to
+          repair
+        </span>{" "}
+        without asking you.{" "}
+        <span className="font-medium text-ink">
+          {word(needsYou)} {needsYou === 1 ? "needs" : "need"} your judgement
+        </span>
+        {because.length > 0 && ` — ${because.join(", ")}`}.
+      </p>
+
+      <div className="flex shrink-0 flex-col items-end gap-2.5">
+        <span className="flex items-center gap-2.5">
+          <span className="grid h-8 w-8 place-items-center rounded-full bg-infected/15">
+            <Bandage size={18} />
+          </span>
+          <span className="font-mono text-[16px] font-semibold tracking-[0.2em] text-ink">
             PATCH
           </span>
         </span>
-      </div>
 
-      <div className="mt-3 flex flex-wrap items-end justify-between gap-x-10 gap-y-3">
-        <div>
-          <div className="flex items-baseline gap-7">
-            <Revision label="was" value={change.previousValue} struck />
-            <Revision label="now" value={change.newValue} />
-            <span className="text-[12.5px] text-ink-3">
-              {Math.round(change.confidence * 100)}% confidence
-            </span>
-          </div>
-        </div>
-
-        <div className="flex flex-wrap items-end justify-end gap-x-6 gap-y-3">
-          <p className="max-w-[52ch] text-[13.5px] leading-relaxed text-ink-2">
-            {word(nodes.length)} artefacts still carry the old figure.{" "}
-            <span className="font-medium text-immune-deep">
-              {word(summary.safeToUpdate)} {summary.safeToUpdate === 1 ? "is" : "are"}{" "}
-              safe to repair
-            </span>{" "}
-            without asking you.{" "}
-            <span className="font-medium text-ink">
-              {word(needsYou)} {needsYou === 1 ? "needs" : "need"} your judgement
-            </span>{" "}
-            — one already went to the customer, one records what was actually built.
-          </p>
-
-          <div className="flex shrink-0 items-center gap-2.5">
-            <NominationStamp change={change} />
-            <ThemeToggle />
-          </div>
+        <div className="flex items-center gap-2.5">
+          <NominationStamp change={change} />
+          <ThemeToggle />
         </div>
       </div>
     </div>
@@ -130,8 +141,8 @@ function Revision({
       <span
         className={
           struck
-            ? "font-mono text-[26px] font-medium leading-none tracking-[-0.03em] text-ink-3 line-through decoration-infected/70 decoration-[2px]"
-            : "font-mono text-[26px] font-semibold leading-none tracking-[-0.03em] text-immune-deep"
+            ? "font-mono text-[23px] font-medium leading-none tracking-[-0.03em] text-ink-3 line-through decoration-infected/70 decoration-[2px]"
+            : "font-mono text-[23px] font-semibold leading-none tracking-[-0.03em] text-immune-deep"
         }
       >
         {value}

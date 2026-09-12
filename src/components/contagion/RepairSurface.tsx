@@ -53,9 +53,11 @@ export function RepairSurface({
     default:
       // The planner produces these live; an unknown kind degrades, it never crashes.
       return (
-        <div className="p-5">
-          <h2 className="text-base font-semibold">{node.title}</h2>
-          <p className="mt-2 text-xs text-white/50">
+        <div className="px-6 py-6">
+          <h2 className="text-[17px] font-semibold leading-snug text-ink">
+            {node.title}
+          </h2>
+          <p className="mt-2 text-[13px] leading-relaxed text-ink-2">
             No repair surface is defined for <code>{String(node.surface)}</code>. Open the
             artefact in the workspace to repair it by hand.
           </p>

@@ -3,6 +3,7 @@
 import type { InfectionNode } from "@/contract";
 import type { LassoResult } from "./InfectionMap";
 import { Action } from "./atoms";
+import { REFUSALS } from "./plainLanguage";
 
 /**
  * The lasso's exclusions are stated out loud (ADR-0010). Restraint nobody is told
@@ -14,6 +15,7 @@ import { Action } from "./atoms";
 export function ApprovalBar({
   lasso,
   byId,
+  outcomes,
   approving,
   healedCount,
   unconfirmedCount,
@@ -23,6 +25,7 @@ export function ApprovalBar({
 }: {
   lasso: LassoResult;
   byId: Map<string, InfectionNode>;
+  outcomes: Record<string, string>;
   approving: boolean;
   healedCount: number;
   unconfirmedCount: number;
@@ -39,7 +42,14 @@ export function ApprovalBar({
           <p className="text-[12.5px] text-immune-deep">
             You approved {healedCount} repair{healedCount === 1 ? "" : "s"}.
             {unconfirmedCount > 0 && (
-              <span className="text-ink-3"> Nothing has reached the workspace yet.</span>
+              <span className="text-ink-3">
+                {" "}
+                {unconfirmedCount === healedCount
+                  ? healedCount === 1
+                    ? "It has not reached the workspace yet."
+                    : "None have reached the workspace yet."
+                  : `${unconfirmedCount} of them ${unconfirmedCount === 1 ? "has" : "have"} not reached the workspace yet.`}
+              </span>
             )}
           </p>
         ) : (
@@ -52,7 +62,9 @@ export function ApprovalBar({
   }
 
   const why = (node: InfectionNode) =>
-    node.disposition === "irreversible"
+    REFUSALS.has(outcomes[node.id] ?? "")
+      ? "you already skipped it"
+      : node.disposition === "irreversible"
       ? "already sent out"
       : node.disposition === "historical"
         ? "a record of what was built"

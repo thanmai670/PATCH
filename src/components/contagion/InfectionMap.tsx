@@ -27,6 +27,7 @@ import {
   TONE_COLOR,
   plainAction,
   plainMatch,
+  plainOutcome,
   plainStatus,
   plainWhy,
 } from "./plainLanguage";
@@ -47,6 +48,7 @@ type Props = {
   onLasso: (result: LassoResult) => void;
   healed?: string[];
   unconfirmed?: string[];
+  outcomes?: Record<string, string>;
 };
 
 /**
@@ -110,6 +112,7 @@ export function InfectionMap({
   onLasso,
   healed = [],
   unconfirmed = [],
+  outcomes = {},
 }: Props) {
   const { nodes, edges, radii, bounds } = useMemo(() => layoutReport(report), [report]);
 
@@ -173,6 +176,8 @@ export function InfectionMap({
   }, [selectedId]);
 
   const svgRef = useRef<SVGSVGElement | null>(null);
+  /** The transformed group. Its live CTM includes any zoom still animating. */
+  const stageRef = useRef<SVGGElement | null>(null);
   const [lasso, setLasso] = useState<{ x0: number; y0: number; x1: number; y1: number } | null>(
     null,
   );
@@ -200,11 +205,23 @@ export function InfectionMap({
     };
   }, [fit, view]);
 
+  /**
+   * Screen → content. Taken from the stage group's own CTM rather than by undoing
+   * `fit` by hand, because a zoom is animated: mid-transition the rendered transform
+   * is not yet the target one, and converting with the target makes a dragged
+   * artefact jump away from the cursor.
+   */
   function toView(ev: React.PointerEvent): { x: number; y: number } | null {
+    const stage = stageRef.current;
+    const ctm = stage?.getScreenCTM();
+    if (ctm) {
+      const pt = new DOMPoint(ev.clientX, ev.clientY).matrixTransform(ctm.inverse());
+      return { x: pt.x, y: pt.y };
+    }
     const svg = svgRef.current;
-    const ctm = svg?.getScreenCTM();
-    if (!svg || !ctm) return null;
-    const pt = new DOMPoint(ev.clientX, ev.clientY).matrixTransform(ctm.inverse());
+    const svgCtm = svg?.getScreenCTM();
+    if (!svg || !svgCtm) return null;
+    const pt = new DOMPoint(ev.clientX, ev.clientY).matrixTransform(svgCtm.inverse());
     return toContent(fit, { x: pt.x, y: pt.y });
   }
 
@@ -323,7 +340,7 @@ export function InfectionMap({
             onClick={() => onSelect(null)}
             className="rounded-md border border-rule bg-surface px-2.5 py-1 text-[12px] text-ink-2 shadow-panel hover:bg-sunk"
           >
-            Show all six
+            Show all {placed.length}
           </button>
         )}
         {Object.keys(nudge).length > 0 && (
@@ -369,6 +386,7 @@ export function InfectionMap({
         </defs>
 
         <g
+          ref={stageRef}
           transform={`translate(${fit.tx},${fit.ty}) scale(${fit.scale})`}
           style={{ transition: "transform 460ms cubic-bezier(.2,.8,.2,1)" }}
         >
@@ -636,9 +654,15 @@ export function InfectionMap({
                       dy={RING_R + 26 + lines.length * 17 + 2}
                       fontSize={12}
                       fontWeight={500}
-                      fill={isHealed ? "rgb(var(--c-immune-deep))" : TONE_COLOR[status.tone].dot}
+                      fill={
+                        isHealed
+                          ? "rgb(var(--c-immune-deep))"
+                          : outcomes[node.id]
+                            ? "rgb(var(--ink-2))"
+                            : TONE_COLOR[status.tone].dot
+                      }
                     >
-                      {isHealed ? "Repair approved" : status.label}
+                      {outcomes[node.id] ? plainOutcome(outcomes[node.id]) : status.label}
                     </text>
                   </g>
                 </g>

@@ -27,7 +27,7 @@ export function CorrectiveMessageSurface({
 
   const [body, setBody] = useState(
     `Correction to our earlier message on ${change.subject}.\n\n` +
-      `We confirmed ${change.previousValue}. The approved value is ${change.newValue}. ` +
+      `We previously confirmed ${change.previousValue}. The approved value is ${change.newValue}. ` +
       `Please disregard the earlier figure and use ${change.newValue} for all ongoing work.\n\n` +
       `Apologies for the confusion.`,
   );

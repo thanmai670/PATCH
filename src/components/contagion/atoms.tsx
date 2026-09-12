@@ -50,7 +50,7 @@ export function Action({
   const base =
     "rounded-md px-3.5 py-2 text-[13px] font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-45 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink";
   const styles = {
-    primary: "bg-ink text-white hover:bg-ink/85",
+    primary: "bg-ink text-paper hover:bg-ink/85",
     secondary: "border border-rule bg-surface text-ink hover:bg-sunk",
     quiet: "text-ink-3 hover:text-ink",
   } as const;
