@@ -17,9 +17,9 @@ import { readFileSync } from "node:fs";
 import { promisify } from "node:util";
 import {
   confirmationCard, summaryCard, auditCard, modelPickerCard, modelSetCard,
-  workspaceChangeCard, deniedCard,
+  workspaceChangeCard, deniedCard, roleCard,
 } from "../src/channels/cards.mjs";
-import { can, describeRole, adminsFor, identityOf } from "../src/channels/authz.mjs";
+import { can, describeRole, adminsFor, identityOf, loadConfig } from "../src/channels/authz.mjs";
 import { writeFileSync } from "node:fs";
 
 const run = promisify(execFile);
@@ -372,14 +372,17 @@ channel.onMention(async (evt) => {
   const text = textOf(evt).replace(/<@[^>]+>/g, "").trim();
   console.log(`[mention] from=${who(evt)} text=${text.slice(0, 90)}`);
 
-  if (/^(whoami|who am i|my role|permissions?)/i.test(text)) {
+  if (/^(whoami|who am i|my role|permissions?|roles?)/i.test(text)) {
     const id = identityOf(evt);
-    const allowed = ["nominate", "confirm", "approve_repairs", "change_models", "dismiss"]
-      .filter((perm) => can(id, perm));
+    const role = describeRole(id);
+    const perms = Object.fromEntries(
+      ["nominate", "confirm", "approve_repairs", "change_models", "dismiss"].map((p) => [p, can(id, p)]),
+    );
+    const cfg = loadConfig();
+    const roster = Object.entries(cfg.roles ?? {}).map(([r, v]) => ({ role: r, members: v.members ?? [] }));
+    console.log(`   -> whoami: ${who(evt)} is ${role}`);
     await evt.thread.post(
-      `You are a *${describeRole(id)}*.\n` +
-      (allowed.length ? `You can: ${allowed.join(", ")}.` : "You can see everything PATCH finds, but not start a search or cause a write.") +
-      `\n_Roles live in patch.config.json._`,
+      roleCard({ identity: id, role, permissions: perms, roster, isAdmin: role.includes("admin") }),
     );
     return;
   }

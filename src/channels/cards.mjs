@@ -341,3 +341,71 @@ export function deniedCard({ action, role, admins }) {
     ],
   });
 }
+
+/**
+ * Who you are and what that permits. Shows the Slack user id prominently because
+ * it is the reliable key for patch.config.json — a display name only resolves
+ * when the provider profile lookup succeeds, and it often does not.
+ */
+export function roleCard({ identity, role, permissions, roster, isAdmin }) {
+  const ACCENT = { admin: "#10b981", operator: "#6366f1" };
+  const LABEL = {
+    nominate: "Nominate a truth change",
+    confirm: "Confirm and run the pipeline",
+    approve_repairs: "Approve repairs",
+    change_models: "Change model routing",
+    dismiss: "Dismiss workspace detections",
+  };
+
+  return Message({
+    accent: ACCENT[role] ?? "#94a3b8",
+    fallbackText: `You are ${role === "viewer" ? "a viewer" : `an ${role}`}`,
+    children: [
+      Header({ children: `You are ${role === "viewer" ? "a viewer" : role === "admin" ? "an admin" : "an operator"}` }),
+
+      Table({
+        columns: [{ header: "Can you…" }, { header: "" }],
+        children: Object.entries(LABEL).map(([perm, label]) =>
+          Row({
+            children: [
+              Cell({ children: label }),
+              Cell({ children: permissions[perm] ? "✅ yes" : "— no" }),
+            ],
+          }),
+        ),
+      }),
+
+      Context({
+        children: role === "viewer"
+          ? "You can see everything PATCH finds. Acting is restricted so that being in the channel is not enough to cause a write."
+          : "Viewing is open to everyone — the audit trail is only useful if the team can read it.",
+      }),
+
+      Divider({}),
+      Fields({
+        children: [
+          Field({ label: "Your Slack id", children: `\`${identity.id ?? "unknown"}\`` }),
+          ...(identity.email ? [Field({ label: "Email", children: identity.email })] : []),
+        ],
+      }),
+
+      ...(isAdmin && roster.length
+        ? [
+            Section({ children: Markdown({ children: "*Who holds what*" }) }),
+            Table({
+              columns: [{ header: "Role" }, { header: "Members" }],
+              children: roster.map((r) =>
+                Row({
+                  children: [
+                    Cell({ children: r.role }),
+                    Cell({ children: r.members.length ? r.members.join(", ").slice(0, 60) : "— none —" }),
+                  ],
+                }),
+              ),
+            }),
+            Context({ children: "Add someone by putting their Slack id in patch.config.json, then restart the listener." }),
+          ]
+        : [Context({ children: "Roles live in patch.config.json." })]),
+    ],
+  });
+}
