@@ -8,8 +8,8 @@
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
-    "seed": "tsx scripts/seed-workspace.ts",
-    "seed:reset": "tsx scripts/seed-workspace.ts --reset",
+    "seed": "tsx --env-file=.env.local scripts/seed-workspace.ts",
+    "seed:reset": "tsx --env-file=.env.local scripts/seed-workspace.ts --reset",
     "fixture:check": "tsx scripts/validate-fixture.ts"
   },
   "dependencies": {
