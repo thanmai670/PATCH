@@ -126,7 +126,23 @@ export function InfectionMap({
     return () => ro.disconnect();
   }, []);
 
-  const fit = useMemo(() => fitBounds(bounds, view), [bounds, view]);
+  const baseFit = useMemo(() => fitBounds(bounds, view), [bounds, view]);
+
+  /** Where the view is zoomed to, captured when the selection changes. */
+  const [focus, setFocus] = useState<{ x: number; y: number } | null>(null);
+  /** Bumped to send the spread out across the map again. */
+  const [replay, setReplay] = useState(0);
+
+  const ZOOM = 1.9;
+  const fit = useMemo(() => {
+    if (!focus) return baseFit;
+    const scale = baseFit.scale * ZOOM;
+    return {
+      scale,
+      tx: view.w / 2 - focus.x * scale,
+      ty: view.h / 2 - focus.y * scale,
+    };
+  }, [baseFit, focus, view]);
 
   /** Where the reader has dragged each artefact, relative to where PATCH put it. */
   const [nudge, setNudge] = useState<Nudge>({});
@@ -143,6 +159,18 @@ export function InfectionMap({
   const healedSet = useMemo(() => new Set(healed), [healed]);
   const lassoedSet = useMemo(() => new Set(lassoed), [lassoed]);
   const unconfirmedSet = useMemo(() => new Set(unconfirmed), [unconfirmed]);
+
+  const placedRef = useRef(placed);
+  placedRef.current = placed;
+
+  useEffect(() => {
+    if (!selectedId) {
+      setFocus(null);
+      return;
+    }
+    const target = placedRef.current.find((n) => n.node.id === selectedId);
+    setFocus(target ? { x: target.x, y: target.y } : null);
+  }, [selectedId]);
 
   const svgRef = useRef<SVGSVGElement | null>(null);
   const [lasso, setLasso] = useState<{ x0: number; y0: number; x1: number; y1: number } | null>(
@@ -209,6 +237,8 @@ export function InfectionMap({
       if (Math.hypot(p.x - moving.from.x, p.y - moving.from.y) > DRAG_THRESHOLD) {
         movedRef.current = true;
       }
+      // Below the threshold this is still a click, and a click must not leave an offset.
+      if (!movedRef.current) return;
       const home = nodes.find((n) => n.node.id === moving.id);
       if (!home) return;
       const wantX = home.x + moving.base.dx + (p.x - moving.from.x);
@@ -286,15 +316,26 @@ export function InfectionMap({
         is one step further
       </p>
 
-      {Object.keys(nudge).length > 0 && (
-        <button
-          type="button"
-          onClick={() => setNudge({})}
-          className="absolute left-4 top-3 z-10 rounded-md border border-rule bg-surface px-2.5 py-1 text-[12px] text-ink-2 shadow-panel hover:bg-sunk"
-        >
-          Put them back
-        </button>
-      )}
+      <div className="absolute bottom-3 left-4 z-10 flex gap-2">
+        {focus && (
+          <button
+            type="button"
+            onClick={() => onSelect(null)}
+            className="rounded-md border border-rule bg-surface px-2.5 py-1 text-[12px] text-ink-2 shadow-panel hover:bg-sunk"
+          >
+            Show all six
+          </button>
+        )}
+        {Object.keys(nudge).length > 0 && (
+          <button
+            type="button"
+            onClick={() => setNudge({})}
+            className="rounded-md border border-rule bg-surface px-2.5 py-1 text-[12px] text-ink-2 shadow-panel hover:bg-sunk"
+          >
+            Put them back
+          </button>
+        )}
+      </div>
 
       <svg
         ref={svgRef}
@@ -327,7 +368,10 @@ export function InfectionMap({
           </filter>
         </defs>
 
-        <g transform={`translate(${fit.tx},${fit.ty}) scale(${fit.scale})`}>
+        <g
+          transform={`translate(${fit.tx},${fit.ty}) scale(${fit.scale})`}
+          style={{ transition: "transform 460ms cubic-bezier(.2,.8,.2,1)" }}
+        >
           <g pointerEvents="none">
             {radii.map((r, i) => (
               <ellipse
@@ -399,22 +443,41 @@ export function InfectionMap({
           </g>
 
           {/* ── Where it started. An origin, never a target — never repaired. ── */}
-          <g transform={`translate(${CX},${CY})`} pointerEvents="none">
-            <circle
-              className="patch-shock"
-              r={56}
-              fill="none"
-              stroke={STATUS_COLOR.infected}
-              strokeWidth={9}
-            />
-            <circle
-              className="patch-shock"
-              r={56}
-              fill="none"
-              stroke={STATUS_COLOR.infected}
-              strokeWidth={6}
-              style={{ animationDelay: "760ms" }}
-            />
+          <g transform={`translate(${CX},${CY})`}>
+            {/* Rings that travel out across the map, replayed on every click. */}
+            <g key={`ripple-${replay}`} pointerEvents="none">
+              {[0, 260, 520].map((delay, i) => (
+                <circle
+                  key={delay}
+                  className={replay > 0 ? "patch-ripple" : "patch-shock"}
+                  r={56}
+                  fill="none"
+                  stroke={STATUS_COLOR.infected}
+                  strokeWidth={9 - i * 2}
+                  style={{ animationDelay: `${replay > 0 ? delay : i * 760}ms` }}
+                />
+              ))}
+            </g>
+
+            <g
+              role="button"
+              tabIndex={0}
+              aria-label="Replay how the change spread, and show the whole map"
+              style={{ cursor: "pointer", outline: "none" }}
+              onPointerDown={(ev) => ev.stopPropagation()}
+              onClick={(ev) => {
+                ev.stopPropagation();
+                onSelect(null);
+                setReplay((r) => r + 1);
+              }}
+              onKeyDown={(ev) => {
+                if (ev.key === "Enter" || ev.key === " ") {
+                  ev.preventDefault();
+                  onSelect(null);
+                  setReplay((r) => r + 1);
+                }
+              }}
+            >
             <circle
               r={54}
               fill="none"
@@ -430,13 +493,26 @@ export function InfectionMap({
               strokeWidth={3}
               filter="url(#patch-lift)"
             />
-            <BandageGlyph size={40} />
-            <text textAnchor="middle" dy={76} fontSize={14} fontWeight={600} fill="rgb(var(--ink))">
-              Someone flagged it here
-            </text>
-            <text textAnchor="middle" dy={96} fontSize={13} fill="rgb(var(--ink-3))">
-              {report.change.patientZero?.channel ?? "Flagged in the app"}
-            </text>
+              <BandageGlyph size={40} />
+            </g>
+
+            <g pointerEvents="none">
+              <text
+                textAnchor="middle"
+                dy={76}
+                fontSize={14}
+                fontWeight={600}
+                fill="rgb(var(--ink))"
+              >
+                Someone flagged it here
+              </text>
+              <text textAnchor="middle" dy={96} fontSize={13} fill="rgb(var(--ink-3))">
+                {report.change.patientZero?.channel ?? "Flagged in the app"}
+              </text>
+              <text textAnchor="middle" dy={114} fontSize={12} fill="rgb(var(--ink-3))">
+                Click to watch it spread again
+              </text>
+            </g>
           </g>
 
           {/* ── The things it reached ── */}
@@ -492,6 +568,18 @@ export function InfectionMap({
                     {/* Ring only when we may NOT edit it — absence is the signal */}
                     {ring && <circle r={RING_R} fill="none" stroke={ring} strokeWidth={3} />}
 
+                    {replay > 0 && (
+                      <circle
+                        key={`hit-${replay}`}
+                        className="patch-hit"
+                        r={NODE_R + 6}
+                        fill="none"
+                        stroke={flat}
+                        strokeWidth={3}
+                        pointerEvents="none"
+                        style={{ animationDelay: `${depth * 250}ms` }}
+                      />
+                    )}
                     <circle
                       r={NODE_R + 10}
                       fill={flat}
