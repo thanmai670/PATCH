@@ -72,19 +72,31 @@ const channel = createChannel({
   identifyUser: "platform",
 });
 
-channel.onReaction(async (evt) => {
-  console.log(`[reaction] emoji=${evt.emoji} raw=${evt.rawEmoji} added=${evt.added}`);
-  if (!evt.added) return;
-  if (!isNomination(evt.emoji, evt.rawEmoji)) return;
+/**
+ * The nomination flow. Shared by both triggers (ADR-0004): the 🩹 reaction is the
+ * hero gesture, an @patch mention is the fallback. Mentions are what actually
+ * deliver today, so the mention path is not a second-class citizen here.
+ */
+async function handleNomination(evt, { nominator, text, trigger }) {
+  console.log(`\n🩹 NOMINATION via ${trigger}`);
+  console.log(`   from: ${nominator}`);
+  console.log(`   text: ${text.slice(0, 120)}`);
 
-  const nominator = who(evt);
-  console.log("\n🩹 NOMINATION RECEIVED");
-  console.log(`   from:      ${nominator}`);
-  console.log(`   messageId: ${evt.messageId}`);
+  // The SDK gives us only the mention's own text - MessageRef is opaque and Thread
+  // exposes no history - so a bare "@patch it" in a thread carries nothing to read.
+  // Say so plainly instead of letting the interpreter fail confusingly.
+  if (text.replace(/\s+/g, " ").trim().length < 15) {
+    await evt.thread.post(
+      "I can only read the message that mentions me, not the one above it. " +
+      "Include the change in the mention, for example:\n" +
+      "`@patch the approved motor for Project Atlas is now 18.5 kW, not 22 kW`",
+    );
+    console.log("   text too thin to interpret; asked for the values");
+    return;
+  }
 
   try {
-    const nominatedText = textOf(evt) || evt.messageRef?.text || "";
-    const result = await interpretMessage(nominatedText, nominator, "#project-atlas");
+    const result = await interpretMessage(text, nominator, "#project-atlas");
 
     if (result.error) {
       console.log(`   interpreter declined: ${result.error}`);
@@ -99,7 +111,6 @@ channel.onReaction(async (evt) => {
     const c = result.change;
     console.log(`   interpreted: ${c.subject} ${c.previousValue} → ${c.newValue} (${c.confidence})`);
 
-    // Card 1 — the gate. Nothing is searched or written until a human confirms.
     await evt.thread.post(
       confirmationCard({
         change: {
@@ -124,12 +135,11 @@ channel.onReaction(async (evt) => {
       }),
     );
   } catch (e) {
-    console.error("   card send failed:", e?.message ?? e);
+    console.error("   nomination failed:", e?.message ?? e);
+    try { await evt.thread.post(`Something went wrong reading that: ${e?.message ?? e}`); } catch {}
   }
-});
+}
 
-// Every handler registered, so "nothing arrives" is distinguishable from
-// "reactions specifically do not arrive".
 const who = (evt) => evt.user?.name ?? evt.actor?.id ?? "someone";
 const textOf = (evt) => String(evt.message?.text ?? evt.text ?? "");
 
@@ -138,12 +148,18 @@ channel.onMessage(async (evt) => {
 });
 
 channel.onMention(async (evt) => {
-  console.log(`[mention] from=${who(evt)} text=${textOf(evt).slice(0, 90)}`);
-  try {
-    await evt.thread.post("PATCH is listening. React 🩹 on a message to nominate it as a truth change.");
-  } catch (e) {
-    console.error("  reply failed:", e?.message ?? e);
-  }
+  const text = textOf(evt).replace(/<@[^>]+>/g, "").trim();
+  console.log(`[mention] from=${who(evt)} text=${text.slice(0, 90)}`);
+  await handleNomination(evt, { nominator: who(evt), text, trigger: "@patch mention" });
+});
+
+// The hero gesture, kept registered. ADR-0004: unfiltered handler, rawEmoji match.
+channel.onReaction(async (evt) => {
+  console.log(`[reaction] emoji=${evt.emoji} raw=${evt.rawEmoji} added=${evt.added}`);
+  if (!evt.added) return;
+  if (!isNomination(evt.emoji, evt.rawEmoji)) return;
+  const text = evt.messageRef?.text ?? textOf(evt) ?? "";
+  await handleNomination(evt, { nominator: who(evt), text, trigger: "🩹 reaction" });
 });
 
 channel.onThreadStarted?.(async () => console.log("[threadStarted]"));
