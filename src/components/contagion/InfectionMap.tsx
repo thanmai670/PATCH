@@ -49,29 +49,53 @@ type Props = {
   unconfirmed?: string[];
 };
 
-function wrapLabel(title: string, perLine = 19, maxLines = 2): string[] {
-  const words = title.split(" ");
+/**
+ * Two lines, broken between words. A label that has to stop stops after a whole word
+ * and takes an ellipsis — cutting mid-word ("Commercial Proposa…") reads as broken
+ * rather than abbreviated, and the full title is always in the list on the left.
+ */
+function wrapLabel(title: string, perLine = 24, maxLines = 2): string[] {
+  const words = title.replace(/\s+/g, " ").trim().split(" ");
   const lines: string[] = [];
   let line = "";
+  let i = 0;
 
-  for (const w of words) {
-    const next = line ? `${line} ${w}` : w;
+  for (; i < words.length; i++) {
+    const next = line ? `${line} ${words[i]}` : words[i];
     if (next.length <= perLine) {
       line = next;
       continue;
     }
     if (line) lines.push(line);
-    line = w;
     if (lines.length === maxLines) break;
+    // A single word longer than the line still has to go somewhere.
+    line = words[i].length > perLine ? `${words[i].slice(0, perLine - 1)}…` : words[i];
   }
-  if (line && lines.length < maxLines) lines.push(line);
-
-  const used = lines.join(" ").length;
-  if (used < title.replace(/\s+/g, " ").length) {
-    const last = lines[lines.length - 1] ?? "";
-    lines[lines.length - 1] = `${last.slice(0, perLine - 1)}…`;
+  if (line && lines.length < maxLines) {
+    lines.push(line);
+    i++;
+  }
+  if (i < words.length && lines.length) {
+    lines[lines.length - 1] = `${lines[lines.length - 1]}…`;
   }
   return lines;
+}
+
+/** A gentle bow, so a web of straight sticks reads as something that travelled. */
+function arc(
+  from: { x: number; y: number },
+  to: { x: number; y: number },
+): { d: string; len: number } {
+  const dx = to.x - from.x;
+  const dy = to.y - from.y;
+  const len = Math.hypot(dx, dy) || 1;
+  const bow = 0.1;
+  const cx = (from.x + to.x) / 2 - dy * bow;
+  const cy = (from.y + to.y) / 2 + dx * bow;
+  return {
+    d: `M ${from.x} ${from.y} Q ${cx} ${cy} ${to.x} ${to.y}`,
+    len: len * 1.05,
+  };
 }
 
 type Nudge = Record<string, { dx: number; dy: number }>;
@@ -237,21 +261,36 @@ export function InfectionMap({
     setLasso(null);
   }
 
+  /** Every edge on the route from the centre to the artefact in focus. */
+  const trail = useMemo(() => {
+    const focus = hoveredId ?? selectedId;
+    if (!focus) return new Set<string>();
+    const parentOf = new Map(edges.map((e) => [e.toId, e.fromId]));
+    const chain = new Set<string>();
+    let at: string | null = focus;
+    const guard = new Set<string>();
+    while (at && !guard.has(at)) {
+      guard.add(at);
+      chain.add(at);
+      at = parentOf.get(at) ?? null;
+    }
+    return chain;
+  }, [edges, hoveredId, selectedId]);
+
   const hovered = hoveredId ? byId.get(hoveredId) : undefined;
 
   return (
     <div ref={wrapRef} className="patch-stage relative h-full w-full overflow-hidden">
-      <p className="pointer-events-none absolute left-5 top-4 z-10 max-w-[34ch] text-[12.5px] leading-relaxed text-ink-2">
-        How far the change travelled. The centre is where it was announced; each ring out
-        is one step further from it. Drag any circle to move it, or drag across empty
-        space to pick up several at once.
+      <p className="pointer-events-none absolute inset-x-0 top-3 z-10 text-center text-[12.5px] text-ink-3">
+        How far the change travelled — the centre is where it was flagged, each ring out
+        is one step further
       </p>
 
       {Object.keys(nudge).length > 0 && (
         <button
           type="button"
           onClick={() => setNudge({})}
-          className="absolute left-5 top-[98px] z-10 rounded-md border border-rule bg-surface px-2.5 py-1 text-[12px] text-ink-2 shadow-panel hover:bg-sunk"
+          className="absolute left-4 top-3 z-10 rounded-md border border-rule bg-surface px-2.5 py-1 text-[12px] text-ink-2 shadow-panel hover:bg-sunk"
         >
           Put them back
         </button>
@@ -272,6 +311,11 @@ export function InfectionMap({
         }}
       >
         <defs>
+          <radialGradient id="patch-sheen" cx="34%" cy="26%" r="78%">
+            <stop offset="0%" stopColor="#FFFFFF" stopOpacity="0.34" />
+            <stop offset="62%" stopColor="#FFFFFF" stopOpacity="0.04" />
+            <stop offset="100%" stopColor="#000000" stopOpacity="0.1" />
+          </radialGradient>
           <filter id="patch-lift" x="-60%" y="-60%" width="220%" height="220%">
             <feDropShadow
               dx="0"
@@ -296,7 +340,8 @@ export function InfectionMap({
                 fill="none"
                 stroke="rgb(var(--map-orbit))"
                 strokeWidth={1}
-                strokeDasharray="2 6"
+                strokeDasharray="1 7"
+                opacity={0.95}
                 style={{ animationDelay: `${i * RING_MS}ms` }}
               />
             ))}
@@ -306,38 +351,37 @@ export function InfectionMap({
           <g>
             {edges.map((e) => {
               const target = byId.get(e.toId);
-              const parentId = e.id.split("->")[0];
-              const source = byId.get(parentId);
+              const source = e.fromId ? byId.get(e.fromId) : undefined;
               const from = source ? { x: source.x, y: source.y } : { x: CX, y: CY };
               const to = target ? { x: target.x, y: target.y } : e.to;
-              const len = Math.hypot(to.x - from.x, to.y - from.y);
+              const { d, len } = arc(from, to);
               const streak = healedSet.has(e.toId)
                 ? HEALED_COLOR
                 : target
                   ? STATUS_COLOR[target.node.status]
                   : STATUS_COLOR.infected;
               const delay = (e.depth - 1) * RING_MS;
-              const lit = hoveredId === e.toId || selectedId === e.toId;
+              const lit = trail.has(e.toId);
               return (
                 <g key={e.id} pointerEvents="none">
-                  <line
+                  <path
                     className="patch-line"
-                    x1={from.x}
-                    y1={from.y}
-                    x2={to.x}
-                    y2={to.y}
-                    stroke={lit ? "rgb(var(--ink))" : "rgb(var(--map-edge))"}
-                    strokeWidth={lit ? 2.2 : 1.5}
+                    d={d}
+                    fill="none"
+                    stroke={lit ? streak : "rgb(var(--map-edge))"}
+                    strokeWidth={lit ? 2.6 : 1.5}
                     strokeDasharray={MATCH_DASH[e.matchKind]}
                     strokeLinecap="round"
-                    style={{ animationDelay: `${delay + 200}ms` }}
+                    opacity={lit ? 1 : 0.75}
+                    style={{
+                      animationDelay: `${delay + 200}ms`,
+                      transition: "stroke 200ms ease, stroke-width 200ms ease",
+                    }}
                   />
-                  <line
+                  <path
                     className="patch-edge"
-                    x1={from.x}
-                    y1={from.y}
-                    x2={to.x}
-                    y2={to.y}
+                    d={d}
+                    fill="none"
                     stroke={streak}
                     strokeWidth={4}
                     strokeLinecap="round"
@@ -448,7 +492,12 @@ export function InfectionMap({
                     {/* Ring only when we may NOT edit it — absence is the signal */}
                     {ring && <circle r={RING_R} fill="none" stroke={ring} strokeWidth={3} />}
 
-                    <circle r={NODE_R + 14} fill={flat} opacity={0.13} />
+                    <circle
+                      r={NODE_R + 10}
+                      fill={flat}
+                      opacity={isHovered || isSelected ? 0.22 : 0.13}
+                      style={{ transition: "opacity 200ms ease" }}
+                    />
                     <circle
                       r={NODE_R}
                       fill={flat}
@@ -457,6 +506,7 @@ export function InfectionMap({
                       filter="url(#patch-lift)"
                       style={{ transition: "fill 600ms ease, stroke 600ms ease" }}
                     />
+                    <circle r={NODE_R} fill="url(#patch-sheen)" pointerEvents="none" />
                     <ArtefactIcon kind={node.kind} size={26} color="rgb(var(--map-disc-ink))" />
 
                     {node.requiresHumanReview && !isHealed && (
@@ -525,33 +575,57 @@ export function InfectionMap({
       </svg>
 
       {/* ── Hovering anything explains it, so nothing needs decoding ── */}
-      {hovered && !moving && !lasso && (
-        <div
-          className="pointer-events-none absolute z-20 w-[270px] rounded-lg border border-rule bg-surface p-3 shadow-panel"
-          style={{
-            left: Math.min(
-              Math.max(8, fit.tx + hovered.x * fit.scale - 135),
-              Math.max(8, view.w - 278),
-            ),
-            top: Math.max(8, fit.ty + hovered.y * fit.scale - 150),
-          }}
-        >
-          <p className="text-[12px] text-ink-3">{KIND_LABEL[hovered.node.kind]}</p>
-          <p className="mt-0.5 text-[13.5px] font-semibold leading-snug text-ink">
-            {hovered.node.title}
-          </p>
-          <p className="mt-1.5 text-[12.5px] leading-snug text-ink-2">
-            {plainWhy(hovered.node, report.change)}
-          </p>
-          <p className="mt-2 border-t border-rule pt-2 text-[12.5px] leading-snug text-ink">
-            PATCH suggests: {plainAction(hovered.node).toLowerCase()}
-          </p>
-          <p className="mt-1.5 text-[12px] leading-snug text-ink-3">
-            {plainMatch(hovered.node)}, {Math.round(hovered.node.confidence * 100)}% sure
-          </p>
-          <p className="mt-1.5 text-[12px] text-ink-3">Click to open it</p>
-        </div>
-      )}
+      {hovered && !moving && !lasso && (() => {
+        // Sit on the far side of the artefact from the centre, so the card never
+        // covers the route the fact travelled to reach it.
+        const W = 244;
+        const H = 168;
+        const M = 10;
+        const gap = RING_R * fit.scale + 16;
+        const sx = fit.tx + hovered.x * fit.scale;
+        const sy = fit.ty + hovered.y * fit.scale;
+        const clamp = (v: number, lo: number, hi: number) =>
+          Math.min(Math.max(v, lo), Math.max(lo, hi));
+
+        const fitsRight = sx + gap + W + M <= view.w;
+        const fitsLeft = sx - gap - W - M >= 0;
+        const outward = hovered.x - CX >= 0;
+
+        let left: number;
+        let top: number;
+        if (outward ? fitsRight : fitsLeft) {
+          left = outward ? sx + gap : sx - gap - W;
+          top = clamp(sy - 54, M, view.h - H - M);
+        } else if (fitsRight || fitsLeft) {
+          left = fitsRight ? sx + gap : sx - gap - W;
+          top = clamp(sy - 54, M, view.h - H - M);
+        } else {
+          // No room either side — go above or below instead of sitting on top of it.
+          left = clamp(sx - W / 2, M, view.w - W - M);
+          top = sy + gap + H + M <= view.h ? sy + gap : Math.max(M, sy - gap - H);
+        }
+
+        return (
+          <div
+            className="pointer-events-none absolute z-20 rounded-lg border border-rule bg-surface p-3 shadow-panel"
+            style={{ left, top, width: W }}
+          >
+            <p className="text-[11.5px] text-ink-3">{KIND_LABEL[hovered.node.kind]}</p>
+            <p className="mt-0.5 text-[13px] font-semibold leading-tight text-ink">
+              {hovered.node.title}
+            </p>
+            <p className="mt-1.5 text-[12px] leading-snug text-ink-2">
+              {plainWhy(hovered.node, report.change)}
+            </p>
+            <p className="mt-2 border-t border-rule pt-2 text-[12px] leading-snug text-ink">
+              {plainAction(hovered.node)}
+            </p>
+            <p className="mt-1 text-[11.5px] leading-snug text-ink-3">
+              {plainMatch(hovered.node)}, {Math.round(hovered.node.confidence * 100)}% sure
+            </p>
+          </div>
+        );
+      })()}
     </div>
   );
 }
