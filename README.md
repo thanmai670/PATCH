@@ -19,9 +19,17 @@ record are five different problems.
 ## Quickstart
 
 ```bash
-npm install
-cp .env.example .env.local
-npm run dev          # http://localhost:3000
+git clone https://github.com/thanmai670/PATCH.git && cd PATCH
+claude          # then type:  /start
+```
+
+`/start` installs the skills, installs deps, boots the dev server, loads the domain
+context, and drives the grill → ADRs → spec → tickets → implement flow. One command.
+
+Manual equivalent:
+
+```bash
+npm install && cp .env.example .env.local && npm run dev   # http://localhost:3000
 ```
 
 The UI boots against `fixtures/atlas-infection.json` and renders fully **with no API
@@ -32,7 +40,7 @@ keys and no network**. That is deliberate (ADR-0002) — it's also the demo fall
 | | Owner | Doc |
 | --- | --- | --- |
 | **A** — agents, Exa, Ambiguous, Slack | Thanmai | [`docs/WORKSTREAM-A.md`](docs/WORKSTREAM-A.md) |
-| **B** — Contagion View, repair surfaces | teammate | [`docs/WORKSTREAM-B.md`](docs/WORKSTREAM-B.md) |
+| **B** — Contagion View, repair surfaces | teammate | [`docs/WORKSTREAM-B.md`](docs/WORKSTREAM-B.md) · **[start here](docs/TEAMMATE-START-HERE.md)** |
 
 The seam between you is [`src/contract/schema.ts`](src/contract/schema.ts). **Neither
 person edits it alone.**
