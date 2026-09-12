@@ -364,7 +364,7 @@ export function roleCard({ identity, role, permissions, roster, isAdmin }) {
       Header({ children: `You are ${role === "viewer" ? "a viewer" : role === "admin" ? "an admin" : "an operator"}` }),
 
       Table({
-        columns: [{ header: "Can you…" }, { header: "" }],
+        columns: [{ header: "Action" }, { header: "Allowed" }],
         children: Object.entries(LABEL).map(([perm, label]) =>
           Row({
             children: [

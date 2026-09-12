@@ -75,9 +75,50 @@ export const search = (q: string, limit = 50) =>
 export type AmbiguousDoc = { id: string; title: string; type: string; content?: string };
 export const listDocs = () => get<{ data: AmbiguousDoc[] }>("/documents");
 export const getDoc = (id: string) => get<AmbiguousDoc>(`/documents/${id}`);
-export const createDoc = (d: { type: "doc" | "sheet" | "slide"; title: string; content: string; labels?: string[] }) =>
-  post<AmbiguousDoc>("/documents", d);
-export const updateDoc = (id: string, d: { title?: string; content?: string }) =>
+/**
+ * NOTE: documents default to `restricted`, owned by whoever created them. Seeded
+ * by the agent that means a human teammate opening Docs sees nothing at all.
+ * Everything the seed creates is workspace-visible on purpose.
+ */
+export const createDoc = (d: {
+  type: "doc" | "sheet" | "slide"; title: string; content: string;
+  labels?: string[]; visibility?: "restricted" | "workspace" | "link" | "public";
+}) => post<AmbiguousDoc>("/documents", { visibility: "workspace", ...d });
+
+/**
+ * Verified 2026-09-12: PATCH, not POST (404).
+ *
+ * `workspace` visibility alone makes a document READ-ONLY for everyone else -
+ * the workspace role defaults to viewer. Seeded content people are meant to edit
+ * has to say `editor` explicitly, or the demo's whole premise (a human edits a
+ * document and PATCH notices) cannot happen.
+ */
+export const setDocVisibility = (
+  id: string,
+  visibility: "restricted" | "workspace",
+  workspaceRole: "viewer" | "commenter" | "editor" = "editor",
+) => patch<unknown>(`/documents/${id}/visibility`, { visibility, workspaceRole });
+
+/**
+ * Sheets take their body as a JSON *string*, not an object: posting the object
+ * fails validation with "expected string, received object".
+ */
+/**
+ * Sheets take their body as a JSON *string* of `{ sheets: [{ name, columns, rows }] }`.
+ * Posting the object fails with "expected string, received object"; posting a
+ * bare {columns, rows} fails with INVALID_SHEET_CONTENT.
+ */
+export const createSheet = (d: {
+  title: string;
+  tabs: { name: string; columns: { id: string; name: string }[]; rows: Record<string, string>[] }[];
+  visibility?: string;
+}) => post<AmbiguousDoc>("/documents", {
+  type: "sheet",
+  title: d.title,
+  visibility: d.visibility ?? "workspace",
+  content: JSON.stringify({ sheets: d.tabs }),
+});
+export const updateDoc = (id: string, d: { title?: string; content?: string; visibility?: string }) =>
   patch<AmbiguousDoc>(`/documents/${id}`, d);
 export const deleteDoc = (id: string) => del<void>(`/documents/${id}`);
 

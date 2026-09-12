@@ -17,11 +17,12 @@ import {
   listSent, sendMail, listDrafts, createDraft,
   listContacts, createContact,
   listWikiSpaces, createWikiSpace, createWikiPage,
+  setDocVisibility, createSheet,
   search, idOf, AmbiguousError,
 } from "../src/adapters/ambiguous";
 import {
   OLD, DOCS, TASKS, COMPANIES, PEOPLE, DEALS, SENT_MAIL, DRAFT_MAIL,
-  WIKI_SPACE, WIKI_PAGES,
+  WIKI_SPACE, WIKI_PAGES, SHEETS,
 } from "./seed/company";
 
 const RESET = process.argv.includes("--reset");
@@ -65,6 +66,41 @@ async function main() {
       if (made) ok("created", made.id, spec.title);
     }
   }
+
+  /* ── Sheets ──────────────────────────────────────────────────────────────── */
+  log("\nSheets");
+  const afterDocs = (await listDocs()).data ?? [];
+  for (const sh of SHEETS) {
+    const hit = afterDocs.find((d) => d.title === sh.title);
+    if (hit && !RESET) { ok("exists", hit.id, sh.title); continue; }
+    if (hit && RESET) await attempt("delete sheet", () => deleteDoc(hit.id));
+    const [header, ...body] = sh.rows;
+    const made = await attempt("create sheet", () => createSheet({
+      title: sh.title,
+      tabs: [{
+        name: "Sheet1",
+        columns: header.map((h, i) => ({ id: String.fromCharCode(65 + i), name: h })),
+        rows: body.map((r) =>
+          Object.fromEntries(r.map((cell, i) => [String.fromCharCode(65 + i), cell])),
+        ),
+      }],
+    }));
+    if (made) ok(hit ? "recreated" : "created", made.id, sh.title);
+  }
+
+  /* ── Visibility ──────────────────────────────────────────────────────────── */
+  // Documents default to `restricted`, owned by their creator. Seeded by the
+  // agent, that means a human opening Docs sees an empty workspace.
+  log("\nVisibility");
+  const all = (await listDocs()).data ?? [];
+  // Re-applied every run: `workspace` alone is read-only, and a document seeded
+  // before the editor role existed keeps the old grant.
+  const mine = all.filter((d: any) => d.owner_username === "patch");
+  for (const d of mine) {
+    const done = await attempt("set visibility", () => setDocVisibility(d.id, "workspace", "editor"));
+    if (done !== null) ok("editable", d.id, d.title);
+  }
+  if (mine.length === 0) log("  no agent-owned documents found");
 
   /* ── Tasks ───────────────────────────────────────────────────────────────── */
   log("\nTasks");

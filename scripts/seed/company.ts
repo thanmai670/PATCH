@@ -488,3 +488,53 @@ export const WIKI_PAGES = [
     ),
   },
 ];
+
+/* ── Sheets ────────────────────────────────────────────────────────────────── */
+
+/** Sheets take structured JSON, not markdown. */
+export const SHEETS = [
+  {
+    title: "Atlas — Bill of Materials",
+    rows: [
+      ["Item", "Part number", "Rating", "Qty", "Unit price (EUR)", "Lead time", "Supplier"],
+      ["Traction drive motor", "ATX-4400-22", OLD.motor, "6", "184000", OLD.leadTime, "ATX Drive Systems GmbH"],
+      ["Auxiliary compressor drive", "ATX-1100-75", "7.5 kW", "6", "22400", "10 weeks", "ATX Drive Systems GmbH"],
+      ["Drive control unit", "DCU-9", "—", "6", "31500", "12 weeks", "ATX Drive Systems GmbH"],
+      ["Traction cable set", "CBL-4MM-T", "4 mm²", "6", "4100", "6 weeks", "Nordkabel AB"],
+      ["Terminal box", "TB-400-IP66", "IP66", "6", "1850", "4 weeks", "Nordkabel AB"],
+      ["Cooling fan assembly", "FAN-220", "220 mm", "12", "940", "8 weeks", "ATX Drive Systems GmbH"],
+    ],
+  },
+  {
+    title: "Meridian — Supplier Lead Times",
+    rows: [
+      ["Supplier", "Category", "Standard lead time", "Expedited", "Contract", "Certification"],
+      ["ATX Drive Systems GmbH", "Drive packages", OLD.leadTime, "9 weeks", "44-119", OLD.standard],
+      ["Nordkabel AB", "Cabling and terminations", "6 weeks", "3 weeks", "44-204", "EN 50264"],
+      ["Ваltic Castings Oy", "Mounting and housings", "11 weeks", "7 weeks", "44-177", "EN 15085-2"],
+      ["Helix Bearings Ltd", "Bearings", "8 weeks", "5 weeks", "44-090", "ISO 281"],
+    ],
+  },
+  {
+    title: "Meridian — Project Tracker",
+    rows: [
+      ["Project", "Status", "Lead", "Contract value (EUR)", "Motor rating", "Certification", "Delivery"],
+      ["Atlas", "In delivery", OLD.lead, "1104000", OLD.motor, OLD.standard, OLD.leadTime],
+      ["Orion", "Delivered 2024", OLD.lead, "1032000", OLD.motor, OLD.standard, "Delivered"],
+      ["Vega", "Tender", "Commercial", "1104000", "TBC", OLD.standard, OLD.leadTime],
+      ["Cassini", "Concept", "Engineering", "—", "TBC", "TBC", "—"],
+    ],
+  },
+  {
+    title: "Atlas — Factory Acceptance Test Log",
+    rows: [
+      ["Unit", "Serial", "Full-load run", "Insulation", "Temperature rise", "EMC pre-scan", "Result"],
+      ["1", "ATX-44119-001", "Pass", "Pass", "Pass", "Pass", "Accepted"],
+      ["2", "ATX-44119-002", "Pass", "Pass", "Pass", "Pass", "Accepted"],
+      ["3", "ATX-44119-003", "Pass", "Pass", "Pending", "Not started", "In progress"],
+      ["4", "ATX-44119-004", "Not started", "—", "—", "—", "Scheduled"],
+      ["5", "ATX-44119-005", "Not started", "—", "—", "—", "Scheduled"],
+      ["6", "ATX-44119-006", "Not started", "—", "—", "—", "Scheduled"],
+    ],
+  },
+];
