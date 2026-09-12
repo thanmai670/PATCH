@@ -1,59 +1,22 @@
 {
-  "reportId": "rpt_chg_1789212327000100",
+  "reportId": "rpt_chg_1789213137000100",
   "change": {
-    "id": "chg_1789212327000100",
-    "subject": "approved motor specification for Project Atlas",
+    "id": "chg_1789213137000100",
+    "subject": "Project Atlas approved motor power rating",
     "previousValue": "22 kW",
     "newValue": "18.5 kW",
     "confidence": 0.95,
     "announcedBy": "Thanmai",
-    "announcedAt": "2026-09-12T11:25:27.000Z",
+    "announcedAt": "2026-09-12T11:38:57.000Z",
     "project": "Project Atlas",
     "patientZero": {
       "channel": "#project-atlas",
-      "messageTs": "1789212327.000100",
+      "messageTs": "1789213137.000100",
       "text": "Supplier correction: the approved motor for Project Atlas is now 18.5 kW, not 22 kW. Please use the revised specification attached here.",
       "permalink": null
     }
   },
-  "evidence": [
-    {
-      "id": "ev_0",
-      "title": "GA18-18kW-8.5bar Air Cooled",
-      "url": "https://www.atlascopco.com/content/dam/atlas-copco/local-countries/united-kingdom/documents/7-5-20kw-(10-25hp)/GA18-18kW-8.5bar-Air-Cooled.pdf",
-      "publishedAt": null,
-      "highlight": "The compressor shall be an 18 kW Atlas Copco model GA18 or pre-approved equivalent.",
-      "sourceStatus": "live",
-      "supports": true
-    },
-    {
-      "id": "ev_1",
-      "title": "18kw Ga18+ , Lubricated Oil Injected  Atlas Screw Air Compressor Ga+ Series by CEBE GROUP HK CO.,LTD",
-      "url": "https://www.bjjsgy.com/details-cuu5c5v-pudvnqb-18kw-ga18-lubricated-oil-injected-atlas-screw-air-compressor-ga-series.html",
-      "publishedAt": null,
-      "highlight": "ATLAS OIL-INJECTED SCREW GA+ SERIES AIR COMPRESSOR 18KW GA18+",
-      "sourceStatus": "live",
-      "supports": true
-    },
-    {
-      "id": "ev_2",
-      "title": "1092094200 9096922018 Atlas Copco Motor 18.5kW 400V 50Hz GA15 Genuine Screw Compressor Spare Parts from China Factory",
-      "url": "https://www.ecer.com/corp/details-uuufbag-p1n1raj-1092094200-9096922018-atlas-copco-motor-18-5kw-400v-50hz-ga15-genuine-screw-compressor-spare-parts.html",
-      "publishedAt": null,
-      "highlight": "Atlas Copco 1092094200 9096922018 Motor 18.5kW 400V 50Hz GA15 Genuine Screw Compressor Spare Parts.",
-      "sourceStatus": "live",
-      "supports": true
-    },
-    {
-      "id": "ev_3",
-      "title": "1092094200 9096922018 Atlas Copco Motor 18.5kW 400V 50Hz GA15 Genuine Screw Compressor Spare Parts – XUYUQIN | Himfr Supplier Product Page",
-      "url": "https://www.himfr.com/product-uufbag-1n1raj-1092094200-9096922018-atlas-copco-motor-18-5kw-400v-50hz-ga15-genuine-screw-compressor-spare-parts.html",
-      "publishedAt": null,
-      "highlight": "Atlas Copco 1092094200 9096922018 Motor 18.5kW 400V 50Hz GA15 Genuine Screw Compressor Spare Parts.",
-      "sourceStatus": "live",
-      "supports": true
-    }
-  ],
+  "evidence": [],
   "nodes": [
     {
       "id": "n_3dfae650",
@@ -65,7 +28,7 @@
       "disposition": "editable",
       "matchKind": "exact",
       "confidence": 0.95,
-      "rationale": "Technical specification document for Project Atlas contains the literal '22 kW' for auxiliary drive. This is an internal specification document (draft status implied by context) and should be updated to reflect the approved 18.5 kW rating.",
+      "rationale": "Technical specification for Project Atlas contains the literal '22 kW' for auxiliary drive. This is an internal specification document and safe to update in place.",
       "excerpt": {
         "before": "Auxiliary drive: 22 kW continuous.",
         "after": "Auxiliary drive: 18.5 kW continuous.",
@@ -94,8 +57,12 @@
       "disposition": "historical",
       "matchKind": "exact",
       "confidence": 0.98,
-      "rationale": "This is Project Orion as-built documentation from 2024, not Project Atlas. The 22 kW motor referenced is a different project's actual installed equipment. Must be preserved as historical record.",
-      "excerpt": null,
+      "rationale": "Project Orion as-built documentation from 2024 contains '22 kW' but this is a DIFFERENT project. The document accurately records what was installed in Orion. Must be preserved as historical record; do not edit.",
+      "excerpt": {
+        "before": "Installed drive motor: 22 kW (ATX-series).",
+        "after": "",
+        "field": null
+      },
       "dependsOn": [],
       "requiresHumanReview": false,
       "surface": "preservation_notice",
@@ -104,8 +71,8 @@
           "annotate",
           "except"
         ],
-        "reason": "Project Orion as-built documentation from 2024 records the actual 22 kW motor that was installed in that project, not Project Atlas.",
-        "proposedNotice": "Note: Project Atlas motor specification changed to 18.5 kW in 2025. This Orion documentation remains accurate for the equipment actually installed in Project Orion."
+        "reason": "This document records the actual 22 kW motor installed in Project Orion in 2024. The current change applies only to Project Atlas. Editing this would falsify the historical record of what was built in Orion.",
+        "proposedNotice": "Note: Project Atlas subsequently adopted an 18.5 kW rating. This Orion record remains accurate for the equipment installed in 2024."
       }
     },
     {
@@ -118,7 +85,7 @@
       "disposition": "editable",
       "matchKind": "exact",
       "confidence": 0.92,
-      "rationale": "Commercial proposal draft v3 for Project Atlas contains literal '22 kW' specification. Marked for human review because changing motor rating in a commercial proposal may affect pricing, delivery commitments, and requires commercial approval before modification.",
+      "rationale": "Draft commercial proposal for Project Atlas contains literal '22 kW'. Marked draft v3 suggests it may be under active negotiation. Human review needed to confirm proposal has not been sent to customer and to check pricing implications of the power change.",
       "excerpt": {
         "before": "Drive motor: 22 kW, 400 V, IE3 efficiency class.",
         "after": "Drive motor: 18.5 kW, 400 V, IE3 efficiency class.",
@@ -135,7 +102,7 @@
         ],
         "paragraphContext": "Drive motor: 22 kW, 400 V, IE3 efficiency class.",
         "occurrences": 1,
-        "warning": "Commercial proposal draft — motor rating change may affect pricing, delivery terms, and contractual commitments. Human review required before customer communication."
+        "warning": "Draft v3 status suggests active negotiation. Verify proposal has not been sent to customer and confirm pricing reflects the reduced motor rating before accepting."
       }
     },
     {
@@ -147,11 +114,11 @@
       "status": "infected",
       "disposition": "irreversible",
       "matchKind": "exact",
-      "confidence": 0.96,
-      "rationale": "Sent email confirming 22 kW motor specification for Project Atlas. Email has already been delivered and cannot be silently edited. Requires corrective action: a follow-up email clarifying the specification change to 18.5 kW.",
+      "confidence": 0.97,
+      "rationale": "Sent email confirming '22 kW' specification for Project Atlas. Email has already been delivered and cannot be silently edited. Requires corrective action: a follow-up email with the updated specification.",
       "excerpt": {
         "before": "Confirming the drive motor at 22 kW as specified in the equipment schedule for Project Atlas.",
-        "after": "",
+        "after": "Confirming the drive motor at 18.5 kW as specified in the equipment schedule for Project Atlas.",
         "field": null
       },
       "dependsOn": [],
@@ -165,8 +132,8 @@
         "recipients": [
           "original email recipients"
         ],
-        "sentAt": "previously sent",
-        "impactExplanation": "Your sent email confirmed the Atlas drive motor at 22 kW, but the approved specification is now 18.5 kW. A follow-up email should clarify this change to prevent procurement or installation errors."
+        "sentAt": "unknown",
+        "impactExplanation": "You confirmed the Atlas drive motor at 22 kW in this email, but the approved specification has since changed to 18.5 kW. Recipients need the corrected specification to avoid ordering or designing for the wrong motor rating."
       }
     },
     {
@@ -178,8 +145,8 @@
       "status": "exposed",
       "disposition": "editable",
       "matchKind": "inferred",
-      "confidence": 0.72,
-      "rationale": "Task for electrical preparation and motor mount for Atlas project. The motor rating change from 22 kW to 18.5 kW may affect mounting dimensions, cable sizing, or electrical preparation work. No literal value visible in snippet, but task scope likely depends on motor specification. Human review needed to assess impact on work scope.",
+      "confidence": 0.75,
+      "rationale": "Task for electrical preparation and motor mount for Atlas. The motor mount design and electrical sizing likely depend on the motor rating, but the snippet does not contain the literal value. Human review needed to assess whether completed work is affected by the power reduction.",
       "excerpt": null,
       "dependsOn": [
         "n_3dfae650"
@@ -193,8 +160,8 @@
           "preserve_original",
           "set_urgency"
         ],
-        "impactStatement": "Motor rating reduction from 22 kW to 18.5 kW may affect mounting footprint, cable sizing (potentially smaller), and electrical preparation scope for TASK-001.",
-        "suggestedAssignee": "electrical engineer assigned to Atlas project",
+        "impactStatement": "The motor mount design and electrical sizing for TASK-001 were likely based on the 22 kW rating. The reduction to 18.5 kW may affect mounting dimensions, cable sizing, and protection settings. Completed work should be reviewed to determine if rework is needed.",
+        "suggestedAssignee": "electrical engineer responsible for TASK-001",
         "suggestedUrgency": "medium"
       }
     },
@@ -207,8 +174,8 @@
       "status": "infected",
       "disposition": "editable",
       "matchKind": "exact",
-      "confidence": 0.97,
-      "rationale": "CRM record for Atlas Drive Package contains literal field value 'motor_rating = 22 kW'. This is a structured data field that should be updated to 18.5 kW to maintain data integrity across systems.",
+      "confidence": 0.96,
+      "rationale": "CRM record for Atlas Drive Package contains literal field value 'motor_rating = 22 kW'. This is structured data in an internal system and safe to update directly.",
       "excerpt": {
         "before": "22 kW",
         "after": "18.5 kW",
@@ -223,9 +190,10 @@
           "except"
         ],
         "connectedOpportunities": [
-          "Atlas Drive Package CRM record links to quotations, orders, and delivery schedules"
+          "Atlas Drive Package sales record",
+          "Atlas project tracking"
         ],
-        "verifiedBy": "motor_rating field contains literal '22 kW' value"
+        "verifiedBy": "motor_rating field update from 22 kW to 18.5 kW"
       }
     }
   ],
@@ -233,26 +201,26 @@
     {
       "agent": "interpreter",
       "model": "anthropic/claude-sonnet-4.5",
-      "startedAt": "2026-09-12T11:25:27.855Z",
-      "durationMs": 3667,
-      "summary": "Extracted truth change: approved motor specification for Project Atlas 22 kW → 18.5 kW, confidence 0.95",
-      "tokensIn": 292,
-      "tokensOut": 113
+      "startedAt": "2026-09-12T11:38:57.398Z",
+      "durationMs": 4008,
+      "summary": "Extracted truth change: Project Atlas approved motor power rating 22 kW → 18.5 kW, confidence 0.95",
+      "tokensIn": 399,
+      "tokensOut": 143
     },
     {
       "agent": "evidence",
       "model": "openai/gpt-4o-mini",
-      "startedAt": "2026-09-12T11:25:31.769Z",
-      "durationMs": 3739,
-      "summary": "Exa returned 5 source(s); 4 relevant, 0 contradicting",
-      "tokensIn": 2684,
-      "tokensOut": 293
+      "startedAt": "2026-09-12T11:39:03.486Z",
+      "durationMs": 2625,
+      "summary": "Exa returned 5 source(s); 0 relevant, 0 contradicting",
+      "tokensIn": 1844,
+      "tokensOut": 156
     },
     {
       "agent": "tracer",
       "model": "n/a (mechanical retrieval)",
-      "startedAt": "2026-09-12T11:25:31.526Z",
-      "durationMs": 840,
+      "startedAt": "2026-09-12T11:39:01.407Z",
+      "durationMs": 811,
       "summary": "Found 6 candidate artefact(s) across Docs, Mail, Tasks, CRM: 4 literal, 1 by subject (possible dependencies), 1 via CRM field scan that search missed",
       "tokensIn": null,
       "tokensOut": null
@@ -260,20 +228,20 @@
     {
       "agent": "classifier",
       "model": "anthropic/claude-sonnet-4.5",
-      "startedAt": "2026-09-12T11:25:35.509Z",
-      "durationMs": 26317,
+      "startedAt": "2026-09-12T11:39:06.111Z",
+      "durationMs": 25504,
       "summary": "Classified 6: 4 editable, 1 historical, 1 irreversible, 1 exposed. 3 flagged for human review",
-      "tokensIn": 3010,
-      "tokensOut": 1307
+      "tokensIn": 3004,
+      "tokensOut": 1301
     },
     {
       "agent": "planner",
       "model": "anthropic/claude-sonnet-4.5",
-      "startedAt": "2026-09-12T11:26:01.827Z",
-      "durationMs": 17000,
+      "startedAt": "2026-09-12T11:39:31.616Z",
+      "durationMs": 12047,
       "summary": "Generated 5 distinct repair surface type(s) across 6 artefact(s)",
-      "tokensIn": 2106,
-      "tokensOut": 690
+      "tokensIn": 1152,
+      "tokensOut": 728
     }
   ],
   "summary": {
@@ -282,5 +250,5 @@
     "alreadyCommunicated": 1,
     "preserveAsHistorical": 1
   },
-  "generatedAt": "2026-09-12T11:26:18.827Z"
+  "generatedAt": "2026-09-12T11:39:43.664Z"
 }

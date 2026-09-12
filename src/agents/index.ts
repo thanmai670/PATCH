@@ -18,11 +18,11 @@ export type { SlackNomination, ClassifiedNode };
 export async function runPipeline(nomination: SlackNomination): Promise<InfectionReport> {
   const trace: AgentTraceEntry[] = [];
 
-  const { change, trace: t1 } = await interpreter(nomination);
+  const { change, extras, trace: t1 } = await interpreter(nomination);
   trace.push(t1);
 
   // Evidence and spread are independent — run them together.
-  const [ev, tr] = await Promise.all([evidence(change), tracer(change)]);
+  const [ev, tr] = await Promise.all([evidence(change, extras), tracer(change)]);
   trace.push(ev.trace, tr.trace);
 
   const cls = await classifier({ change, candidates: tr.candidates });

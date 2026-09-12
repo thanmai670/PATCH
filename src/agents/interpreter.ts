@@ -20,6 +20,10 @@ const Out = z.object({
   project: z.string().nullable(),
   isFactualChange: z.boolean(),
   reason: z.string(),
+  /** What the message cites as its source, e.g. "supplier technical bulletin TB-2026-114". */
+  sourceHint: z.string().nullable(),
+  /** The thing the value describes, without brand-ambiguous words. e.g. "rail drivetrain traction motor". */
+  subjectDomain: z.string().nullable(),
 });
 
 const SYSTEM = `You extract a single canonical TRUTH CHANGE from a nominated chat message.
@@ -35,11 +39,21 @@ previousValue and newValue must be the literal strings as a person would write t
 
 confidence reflects how clearly the message states the change, not how much you like it.
 
-Return ONLY JSON: {subject, previousValue, newValue, confidence, project, isFactualChange, reason}`;
+sourceHint: quote what the message cites as authority — a bulletin number, a document
+name, an attachment, a supplier. null if it cites nothing.
+
+subjectDomain: what the value actually describes, in words that will not collide with an
+unrelated brand when searched. "Project Atlas" is a codename and matches the wrong
+manufacturer; "rail drivetrain traction motor" does not. Be concrete about the equipment.
+
+Return ONLY JSON: {subject, previousValue, newValue, confidence, project, isFactualChange,
+reason, sourceHint, subjectDomain}`;
+
+export type InterpretedExtras = { sourceHint: string | null; subjectDomain: string | null };
 
 export async function interpreter(
   input: SlackNomination,
-): Promise<{ change: TruthChange; trace: AgentTraceEntry }> {
+): Promise<{ change: TruthChange; extras: InterpretedExtras; trace: AgentTraceEntry }> {
   const user = [
     `Channel: ${input.channel}`,
     `Author: ${input.author}`,
@@ -67,6 +81,7 @@ export async function interpreter(
 
   return {
     trace,
+    extras: { sourceHint: data.sourceHint, subjectDomain: data.subjectDomain },
     change: {
       id: `chg_${input.messageTs.replace(".", "")}`,
       subject: data.subject,

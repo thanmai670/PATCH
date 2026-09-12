@@ -18,7 +18,16 @@ const SYSTEM = `You assess whether each retrieved source SUPPORTS or CONTRADICTS
 
 supports=true  : the source asserts the NEW value, or withdraws the previous one.
 supports=false : the source still asserts the PREVIOUS value, or contradicts the change.
-relevant=false : the source is about something else entirely; it will be dropped.
+relevant=false : the source is not about THIS equipment and THIS change. Be strict.
+
+BE RUTHLESS ABOUT RELEVANCE. A source that merely contains the same number, or shares a
+word with the project codename, is NOT relevant. A product listing, a spare-parts page or
+a catalogue entry for a different manufacturer's equipment is NOT relevant even when the
+rating matches exactly. Marking such a source relevant puts a confident irrelevant claim
+in front of a human making a repair decision, which is worse than showing nothing.
+
+If nothing is genuinely relevant, mark everything relevant=false. "Internally confirmed
+only" is an honest, designed outcome.
 
 A contradicting source is valuable and must be reported, never suppressed — an older
 catalogue still listing the old value is exactly what a human needs to see.
@@ -29,8 +38,14 @@ Return ONLY JSON: {evidence: [{index, supports, relevant, highlight}]}`;
 
 export async function evidence(
   change: TruthChange,
+  extras: { sourceHint: string | null; subjectDomain: string | null } = { sourceHint: null, subjectDomain: null },
 ): Promise<{ evidence: Evidence[]; trace: AgentTraceEntry }> {
-  const query = `${change.subject} ${change.newValue} specification change`;
+  // Search what the message CITED, not the project codename. A codename like
+  // "Project Atlas" collides with real manufacturers (Atlas Copco), which returns
+  // confident, irrelevant sources — worse than returning nothing.
+  const query = extras.sourceHint
+    ? `${extras.sourceHint} ${change.newValue}`
+    : `${extras.subjectDomain ?? change.subject} ${change.newValue} specification revision`;
   const { results, reachable } = await findEvidence(query);
 
   if (results.length === 0) {
@@ -53,6 +68,8 @@ export async function evidence(
 
   const user = [
     `Change: ${change.subject}`,
+    extras.subjectDomain ? `Equipment: ${extras.subjectDomain}` : "",
+    extras.sourceHint ? `The message cites: ${extras.sourceHint}` : "",
     `Previous value: ${change.previousValue}`,
     `New value: ${change.newValue}`,
     "",
