@@ -100,12 +100,31 @@ async function jsonCapableModels() {
   });
   const { data } = await res.json();
   const majors = ["openai/", "anthropic/", "google/", "meta-llama/", "mistralai/", "deepseek/", "qwen/", "x-ai/"];
+  // Buttons can only show a handful, so the order decides what people actually
+  // see. Alphabetical put an arbitrary slice in front; this leads with models
+  // worth routing an agent to, then everything else alphabetically.
+  const PREFERRED = [
+    "anthropic/claude-sonnet-4.5",
+    "anthropic/claude-haiku-4.5",
+    "openai/gpt-4o-mini",
+    "openai/gpt-4o",
+    "google/gemini-2.5-flash",
+    "deepseek/deepseek-chat",
+    "qwen/qwen-2.5-72b-instruct",
+    "x-ai/grok-2-1212",
+    "mistralai/mistral-large",
+    "meta-llama/llama-3.3-70b-instruct",
+  ];
+  const rank = (id) => {
+    const i = PREFERRED.indexOf(id);
+    return i === -1 ? PREFERRED.length : i;
+  };
   modelCache = data
     // Agents demand JSON and validate with Zod; a model without JSON mode fails
     // schema validation twice and aborts the run, so never offer one.
     .filter((m) => (m.supported_parameters ?? []).includes("response_format"))
     .filter((m) => majors.some((x) => m.id.startsWith(x)) && !m.id.startsWith("~"))
-    .sort((a, b) => a.id.localeCompare(b.id));
+    .sort((a, b) => rank(a.id) - rank(b.id) || a.id.localeCompare(b.id));
   return modelCache;
 }
 

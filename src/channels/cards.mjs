@@ -204,28 +204,38 @@ export function modelPickerCard({ current, models, agent, onPick, onPickAgent })
 
       Divider({}),
 
-      Section({ children: Markdown({ children: "*Apply to one agent*" }) }),
-      Select({
-        name: "agent",
-        placeholder: agent ?? "All agents",
-        onSelect: onPickAgent,
-        options: [
-          { label: "All agents", value: "__all__" },
-          ...AGENTS.filter((a) => a !== "tracer").map((a) => ({ label: a, value: a })),
+      // Buttons, not Select: Slack renders Select as a bare heading here, which
+      // left the card looking broken. Buttons render natively.
+      Section({ children: Markdown({ children: "*Apply to*" }) }),
+      Actions({
+        children: [
+          Button({ value: "__all__", onClick: onPickAgent, children: "All agents" }),
+          Button({ value: "interpreter", onClick: onPickAgent, children: "interpreter" }),
+          Button({ value: "evidence", onClick: onPickAgent, children: "evidence" }),
+          Button({ value: "classifier", onClick: onPickAgent, children: "classifier" }),
+          Button({ value: "planner", onClick: onPickAgent, children: "planner" }),
         ],
       }),
 
-      Section({ children: Markdown({ children: `*Choose a model*  ·  _${models.length} JSON-capable models_` }) }),
-      Select({
-        name: "model",
-        placeholder: "Search models…",
-        onSelect: onPick,
-        options: models.slice(0, 100).map((m) => ({
-          label: `${m.id}  ${perMillion(m.pricing?.prompt)}`.slice(0, 74),
-          value: m.id,
-        })),
+      Section({
+        children: Markdown({
+          children: `*Pick a model*  ·  _currently applying to ${scope}_`,
+        }),
       }),
+      Actions({
+        children: models.slice(0, 5).map((m) =>
+          Button({ value: m.id, onClick: onPick, children: `${m.id.split("/").pop()} ${perMillion(m.pricing?.prompt)}`.slice(0, 70) }),
+        ),
+      }),
+      ...(models.length > 5
+        ? [Actions({
+            children: models.slice(5, 10).map((m) =>
+              Button({ value: m.id, onClick: onPick, children: `${m.id.split("/").pop()} ${perMillion(m.pricing?.prompt)}`.slice(0, 70) }),
+            ),
+          })]
+        : []),
 
+      Context({ children: `Any other model: \`@patch use <model-id>\`  ·  ${models.length} available` }),
       Context({
         children: "Only models supporting JSON mode are listed — the agents validate every response against a schema.",
       }),
@@ -294,17 +304,13 @@ export function workspaceChangeCard({ detections, onNominate, onDismiss }) {
 
       Divider({}),
       Section({ children: Markdown({ children: "*Nominate one to see where the old value spread*" }) }),
-      Select({
-        name: "detection",
-        placeholder: "Choose a change…",
-        onSelect: onNominate,
-        options: detections.slice(0, 100).map((d) => ({
-          label: `${d.previousValue} → ${d.newValue}  ·  ${d.docTitle}`.slice(0, 74),
-          value: d.id,
-        })),
-      }),
       Actions({
-        children: [Button({ value: "dismiss", onClick: onDismiss, children: "Dismiss all" })],
+        children: [
+          ...detections.slice(0, 4).map((d) =>
+            Button({ value: d.id, onClick: onNominate, children: `${d.previousValue} → ${d.newValue}`.slice(0, 70) }),
+          ),
+          Button({ value: "dismiss", onClick: onDismiss, children: "Dismiss all" }),
+        ],
       }),
       Context({
         children: "PATCH watches the workspace but never repairs on its own — a human nominates.",
