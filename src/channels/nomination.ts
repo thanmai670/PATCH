@@ -9,7 +9,9 @@
  *
  * Do not "clean this up" into the filtered form — it silently breaks the demo.
  */
-const BANDAGE = new Set(["adhesive_bandage", "bandage", "🩹"]);
+const BANDAGE = new Set([
+  "adhesive_bandage", "bandage", "plaster", "band-aid", "bandaid", "band_aid", "🩹",
+]);
 
 export function isNomination(emoji: string, rawEmoji: string): boolean {
   return BANDAGE.has(rawEmoji) || BANDAGE.has(emoji);

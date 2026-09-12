@@ -8,6 +8,8 @@ const cases: [string, string, boolean, boolean][] = [
   ["thumbs_up", "thumbs_up", true, false],
   ["🩹", "🩹", true, true],
   ["bandage", "bandage", true, true],
+  ["plaster", "plaster", true, true],
+  ["band-aid", "band-aid", true, true],
 ];
 let ok = true;
 for (const [emoji, rawEmoji, added, want] of cases) {

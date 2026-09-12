@@ -24,6 +24,16 @@ const run = promisify(execFile);
  * the interop, run it as a child process and read the report it saves. Slower than
  * an in-process call, and completely robust.
  */
+/** Interpret the nominated message so the card shows what was actually said. */
+async function interpretMessage(text, author, channel) {
+  const { stdout } = await run(
+    "npx",
+    ["tsx", "--env-file=.env.local", "scripts/interpret-once.ts", text, author, channel],
+    { cwd: process.cwd(), maxBuffer: 1024 * 1024 * 8 },
+  );
+  return JSON.parse(stdout.trim().split("\n").pop());
+}
+
 async function runPipeline() {
   await run("npx", ["tsx", "--env-file=.env.local", "scripts/run-pipeline.ts", "--save"], {
     cwd: process.cwd(),
@@ -35,7 +45,12 @@ async function runPipeline() {
 const VIEW_URL = `${process.env.NEXT_PUBLIC_BASE_URL ?? "http://localhost:3000"}/?fixture=0`;
 import { createCopilotNodeListener } from "@copilotkit/runtime/v2/node";
 
-const BANDAGE = new Set(["adhesive_bandage", "bandage", "🩹"]);
+// Slack workspaces name this emoji differently by locale: :plaster: (en-GB),
+// :adhesive_bandage: (en-US), :band-aid: on some clients. Match them all, plus the
+// raw character. A too-narrow set here silently rejects a delivered reaction.
+const BANDAGE = new Set([
+  "adhesive_bandage", "bandage", "plaster", "band-aid", "bandaid", "band_aid", "🩹",
+]);
 const isNomination = (emoji, rawEmoji) => BANDAGE.has(rawEmoji) || BANDAGE.has(emoji);
 
 // createChannel wants the project-unique lowercase kebab-case channel NAME
@@ -68,15 +83,31 @@ channel.onReaction(async (evt) => {
   console.log(`   messageId: ${evt.messageId}`);
 
   try {
+    const nominatedText = textOf(evt) || evt.messageRef?.text || "";
+    const result = await interpretMessage(nominatedText, nominator, "#project-atlas");
+
+    if (result.error) {
+      console.log(`   interpreter declined: ${result.error}`);
+      await evt.thread.post(
+        result.notAChange
+          ? "That does not look like a durable fact change, so I have not searched or changed anything."
+          : `I could not read a truth change from that message: ${result.error}`,
+      );
+      return;
+    }
+
+    const c = result.change;
+    console.log(`   interpreted: ${c.subject} ${c.previousValue} → ${c.newValue} (${c.confidence})`);
+
     // Card 1 — the gate. Nothing is searched or written until a human confirms.
     await evt.thread.post(
       confirmationCard({
         change: {
-          subject: "Drive motor specification — Project Atlas",
-          previousValue: "22 kW",
-          newValue: "18.5 kW",
-          confidence: 0.95,
-          announcedBy: nominator,
+          subject: c.subject,
+          previousValue: c.previousValue,
+          newValue: c.newValue,
+          confidence: c.confidence,
+          announcedBy: c.announcedBy ?? nominator,
         },
         onConfirm: async (ctx) => {
           await ctx.thread.post("Confirmed. Checking external evidence and searching the workspace…");
