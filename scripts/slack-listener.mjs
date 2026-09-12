@@ -62,33 +62,33 @@ channel.onReaction(async (evt) => {
   if (!evt.added) return;
   if (!isNomination(evt.emoji, evt.rawEmoji)) return;
 
-  const who = evt.user?.name ?? evt.actor?.id ?? "someone";
+  const nominator = who(evt);
   console.log("\n🩹 NOMINATION RECEIVED");
-  console.log(`   from:      ${who}`);
+  console.log(`   from:      ${nominator}`);
   console.log(`   messageId: ${evt.messageId}`);
 
   try {
     // Card 1 — the gate. Nothing is searched or written until a human confirms.
-    await evt.thread.send(
+    await evt.thread.post(
       confirmationCard({
         change: {
           subject: "Drive motor specification — Project Atlas",
           previousValue: "22 kW",
           newValue: "18.5 kW",
           confidence: 0.95,
-          announcedBy: who,
+          announcedBy: nominator,
         },
         onConfirm: async (ctx) => {
-          await ctx.thread.send("Confirmed. Checking external evidence and searching the workspace…");
+          await ctx.thread.post("Confirmed. Checking external evidence and searching the workspace…");
           const report = await runPipeline();
-          await ctx.thread.send(summaryCard({ report, viewUrl: VIEW_URL }));
+          await ctx.thread.post(summaryCard({ report, viewUrl: VIEW_URL }));
           console.log(`   pipeline done: ${report.nodes.length} artefacts`);
         },
         onEdit: async (ctx) => {
-          await ctx.thread.send("Tell me the corrected previous and new values and I will re-read it.");
+          await ctx.thread.post("Tell me the corrected previous and new values and I will re-read it.");
         },
         onReject: async (ctx) => {
-          await ctx.thread.send("Understood — not treating this as a truth change. Nothing was searched or changed.");
+          await ctx.thread.post("Understood — not treating this as a truth change. Nothing was searched or changed.");
         },
       }),
     );
@@ -99,14 +99,20 @@ channel.onReaction(async (evt) => {
 
 // Every handler registered, so "nothing arrives" is distinguishable from
 // "reactions specifically do not arrive".
+const who = (evt) => evt.user?.name ?? evt.actor?.id ?? "someone";
+const textOf = (evt) => String(evt.message?.text ?? evt.text ?? "");
+
 channel.onMessage(async (evt) => {
-  console.log(`[message] from=${evt.user?.name ?? evt.actor?.id ?? "?"} text=${String(evt.text ?? "").slice(0, 80)}`);
+  console.log(`[message] from=${who(evt)} text=${textOf(evt).slice(0, 90)}`);
 });
 
 channel.onMention(async (evt) => {
-  console.log(`[mention] from=${evt.user?.name ?? evt.actor?.id ?? "?"} text=${String(evt.text ?? "").slice(0, 80)}`);
-  try { await evt.thread.send("PATCH is listening. React 🩹 on a message to nominate it."); }
-  catch (e) { console.error("  reply failed:", e?.message ?? e); }
+  console.log(`[mention] from=${who(evt)} text=${textOf(evt).slice(0, 90)}`);
+  try {
+    await evt.thread.post("PATCH is listening. React 🩹 on a message to nominate it as a truth change.");
+  } catch (e) {
+    console.error("  reply failed:", e?.message ?? e);
+  }
 });
 
 channel.onThreadStarted?.(async () => console.log("[threadStarted]"));
