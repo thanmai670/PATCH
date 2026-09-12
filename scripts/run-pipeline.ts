@@ -9,15 +9,30 @@ import { runPipeline } from "../src/agents";
 import { InfectionReport } from "../src/contract";
 import { writeFileSync } from "node:fs";
 
+/**
+ * The nominated text comes from the caller. It used to be hardcoded here, which
+ * meant Confirm in Slack ran the motor scenario no matter what the human actually
+ * said - the card showed one change and the pipeline repaired another.
+ */
+const arg = (flag: string): string | undefined => {
+  const i = process.argv.indexOf(flag);
+  return i !== -1 ? process.argv[i + 1] : undefined;
+};
+
+const DEFAULT_TEXT =
+  "Supplier correction: the approved motor for Project Atlas is now 18.5 kW, not 22 kW. Please use the revised specification attached here.";
+
 const nomination = {
-  channel: "#project-atlas",
+  channel: arg("--channel") ?? "#project-atlas",
   messageTs: `${Math.floor(Date.now() / 1000)}.000100`,
-  text: "Supplier correction: the approved motor for Project Atlas is now 18.5 kW, not 22 kW. Please use the revised specification attached here.",
-  threadText: ["Is that the ATX-series unit?", "Yes — supplier bulletin TB-2026-114."],
-  author: "Thanmai",
-  attachments: [{ name: "TB-2026-114.pdf", url: "https://example-supplier.com/bulletins/tb-2026-114" }],
+  text: arg("--text") ?? DEFAULT_TEXT,
+  threadText: [],
+  author: arg("--author") ?? "Thanmai",
+  attachments: [],
   permalink: null,
 };
+
+console.log(`nomination: ${nomination.text.slice(0, 120)}`);
 
 (async () => {
   console.time("pipeline");

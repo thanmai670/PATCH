@@ -152,6 +152,21 @@ export async function tracer(
     });
   }
 
+  // One artefact can surface from several passes and, for wiki pages, several
+  // times from one search. Duplicates cost a classifier call each and render as
+  // separate nodes on the map - "Supplier Directory" appeared three times.
+  const unique = new Map<string, Candidate>();
+  for (const c of candidates) {
+    const key = c.ambiguousId || `${c.module}:${c.title}`;
+    const seen = unique.get(key);
+    // Keep the richest evidence: a literal hit beats a subject hit.
+    if (!seen || (seen.foundBy === "subject_search" && c.foundBy !== "subject_search")) {
+      unique.set(key, c);
+    }
+  }
+  candidates.length = 0;
+  candidates.push(...unique.values());
+
   await enrich(candidates, change.previousValue);
   await markMailState(candidates);
 

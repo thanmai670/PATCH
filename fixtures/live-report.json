@@ -1,17 +1,17 @@
 {
-  "reportId": "rpt_chg_1789218744000100",
+  "reportId": "rpt_chg_1789220635000100",
   "change": {
-    "id": "chg_1789218744000100",
-    "subject": "Project Atlas approved motor power rating",
+    "id": "chg_1789220635000100",
+    "subject": "approved motor power rating",
     "previousValue": "22 kW",
     "newValue": "18.5 kW",
     "confidence": 0.95,
     "announcedBy": "Thanmai",
-    "announcedAt": "2026-09-12T13:12:24.000Z",
+    "announcedAt": "2026-09-12T13:43:55.000Z",
     "project": "Project Atlas",
     "patientZero": {
       "channel": "#project-atlas",
-      "messageTs": "1789218744.000100",
+      "messageTs": "1789220635.000100",
       "text": "Supplier correction: the approved motor for Project Atlas is now 18.5 kW, not 22 kW. Please use the revised specification attached here.",
       "permalink": null
     }
@@ -19,16 +19,16 @@
   "evidence": [],
   "nodes": [
     {
-      "id": "n_da1cb513",
-      "ambiguousId": "da1cb513-30b2-4201-8708-f2ec6329bf94",
+      "id": "n_416f9774",
+      "ambiguousId": "416f9774-f413-4d85-b889-a80c137bb78a",
       "kind": "document",
       "title": "Supplier Directory",
-      "href": "https://app.ambiguous.ai/documents/da1cb513-30b2-4201-8708-f2ec6329bf94",
+      "href": "https://app.ambiguous.ai/documents/416f9774-f413-4d85-b889-a80c137bb78a",
       "status": "infected",
       "disposition": "editable",
       "matchKind": "exact",
-      "confidence": 0.65,
-      "rationale": "Supplier Directory lists '22 kW' as 'Series rating' for a supplier. This may refer to the supplier's standard product range rather than Project Atlas specifically. Needs human verification of context before editing.",
+      "confidence": 0.6,
+      "rationale": "Supplier Directory lists a 'Series rating: 22 kW' which may refer to a standard product line rather than the Project Atlas motor specifically. Needs human review to confirm whether this is the Atlas motor or a general supplier capability.",
       "excerpt": {
         "before": "Series rating: 22 kW",
         "after": "Series rating: 18.5 kW",
@@ -39,86 +39,27 @@
       "surface": "document_diff",
       "surfaceProps": {
         "actions": [
-          "rewrite",
           "except"
         ],
-        "paragraphContext": "Supplier Directory entry lists '22 kW' as 'Series rating' for a supplier. This may describe the supplier's standard product catalog rather than Project Atlas specifications.",
+        "paragraphContext": "Series rating: 22 kW",
         "occurrences": 1,
-        "warning": "Low confidence (0.65) — verify whether this describes supplier capabilities or Atlas requirements before accepting."
+        "warning": "This Supplier Directory entry may describe the supplier's standard product line capability rather than the Project Atlas motor specification. Human review required to confirm whether this 22 kW rating refers to Atlas or to general supplier inventory."
       }
     },
     {
-      "id": "n_d06273e6",
-      "ambiguousId": "d06273e6-8079-41aa-bd8c-69ff3eae57bd",
+      "id": "n_771f981e",
+      "ambiguousId": "771f981e-a9dd-4ae0-8bda-07a7914c6c65",
       "kind": "document",
       "title": "Drive Systems — Selection Guidance",
-      "href": "https://app.ambiguous.ai/documents/d06273e6-8079-41aa-bd8c-69ff3eae57bd",
-      "status": "infected",
-      "disposition": "editable",
-      "matchKind": "exact",
-      "confidence": 0.7,
-      "rationale": "Wiki guidance document states '22 kW' as 'current series rating for refurbishment projects'. This appears to be general guidance rather than Atlas-specific, but the changed fact may indicate Atlas is now the new standard. Human review needed to determine scope.",
-      "excerpt": {
-        "before": "The current series rating for refurbishment projects is **22 kW**",
-        "after": "The current series rating for refurbishment projects is **18.5 kW**",
-        "field": null
-      },
-      "dependsOn": [],
-      "requiresHumanReview": true,
-      "surface": "document_diff",
-      "surfaceProps": {
-        "actions": [
-          "rewrite",
-          "except"
-        ],
-        "paragraphContext": "Wiki guidance states '22 kW' as 'current series rating for refurbishment projects'. This appears to be general design guidance that may now be outdated by the Atlas decision.",
-        "occurrences": 1,
-        "warning": "Moderate confidence (0.7) — determine whether Atlas sets a new standard for all refurbishment projects or is a special case."
-      }
-    },
-    {
-      "id": "n_2de1bb41",
-      "ambiguousId": "2de1bb41-3524-4882-840b-57b55a38aa35",
-      "kind": "document",
-      "title": "Supplier Agreement — ATX Drives (Contract 44-119)",
-      "href": "https://app.ambiguous.ai/documents/2de1bb41-3524-4882-840b-57b55a38aa35",
-      "status": "infected",
-      "disposition": "editable",
-      "matchKind": "exact",
-      "confidence": 0.85,
-      "rationale": "Supplier contract specifies '22 kW' as series drive package rating. This is a contractual document that may require formal amendment rather than silent edit. High confidence it relates to Atlas given the ATX Drives reference.",
-      "excerpt": {
-        "before": "Series drive package nominal rating: 22 kW",
-        "after": "Series drive package nominal rating: 18.5 kW",
-        "field": null
-      },
-      "dependsOn": [],
-      "requiresHumanReview": true,
-      "surface": "document_diff",
-      "surfaceProps": {
-        "actions": [
-          "rewrite",
-          "except"
-        ],
-        "paragraphContext": "Supplier contract (Contract 44-119) specifies '22 kW' as the series drive package rating. Contractual documents typically require formal amendment procedures rather than silent edits.",
-        "occurrences": 1,
-        "warning": "Confidence 85%. Human review required before any write."
-      }
-    },
-    {
-      "id": "n_3dfae650",
-      "ambiguousId": "3dfae650-8cf5-42b7-9b85-80518384d58f",
-      "kind": "document",
-      "title": "Atlas Drivetrain — Technical Specification",
-      "href": "https://app.ambiguous.ai/documents/3dfae650-8cf5-42b7-9b85-80518384d58f",
+      "href": "https://app.ambiguous.ai/documents/771f981e-a9dd-4ae0-8bda-07a7914c6c65",
       "status": "infected",
       "disposition": "editable",
       "matchKind": "exact",
       "confidence": 0.95,
-      "rationale": "Atlas Technical Specification document explicitly states 'Auxiliary drive: 22 kW continuous'. Clear Atlas project reference and literal match to changed fact.",
+      "rationale": "Drive Systems guidance document explicitly states 'current series rating for refurbishment projects is 22 kW' — this is policy/guidance that should reflect the new approved rating.",
       "excerpt": {
-        "before": "Auxiliary drive: 22 kW continuous",
-        "after": "Auxiliary drive: 18.5 kW continuous",
+        "before": "The current series rating for refurbishment projects is **22 kW**.",
+        "after": "The current series rating for refurbishment projects is **18.5 kW**.",
         "field": null
       },
       "dependsOn": [],
@@ -130,7 +71,7 @@
           "rewrite",
           "except"
         ],
-        "paragraphContext": "Atlas Technical Specification states 'Auxiliary drive: 22 kW continuous'. This is the authoritative specification document for the project.",
+        "paragraphContext": "The current series rating for refurbishment projects is **22 kW**.",
         "occurrences": 1
       }
     },
@@ -143,11 +84,11 @@
       "status": "infected",
       "disposition": "editable",
       "matchKind": "exact",
-      "confidence": 0.95,
-      "rationale": "Draft commercial proposal for Project Atlas lists 'Drive motor: 22 kW'. Draft status (v3) and clear project match make this safe to update.",
+      "confidence": 0.98,
+      "rationale": "Commercial Proposal Draft v3 for Project Atlas contains literal '22 kW' motor specification. As a draft, it is editable and should be updated to reflect the approved 18.5 kW rating.",
       "excerpt": {
-        "before": "Drive motor: 22 kW, 400 V, IE3 efficiency class",
-        "after": "Drive motor: 18.5 kW, 400 V, IE3 efficiency class",
+        "before": "Drive motor: 22 kW, 400 V, IE3 efficiency class.",
+        "after": "Drive motor: 18.5 kW, 400 V, IE3 efficiency class.",
         "field": null
       },
       "dependsOn": [],
@@ -159,8 +100,96 @@
           "rewrite",
           "except"
         ],
-        "paragraphContext": "Draft commercial proposal (v3) lists 'Drive motor: 22 kW, 400 V, IE3 efficiency class'. Draft status means this can be corrected before finalization.",
+        "paragraphContext": "Drive motor: 22 kW, 400 V, IE3 efficiency class.",
         "occurrences": 1
+      }
+    },
+    {
+      "id": "n_3dfae650",
+      "ambiguousId": "3dfae650-8cf5-42b7-9b85-80518384d58f",
+      "kind": "document",
+      "title": "Atlas Drivetrain — Technical Specification",
+      "href": "https://app.ambiguous.ai/documents/3dfae650-8cf5-42b7-9b85-80518384d58f",
+      "status": "infected",
+      "disposition": "editable",
+      "matchKind": "exact",
+      "confidence": 0.97,
+      "rationale": "Atlas Drivetrain Technical Specification states 'Auxiliary drive: 22 kW continuous' — directly references the motor rating that has changed to 18.5 kW.",
+      "excerpt": {
+        "before": "Auxiliary drive: 22 kW continuous.",
+        "after": "Auxiliary drive: 18.5 kW continuous.",
+        "field": null
+      },
+      "dependsOn": [],
+      "requiresHumanReview": false,
+      "surface": "document_diff",
+      "surfaceProps": {
+        "actions": [
+          "accept",
+          "rewrite",
+          "except"
+        ],
+        "paragraphContext": "Auxiliary drive: 22 kW continuous.",
+        "occurrences": 1
+      }
+    },
+    {
+      "id": "n_2de1bb41",
+      "ambiguousId": "2de1bb41-3524-4882-840b-57b55a38aa35",
+      "kind": "historical_document",
+      "title": "Supplier Agreement — ATX Drives (Contract 44-119)",
+      "href": "https://app.ambiguous.ai/documents/2de1bb41-3524-4882-840b-57b55a38aa35",
+      "status": "infected",
+      "disposition": "irreversible",
+      "matchKind": "exact",
+      "confidence": 0.92,
+      "rationale": "Supplier Agreement (Contract 44-119) specifies 'Series drive package nominal rating: 22 kW'. This is a signed contract document, making it historical/irreversible. Requires amendment or addendum, not silent edit.",
+      "excerpt": {
+        "before": "Series drive package nominal rating: 22 kW.",
+        "after": "Series drive package nominal rating: 18.5 kW.",
+        "field": null
+      },
+      "dependsOn": [],
+      "requiresHumanReview": true,
+      "surface": "corrective_message",
+      "surfaceProps": {
+        "actions": [
+          "draft_correction",
+          "except"
+        ],
+        "recipients": [
+          "Contract administrator",
+          "ATX Drives commercial contact"
+        ],
+        "impactExplanation": "Contract 44-119 with ATX Drives specifies a 22 kW series drive package, but the approved motor rating for Project Atlas is now 18.5 kW. This contract requires a formal amendment or addendum to reflect the reduced rating and any associated changes to pricing, delivery schedule, or technical specifications."
+      }
+    },
+    {
+      "id": "n_98ffeef4",
+      "ambiguousId": "98ffeef4-24f1-4027-9f23-9946c0dd1cef",
+      "kind": "document",
+      "title": "Supplier Directory",
+      "href": "https://app.ambiguous.ai/documents/98ffeef4-24f1-4027-9f23-9946c0dd1cef",
+      "status": "infected",
+      "disposition": "editable",
+      "matchKind": "exact",
+      "confidence": 0.6,
+      "rationale": "Duplicate of 416f9774 — same Supplier Directory entry with 'Series rating: 22 kW'. Same concern: may refer to supplier's standard product line rather than Atlas-specific rating.",
+      "excerpt": {
+        "before": "Series rating: 22 kW",
+        "after": "Series rating: 18.5 kW",
+        "field": null
+      },
+      "dependsOn": [],
+      "requiresHumanReview": true,
+      "surface": "document_diff",
+      "surfaceProps": {
+        "actions": [
+          "except"
+        ],
+        "paragraphContext": "Series rating: 22 kW",
+        "occurrences": 1,
+        "warning": "This appears to be a duplicate Supplier Directory entry with the same ambiguity as n_416f9774. The 22 kW rating may describe supplier capability rather than the Atlas project specification. Human review needed before any change."
       }
     },
     {
@@ -172,11 +201,11 @@
       "status": "infected",
       "disposition": "editable",
       "matchKind": "exact",
-      "confidence": 0.98,
-      "rationale": "Task explicitly references the rating change '22 kW → 18.5 kW' for Atlas. The task description itself contains the old value and should reflect the approved change.",
+      "confidence": 0.9,
+      "rationale": "Task explicitly references the rating change '22 kW → 18.5 kW' as context for review work. The literal values should be updated to reflect that the change has been approved.",
       "excerpt": {
-        "before": "Review the impact of 22 kW → 18.5 kW",
-        "after": "Review the impact of 18.5 kW (approved rating)",
+        "before": "Review the impact of 22 kW → 18.5 kW on this work before it proceeds.",
+        "after": "Review the impact of the approved rating change (from 22 kW to 18.5 kW) on this work before it proceeds.",
         "field": null
       },
       "dependsOn": [],
@@ -188,7 +217,7 @@
           "rewrite",
           "except"
         ],
-        "paragraphContext": "Task description references 'Review the impact of 22 kW → 18.5 kW'. The task itself should reflect that 18.5 kW is now the approved rating, not a proposed change.",
+        "paragraphContext": "Review the impact of 22 kW → 18.5 kW on this work before it proceeds.",
         "occurrences": 1
       }
     },
@@ -201,11 +230,11 @@
       "status": "infected",
       "disposition": "irreversible",
       "matchKind": "exact",
-      "confidence": 0.95,
-      "rationale": "Email marked [ALREADY SENT] confirming '22 kW' specification for Atlas. Cannot be edited; requires corrective follow-up communication to recipient.",
+      "confidence": 0.98,
+      "rationale": "Email marked [ALREADY SENT] confirming '22 kW as specified' — this is irreversible. A correction email must be sent to update the recipient with the new 18.5 kW rating.",
       "excerpt": {
-        "before": "Confirming the drive motor at 22 kW",
-        "after": "",
+        "before": "Confirming the drive motor at 22 kW as specified in the equipment schedule for Project Atlas.",
+        "after": "Confirming the drive motor at 18.5 kW as specified in the equipment schedule for Project Atlas.",
         "field": null
       },
       "dependsOn": [],
@@ -217,10 +246,10 @@
           "except"
         ],
         "recipients": [
-          "Original email recipient(s)"
+          "Original email recipient"
         ],
-        "sentAt": "Previously sent",
-        "impactExplanation": "The sent email confirmed 22 kW as the Atlas drive motor specification. The recipient now has outdated information following the approved change to 18.5 kW. A correction ensures they work with current specifications."
+        "sentAt": "2024-01-15T09:23:00Z",
+        "impactExplanation": "An email sent on 15 January 2024 confirmed the Atlas drive motor at 22 kW, but the approved specification is now 18.5 kW. The recipient needs to be notified of this correction to ensure their records, planning, and any dependent work reflect the accurate motor rating."
       }
     },
     {
@@ -232,11 +261,11 @@
       "status": "infected",
       "disposition": "editable",
       "matchKind": "exact",
-      "confidence": 0.95,
-      "rationale": "Unsent draft email referencing 'Atlas drive packages, rated 22 kW'. Draft status means safe to correct before sending.",
+      "confidence": 0.98,
+      "rationale": "Unsent draft email referencing 'Atlas drive packages, rated 22 kW' — editable and should be corrected to 18.5 kW before sending.",
       "excerpt": {
-        "before": "Atlas drive packages, rated 22 kW",
-        "after": "Atlas drive packages, rated 18.5 kW",
+        "before": "factory acceptance test for the Atlas drive packages, rated 22 kW",
+        "after": "factory acceptance test for the Atlas drive packages, rated 18.5 kW",
         "field": null
       },
       "dependsOn": [],
@@ -248,25 +277,23 @@
           "rewrite",
           "except"
         ],
-        "paragraphContext": "Unsent draft email mentions 'Atlas drive packages, rated 22 kW'. Since this has not been sent, it can be corrected to reflect the approved 18.5 kW rating.",
+        "paragraphContext": "factory acceptance test for the Atlas drive packages, rated 22 kW",
         "occurrences": 1
       }
     },
     {
-      "id": "n_0ed00abe",
-      "ambiguousId": "0ed00abe-b27a-47f0-a4bb-70844caa0b38",
-      "kind": "document",
-      "title": "Atlas — Factory Acceptance Test Plan",
-      "href": "https://app.ambiguous.ai/documents/0ed00abe-b27a-47f0-a4bb-70844caa0b38",
+      "id": "n_ddf4ef61",
+      "ambiguousId": "ddf4ef61-7663-4e4b-8e97-5a0dea1fa44d",
+      "kind": "task",
+      "title": "TASK-001: Electrical preparation — Atlas motor mount",
+      "href": "https://app.ambiguous.ai/tasks/ddf4ef61-7663-4e4b-8e97-5a0dea1fa44d",
       "status": "exposed",
       "disposition": "editable",
-      "matchKind": "semantic",
-      "confidence": 0.85,
-      "rationale": "Factory Acceptance Test Plan for Atlas. Test procedures (full-load run, insulation tests) depend on motor rating but snippet shows no literal '22 kW'. Test parameters likely need review.",
+      "matchKind": "inferred",
+      "confidence": 0.7,
+      "rationale": "Task for 'Electrical preparation — Atlas motor mount' likely depends on motor dimensions/weight/mounting which may change with the rating reduction from 22 kW to 18.5 kW. No literal value present but work scope may be affected.",
       "excerpt": null,
-      "dependsOn": [
-        "n_3dfae650"
-      ],
+      "dependsOn": [],
       "requiresHumanReview": true,
       "surface": "dependency_decision",
       "surfaceProps": {
@@ -276,9 +303,9 @@
           "preserve_original",
           "set_urgency"
         ],
-        "impactStatement": "The Factory Acceptance Test Plan procedures (full-load run, insulation tests) are designed for specific motor electrical characteristics. The rating change from 22 kW to 18.5 kW affects current draw, thermal behavior, and test acceptance criteria. Test procedures must be reverified before factory testing proceeds.",
-        "suggestedAssignee": "Test engineer or electrical engineer responsible for Atlas FAT",
-        "suggestedUrgency": "high"
+        "impactStatement": "The motor mount electrical preparation task may be affected by the rating change from 22 kW to 18.5 kW, as the physical dimensions, weight, cable entry points, and mounting requirements could differ between motor sizes. Engineering review is needed to confirm whether the current preparation scope remains valid or requires modification.",
+        "suggestedAssignee": "Electrical lead engineer",
+        "suggestedUrgency": "medium"
       }
     },
     {
@@ -290,12 +317,10 @@
       "status": "exposed",
       "disposition": "editable",
       "matchKind": "semantic",
-      "confidence": 0.9,
-      "rationale": "Cable sizing calculations for Atlas. Conductor sizing is directly derived from motor rating but no literal '22 kW' visible in snippet. Calculations must be reverified for 18.5 kW.",
+      "confidence": 0.95,
+      "rationale": "Cable Schedule states 'Conductor sizing derived from the approved motor load' — the sizing calculations depend on the motor rating but do not contain the literal value. Must be recalculated for 18.5 kW.",
       "excerpt": null,
-      "dependsOn": [
-        "n_3dfae650"
-      ],
+      "dependsOn": [],
       "requiresHumanReview": true,
       "surface": "dependency_decision",
       "surfaceProps": {
@@ -305,26 +330,53 @@
           "preserve_original",
           "set_urgency"
         ],
-        "impactStatement": "Cable sizing calculations are derived from motor full-load current, which changes with the rating reduction from 22 kW to 18.5 kW. While the 18.5 kW motor draws less current (potentially making existing calculations conservative), all conductor sizing, protection coordination, and voltage drop calculations should be reverified for accuracy and compliance.",
-        "suggestedAssignee": "Electrical design engineer responsible for Atlas cable schedule",
+        "impactStatement": "The Atlas Cable Schedule states that conductor sizing is derived from the approved motor load. With the motor rating reduced from 22 kW to 18.5 kW, the load current will decrease, potentially allowing smaller cable sizes. All sizing calculations must be recalculated and the schedule updated to reflect the new 18.5 kW rating.",
+        "suggestedAssignee": "Electrical design engineer",
         "suggestedUrgency": "high"
       }
     },
     {
-      "id": "n_80480a25",
-      "ambiguousId": "80480a25-1755-4afb-b409-42f81ff523a7",
+      "id": "n_d80c89b3",
+      "ambiguousId": "d80c89b3-24e6-4425-ad4e-b276b933e2bc",
       "kind": "task",
-      "title": "TASK-007: Schedule Atlas factory acceptance test",
-      "href": "https://app.ambiguous.ai/tasks/80480a25-1755-4afb-b409-42f81ff523a7",
+      "title": "TASK-008: Update cable schedule after design freeze",
+      "href": "https://app.ambiguous.ai/tasks/d80c89b3-24e6-4425-ad4e-b276b933e2bc",
       "status": "exposed",
       "disposition": "editable",
       "matchKind": "semantic",
-      "confidence": 0.8,
-      "rationale": "Task to schedule Atlas factory acceptance test. Empty snippet but test scheduling depends on equipment specification. May need timeline adjustment if rating change affects test setup.",
+      "confidence": 0.92,
+      "rationale": "Task to 'Update cable schedule after design freeze' explicitly notes that 'any change to the rating invalidates the current se[lection]' — this task is now actionable given the rating change.",
       "excerpt": null,
       "dependsOn": [
-        "n_0ed00abe"
+        "n_402197f4"
       ],
+      "requiresHumanReview": false,
+      "surface": "dependency_decision",
+      "surfaceProps": {
+        "actions": [
+          "create_review",
+          "assign_engineer",
+          "preserve_original",
+          "set_urgency"
+        ],
+        "impactStatement": "This task to update the cable schedule after design freeze explicitly notes that any rating change invalidates the current selection. The approved change from 22 kW to 18.5 kW triggers this task, which should now be prioritized and assigned to ensure the cable schedule reflects the correct motor rating.",
+        "suggestedAssignee": "Electrical design engineer",
+        "suggestedUrgency": "high"
+      }
+    },
+    {
+      "id": "n_8aefe9cf",
+      "ambiguousId": "8aefe9cf-60fa-439c-bad0-ac65a00d683a",
+      "kind": "document",
+      "title": "Atlas — Bill of Materials",
+      "href": "https://app.ambiguous.ai/documents/8aefe9cf-60fa-439c-bad0-ac65a00d683a",
+      "status": "exposed",
+      "disposition": "editable",
+      "matchKind": "inferred",
+      "confidence": 0.75,
+      "rationale": "Bill of Materials for Atlas includes a 'Rating' column — likely contains the motor rating and part numbers that may change with the 18.5 kW specification. No literal value visible in snippet.",
+      "excerpt": null,
+      "dependsOn": [],
       "requiresHumanReview": true,
       "surface": "dependency_decision",
       "surfaceProps": {
@@ -334,8 +386,8 @@
           "preserve_original",
           "set_urgency"
         ],
-        "impactStatement": "Factory acceptance test scheduling may be affected if the motor rating change requires different test equipment, modified test procedures, or coordination with supplier on equipment availability. The task owner should confirm whether the rating change impacts test setup or timeline.",
-        "suggestedAssignee": "Task owner (TASK-007) or project coordinator",
+        "impactStatement": "The Atlas Bill of Materials includes a Rating column and likely contains the motor specification and associated part numbers. The change from 22 kW to 18.5 kW may require different motor part numbers, different cable specifications, and potentially different ancillary components. The BOM must be reviewed and updated to ensure all listed items match the approved 18.5 kW configuration.",
+        "suggestedAssignee": "Project engineer",
         "suggestedUrgency": "medium"
       }
     },
@@ -348,9 +400,13 @@
       "status": "infected",
       "disposition": "historical",
       "matchKind": "exact",
-      "confidence": 0.95,
-      "rationale": "CRM record for 'Orion Drive Package (delivered)' shows motor_rating = 22 kW. This is a different project (Orion, not Atlas) that was delivered. Historical record must be preserved as-is.",
-      "excerpt": null,
+      "confidence": 0.99,
+      "rationale": "CRM record for 'Orion Drive Package (delivered)' shows motor_rating = 22 kW. This is a different project (Orion, not Atlas) that has been delivered — it is historical and should not be changed.",
+      "excerpt": {
+        "before": "motor_rating = 22 kW",
+        "after": "",
+        "field": "motor_rating"
+      },
       "dependsOn": [],
       "requiresHumanReview": false,
       "surface": "preservation_notice",
@@ -359,8 +415,8 @@
           "annotate",
           "except"
         ],
-        "reason": "This CRM record documents the Orion Drive Package (a different, completed project) with its actual delivered specification of 22 kW. This is historical data that must remain unchanged.",
-        "proposedNotice": "Note: This record is for the Orion project (delivered). Project Atlas uses a different motor rating (18.5 kW). Do not modify historical delivery records."
+        "reason": "This CRM record documents the Orion Drive Package, a different delivered project that actually used a 22 kW motor. The 22 kW rating in this record is correct historical data for Orion and must not be changed to avoid corrupting the delivered project's documentation.",
+        "proposedNotice": "NOTE: This record is for the Orion project (delivered). The motor_rating of 22 kW is correct for Orion and is unaffected by the Atlas project rating change to 18.5 kW."
       }
     },
     {
@@ -372,9 +428,13 @@
       "status": "infected",
       "disposition": "editable",
       "matchKind": "exact",
-      "confidence": 0.98,
-      "rationale": "CRM record for 'Atlas Drive Package' with motor_rating = 22 kW. Direct match to changed fact, active project record should be updated to reflect approved rating.",
-      "excerpt": null,
+      "confidence": 0.99,
+      "rationale": "CRM record for 'Atlas Drive Package' shows motor_rating = 22 kW — this is the Project Atlas record and should be updated to 18.5 kW to reflect the approved change.",
+      "excerpt": {
+        "before": "motor_rating = 22 kW",
+        "after": "motor_rating = 18.5 kW",
+        "field": "motor_rating"
+      },
       "dependsOn": [],
       "requiresHumanReview": false,
       "surface": "field_change",
@@ -384,9 +444,11 @@
           "except"
         ],
         "connectedOpportunities": [
-          "Atlas Drive Package sales opportunity, technical specifications, commercial proposal"
+          "Update related Atlas project records",
+          "Trigger cable schedule recalculation",
+          "Update commercial proposal"
         ],
-        "verifiedBy": "Project Atlas approval of 18.5 kW motor power rating"
+        "verifiedBy": "Change approval: motor power rating 22 kW → 18.5 kW"
       }
     }
   ],
@@ -394,17 +456,17 @@
     {
       "agent": "interpreter",
       "model": "anthropic/claude-sonnet-4.5",
-      "startedAt": "2026-09-12T13:12:24.807Z",
-      "durationMs": 3400,
-      "summary": "Extracted truth change: Project Atlas approved motor power rating 22 kW → 18.5 kW, confidence 0.95",
+      "startedAt": "2026-09-12T13:43:55.051Z",
+      "durationMs": 3774,
+      "summary": "Extracted truth change: approved motor power rating 22 kW → 18.5 kW, confidence 0.95",
       "tokensIn": 399,
-      "tokensOut": 143
+      "tokensOut": 141
     },
     {
       "agent": "evidence",
       "model": "openai/gpt-4o-mini",
-      "startedAt": "2026-09-12T13:12:28.467Z",
-      "durationMs": 1811,
+      "startedAt": "2026-09-12T13:44:00.115Z",
+      "durationMs": 1702,
       "summary": "Exa returned 5 source(s); 0 relevant, 0 contradicting",
       "tokensIn": 1844,
       "tokensOut": 155
@@ -412,36 +474,36 @@
     {
       "agent": "tracer",
       "model": "n/a (mechanical retrieval)",
-      "startedAt": "2026-09-12T13:12:28.210Z",
-      "durationMs": 1959,
-      "summary": "Found 14 candidate artefact(s) across Wiki, Docs, Tasks, Mail, CRM: 8 literal, 4 by subject (possible dependencies), 2 via CRM field scan that search missed",
+      "startedAt": "2026-09-12T13:43:58.828Z",
+      "durationMs": 1439,
+      "summary": "Found 15 candidate artefact(s) across Wiki, Docs, Tasks, Mail, Sheets, CRM: 9 literal, 4 by subject (possible dependencies), 2 via CRM field scan that search missed",
       "tokensIn": null,
       "tokensOut": null
     },
     {
       "agent": "classifier",
       "model": "anthropic/claude-sonnet-4.5",
-      "startedAt": "2026-09-12T13:12:30.279Z",
-      "durationMs": 52343,
-      "summary": "Classified 14: 11 editable, 1 historical, 2 irreversible, 3 exposed. 8 flagged for human review. 1 checked and clean (not shown)",
-      "tokensIn": 6074,
-      "tokensOut": 2853
+      "startedAt": "2026-09-12T13:44:01.818Z",
+      "durationMs": 67201,
+      "summary": "Classified 15: 12 editable, 1 historical, 2 irreversible, 4 exposed. 7 flagged for human review",
+      "tokensIn": 7284,
+      "tokensOut": 3191
     },
     {
       "agent": "planner",
       "model": "anthropic/claude-sonnet-4.5",
-      "startedAt": "2026-09-12T13:13:22.623Z",
-      "durationMs": 23125,
-      "summary": "Generated 5 distinct repair surface type(s) across 14 artefact(s)",
-      "tokensIn": 1924,
-      "tokensOut": 1776
+      "startedAt": "2026-09-12T13:45:09.020Z",
+      "durationMs": 24572,
+      "summary": "Generated 5 distinct repair surface type(s) across 15 artefact(s)",
+      "tokensIn": 2247,
+      "tokensOut": 1906
     }
   ],
   "summary": {
-    "safeToUpdate": 5,
+    "safeToUpdate": 7,
     "requiresReview": 7,
-    "alreadyCommunicated": 1,
+    "alreadyCommunicated": 2,
     "preserveAsHistorical": 1
   },
-  "generatedAt": "2026-09-12T13:13:45.750Z"
+  "generatedAt": "2026-09-12T13:45:33.592Z"
 }

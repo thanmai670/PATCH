@@ -192,11 +192,12 @@ const AGENT_LABEL = {
  * going quiet for 45 seconds. Each `@@AGENT` marker on stdout is one finished
  * agent; `onAgent` renders it by editing a single message in place.
  */
-function runPipelineStreaming(onAgent) {
+function runPipelineStreaming(onAgent, { text, author } = {}) {
   return new Promise((resolve, reject) => {
-    const child = spawn("npx", ["tsx", "--env-file=.env.local", "scripts/run-pipeline.ts", "--save"], {
-      cwd: process.cwd(),
-    });
+    const args = ["tsx", "--env-file=.env.local", "scripts/run-pipeline.ts", "--save"];
+    if (text) args.push("--text", text);
+    if (author) args.push("--author", author);
+    const child = spawn("npx", args, { cwd: process.cwd() });
     let buf = "";
     let stderr = "";
     child.stdout.on("data", (chunk) => {
@@ -319,12 +320,13 @@ async function handleNomination(evt, { nominator, text, trigger }) {
           const ref = await ctx.thread.post("*Working…*\n_Starting the agents…_");
           let pending = Promise.resolve();
 
+          // Run the pipeline on what the human actually nominated, not a fixture.
           const report = await runPipelineStreaming((a) => {
             done.push(a);
             console.log(`   [${a.agent}] ${a.ms}ms ${a.model}`);
             // Serialise edits so two fast agents can't race the same message.
             pending = pending.then(() => ctx.thread.update(ref, render()).catch(() => {}));
-          });
+          }, { text, author: c.announcedBy ?? nominator });
           await pending;
           await ctx.thread.update(ref, render() + "\n\n*Done.*").catch(() => {});
 
