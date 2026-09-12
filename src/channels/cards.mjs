@@ -7,7 +7,14 @@
  */
 import {
   Message, Header, Section, Fields, Field, Context, Divider, Actions, Button, Markdown,
+  Chart, Table, Row, Cell, Select,
 } from "@copilotkit/channels-ui";
+
+/** Ten-block meter — reads at a glance in Slack, where a number alone does not. */
+function confidenceBar(v) {
+  const filled = Math.max(0, Math.min(10, Math.round((v ?? 0) * 10)));
+  return "█".repeat(filled) + "░".repeat(10 - filled);
+}
 
 const RED = "#ef4444";
 const AMBER = "#f59e0b";
@@ -23,12 +30,14 @@ export function confirmationCard({ change, onConfirm, onReject, onEdit }) {
     fallbackText: `Possible truth change: ${change.subject} ${change.previousValue} → ${change.newValue}`,
     children: [
       Header({ children: "Possible truth change detected" }),
-      Section({ children: Markdown({ children: `*${change.subject}*` }) }),
+      Section({
+        children: Markdown({
+          children: `*${change.subject}*\n\n~${change.previousValue}~  →  *${change.newValue}*`,
+        }),
+      }),
       Fields({
         children: [
-          Field({ label: "Previous value", children: change.previousValue }),
-          Field({ label: "New value", children: change.newValue }),
-          Field({ label: "Confidence", children: `${Math.round(change.confidence * 100)}%` }),
+          Field({ label: "Confidence", children: `${confidenceBar(change.confidence)} ${Math.round(change.confidence * 100)}%` }),
           Field({ label: "Announced by", children: change.announcedBy }),
         ],
       }),
@@ -54,19 +63,49 @@ export function summaryCard({ report, viewUrl }) {
     ? `${report.evidence.length} external source(s), ${report.evidence.filter((e) => !e.supports).length} contradicting`
     : "No external source found — internally confirmed only";
 
+  const ICON = {
+    editable: "🟢",
+    historical: "🟣",
+    irreversible: "🔴",
+  };
+  const STATUS = { infected: "infected", exposed: "exposed", immune: "immune" };
+
   return Message({
     accent: RED,
     fallbackText: `The old value appears in ${report.nodes.length} connected items`,
     children: [
-      Header({ children: `The old value appears in ${report.nodes.length} connected items` }),
-      Fields({
-        children: [
-          Field({ label: "Safe to update", children: String(s.safeToUpdate) }),
-          Field({ label: "Need technical review", children: String(s.requiresReview) }),
-          Field({ label: "Already communicated", children: String(s.alreadyCommunicated) }),
-          Field({ label: "Preserve as historical", children: String(s.preserveAsHistorical) }),
-        ],
+      Header({ children: `${report.change.previousValue} → ${report.change.newValue} spread to ${report.nodes.length} items` }),
+      Section({ children: Markdown({ children: `*${report.change.subject}*` }) }),
+
+      // A picture of the decision, not just four numbers.
+      Chart({
+        type: "donut",
+        title: "What PATCH may do with each artefact",
+        data: [
+          { label: "Safe to update", value: s.safeToUpdate },
+          { label: "Needs review", value: s.requiresReview },
+          { label: "Already sent", value: s.alreadyCommunicated },
+          { label: "Historical", value: s.preserveAsHistorical },
+        ].filter((d) => d.value > 0),
       }),
+
+      Divider({}),
+
+      // Per-artefact detail, so the counts above are inspectable rather than asserted.
+      Table({
+        columns: [{ header: "Artefact" }, { header: "State" }, { header: "Repair" }],
+        children: report.nodes.map((n) =>
+          Row({
+            children: [
+              Cell({ children: `${ICON[n.disposition] ?? "⚪"} ${n.title.slice(0, 38)}` }),
+              Cell({ children: `${STATUS[n.status]}${n.requiresHumanReview ? " · review" : ""}` }),
+              Cell({ children: n.surface.replace(/_/g, " ") }),
+            ],
+          }),
+        ),
+      }),
+
+      Context({ children: `🟢 editable   🟣 historical — never edited   🔴 already sent — corrective action only` }),
       Context({ children: evidenceLine }),
       Divider({}),
       Actions({
@@ -93,11 +132,19 @@ export function auditCard({ report, execution, approvedBy }) {
     fallbackText: "Truth propagation contained",
     children: [
       Header({ children: "Truth propagation contained" }),
-      Section({
-        children: Markdown({
-          children: ok.map((r) => `• ${r.operation}`).join("\n") || "• No writes were approved",
-        }),
-      }),
+      ...(ok.length
+        ? [Table({
+            columns: [{ header: "Action" }, { header: "Where" }],
+            children: ok.map((r) =>
+              Row({
+                children: [
+                  Cell({ children: "✅ applied" }),
+                  Cell({ children: String(r.operation ?? "").slice(0, 60) }),
+                ],
+              }),
+            ),
+          })]
+        : [Section({ children: Markdown({ children: "_No writes were approved._" }) })]),
       ...(failed.length
         ? [Section({ children: Markdown({ children: failed.map((r) => `• _${r.error}_`).join("\n") }) })]
         : []),
