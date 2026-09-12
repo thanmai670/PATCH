@@ -31,7 +31,13 @@ body { background: #0a0a0f; color: #e5e7eb; }
   50%      { opacity: 0.08; transform: scale(1.35); }
 }
 
-.patch-node   { animation: patch-ignite 520ms cubic-bezier(.2,.9,.3,1.4) both; }
+/* transform-box defaults to view-box for SVG, which would scale each node about a
+   point hundreds of units away. fill-box pins the origin to the node itself. */
+.patch-node   {
+  animation: patch-ignite 520ms cubic-bezier(.2,.9,.3,1.4) both;
+  transform-box: fill-box;
+  transform-origin: center;
+}
 .patch-edge   { animation: patch-travel 620ms ease-out both; }
 .patch-line   { animation: patch-edge-fade 400ms ease-out both; }
 .patch-centre { animation: patch-pulse 2.6s ease-in-out infinite; }

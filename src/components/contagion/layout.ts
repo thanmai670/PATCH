@@ -29,6 +29,8 @@ export type PlacedNode = {
 
 export type PlacedEdge = {
   id: string;
+  /** The node this edge feeds. Never re-derive this by splitting `id`. */
+  toId: string;
   /** null source means the edge comes from Patient Zero. */
   from: { x: number; y: number };
   to: { x: number; y: number };
@@ -54,13 +56,15 @@ function computeDepths(nodes: InfectionNode[]): Map<string, number> {
     if (cached !== undefined) return cached;
     const node = byId.get(id);
     // A dependency we were never sent hangs off the centre rather than vanishing.
-    if (!node || seen.has(id)) return 1;
+    if (!node) return 1;
+    // A cycle: break it here WITHOUT caching, so the depth we eventually store for
+    // this node does not depend on which node the outer loop happened to reach first.
+    if (seen.has(id)) return 1;
 
     seen.add(id);
-    const parents = node.dependsOn.filter((p) => byId.has(p));
-    const depth = parents.length === 0
-      ? 1
-      : Math.max(...parents.map((p) => resolve(p, seen))) + 1;
+    const parents = node.dependsOn.filter((p) => p !== id && byId.has(p));
+    const depth =
+      parents.length === 0 ? 1 : Math.max(...parents.map((p) => resolve(p, seen))) + 1;
     seen.delete(id);
 
     depths.set(id, depth);
@@ -130,10 +134,13 @@ export function layoutReport(report: InfectionReport): Layout {
 
   const edges: PlacedEdge[] = [];
   for (const p of placed.values()) {
-    const parents = p.node.dependsOn.filter((id) => placed.has(id));
+    const parents = p.node.dependsOn.filter(
+      (id) => id !== p.node.id && placed.has(id),
+    );
     if (parents.length === 0) {
       edges.push({
         id: `centre->${p.node.id}`,
+        toId: p.node.id,
         from: { x: CX, y: CY },
         to: { x: p.x, y: p.y },
         matchKind: p.node.matchKind,
@@ -144,6 +151,7 @@ export function layoutReport(report: InfectionReport): Layout {
         const parent = placed.get(parentId)!;
         edges.push({
           id: `${parentId}->${p.node.id}`,
+          toId: p.node.id,
           from: { x: parent.x, y: parent.y },
           to: { x: p.x, y: p.y },
           matchKind: p.node.matchKind,

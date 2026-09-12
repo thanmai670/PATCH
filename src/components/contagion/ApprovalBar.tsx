@@ -97,11 +97,14 @@ export function ApprovalBar({
       )}
 
       <div className="mt-3 flex items-center gap-2">
-        <Action variant="primary" onClick={onApprove}>
-          {approving
-            ? "Approving…"
-            : `Approve ${lasso.safe.length} repair${lasso.safe.length === 1 ? "" : "s"}`}
-        </Action>
+        {/* No live-looking CTA when there is nothing it could approve. */}
+        {lasso.safe.length > 0 && (
+          <Action variant="primary" onClick={onApprove} disabled={approving}>
+            {approving
+              ? "Approving…"
+              : `Approve ${lasso.safe.length} repair${lasso.safe.length === 1 ? "" : "s"}`}
+          </Action>
+        )}
         <Action variant="quiet" onClick={onClear}>
           Clear
         </Action>
@@ -109,7 +112,8 @@ export function ApprovalBar({
 
       {lasso.safe.length === 0 && (
         <p className="mt-2 text-[11px] leading-relaxed text-amber-300/80">
-          Nothing in this selection can be repaired without a human decision.
+          Nothing in this selection can be repaired without a human decision. Open each
+          artefact above to decide individually.
         </p>
       )}
     </div>

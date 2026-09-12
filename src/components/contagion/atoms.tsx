@@ -39,14 +39,16 @@ export function Action({
   onClick,
   variant = "secondary",
   active = false,
+  disabled = false,
 }: {
   children: ReactNode;
   onClick?: () => void;
   variant?: "primary" | "secondary" | "quiet";
   active?: boolean;
+  disabled?: boolean;
 }) {
   const base =
-    "rounded-md px-3 py-1.5 text-xs font-medium transition-colors disabled:opacity-40";
+    "rounded-md px-3 py-1.5 text-xs font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-40";
   const styles = {
     primary: "bg-emerald-500/90 text-black hover:bg-emerald-400",
     secondary: "border border-white/20 text-white/80 hover:bg-white/10",
@@ -56,6 +58,7 @@ export function Action({
     <button
       type="button"
       onClick={onClick}
+      disabled={disabled}
       className={`${base} ${styles[variant]} ${active ? "ring-2 ring-white/60" : ""}`}
     >
       {children}

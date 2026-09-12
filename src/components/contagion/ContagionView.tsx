@@ -12,6 +12,12 @@ import { RepairSurface } from "./RepairSurface";
 import { TracePanel } from "./TracePanel";
 import { EvidenceRail } from "./EvidenceRail";
 import { ApprovalBar } from "./ApprovalBar";
+import { actions as offeredActions } from "./surfaceProps";
+
+/** Decisions that decline to act. They are recorded, and they never heal a node. */
+const REFUSALS = new Set(["except", "preserve_original"]);
+
+type Decision = { decision: string; payload: Record<string, unknown> };
 
 /**
  * WORKSTREAM B OWNS THIS TREE.
@@ -21,6 +27,7 @@ import { ApprovalBar } from "./ApprovalBar";
 export function ContagionView({ report }: { report: InfectionReport }) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [lasso, setLasso] = useState<LassoResult>({ safe: [], excluded: [] });
+  const [decisions, setDecisions] = useState<Record<string, Decision>>({});
   const [healed, setHealed] = useState<string[]>([]);
   const [unconfirmed, setUnconfirmed] = useState<string[]>([]);
   const [approving, setApproving] = useState(false);
@@ -37,14 +44,9 @@ export function ContagionView({ report }: { report: InfectionReport }) {
    * Heal first, ask the network second (ADR-0011). A dead route degrades the
    * repairs to Unconfirmed; it never turns the screen into an error.
    */
-  async function approve(ids: string[]) {
-    if (ids.length === 0) return;
-
-    const actions: RepairAction[] = ids.flatMap((id) => {
-      const node = byId.get(id);
-      if (!node) return [];
-      return [{ nodeId: id, surface: node.surface, decision: "accept", payload: {} }];
-    });
+  async function submit(actions: RepairAction[]) {
+    if (actions.length === 0) return;
+    const ids = actions.map((a) => a.nodeId);
 
     const plan: RepairPlan = {
       reportId: report.reportId,
@@ -54,7 +56,6 @@ export function ContagionView({ report }: { report: InfectionReport }) {
 
     setApproving(true);
     setHealed((h) => [...new Set([...h, ...ids])]);
-    setLasso({ safe: [], excluded: [] });
     console.info("[PATCH] RepairPlan", plan);
 
     try {
@@ -70,7 +71,57 @@ export function ContagionView({ report }: { report: InfectionReport }) {
       setUnconfirmed((u) => [...new Set([...u, ...ids])]);
     } finally {
       setApproving(false);
+      setLasso({ safe: [], excluded: [] });
     }
+  }
+
+  /** The action a node carries into a batch when the human has not opened it. */
+  function buildAction(nodeId: string): RepairAction | null {
+    const node = byId.get(nodeId);
+    if (!node) return null;
+    const made = decisions[nodeId];
+    if (made) {
+      return {
+        nodeId,
+        surface: node.surface,
+        decision: made.decision,
+        payload: made.payload,
+      };
+    }
+    // Honour what the planner actually offered rather than assuming "accept".
+    const offered = offeredActions(node.surfaceProps).filter((a) => !REFUSALS.has(a));
+    return {
+      nodeId,
+      surface: node.surface,
+      decision: offered[0] ?? "accept",
+      payload: {},
+    };
+  }
+
+  /** A decision taken on one artefact's own Repair Surface. */
+  function handleDecide(
+    nodeId: string,
+    decision: string,
+    payload: Record<string, unknown> = {},
+  ) {
+    setDecisions((d) => ({ ...d, [nodeId]: { decision, payload } }));
+
+    if (REFUSALS.has(decision)) {
+      setHealed((h) => h.filter((id) => id !== nodeId));
+      setUnconfirmed((u) => u.filter((id) => id !== nodeId));
+      return;
+    }
+
+    const node = byId.get(nodeId);
+    if (!node) return;
+    void submit([{ nodeId, surface: node.surface, decision, payload }]);
+  }
+
+  function approveLasso() {
+    const actions = lasso.safe
+      .map(buildAction)
+      .filter((a): a is RepairAction => a !== null);
+    void submit(actions);
   }
 
   return (
@@ -105,7 +156,7 @@ export function ContagionView({ report }: { report: InfectionReport }) {
           approving={approving}
           healedCount={healed.length}
           unconfirmedCount={unconfirmed.length}
-          onApprove={() => approve(lasso.safe)}
+          onApprove={approveLasso}
           onClear={() => setLasso({ safe: [], excluded: [] })}
           onInspect={(id) => setSelectedId(id)}
         />
@@ -113,10 +164,14 @@ export function ContagionView({ report }: { report: InfectionReport }) {
 
       <aside className="overflow-y-auto border-l border-white/10">
         {selected ? (
+          // Keyed by artefact: two nodes can share a surface kind (n_proposal and
+          // n_techdoc are both document_diff) and must not share its draft state.
           <RepairSurface
+            key={selected.id}
             node={selected}
             change={report.change}
             evidence={report.evidence}
+            onDecide={handleDecide}
           />
         ) : (
           <EvidenceRail evidence={report.evidence} />

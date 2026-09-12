@@ -46,6 +46,10 @@ export function InfectionMap({
   unconfirmed = [],
 }: Props) {
   const { nodes, edges } = useMemo(() => layoutReport(report), [report]);
+  const byId = useMemo(
+    () => new Map(nodes.map((n) => [n.node.id, n])),
+    [nodes],
+  );
   const healedSet = useMemo(() => new Set(healed), [healed]);
   const lassoedSet = useMemo(() => new Set(lassoed), [lassoed]);
   const unconfirmedSet = useMemo(() => new Set(unconfirmed), [unconfirmed]);
@@ -113,11 +117,12 @@ export function InfectionMap({
         viewBox={`0 0 ${VIEW_W} ${VIEW_H}`}
         preserveAspectRatio="xMidYMid meet"
         className="h-full w-full touch-none select-none"
-        role="img"
         aria-label={`Contagion map: ${nodes.length} affected artefacts`}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
+        onPointerCancel={() => setDrag(null)}
+        onLostPointerCapture={() => setDrag(null)}
       >
         <defs>
           <filter id="patch-glow" x="-80%" y="-80%" width="260%" height="260%">
@@ -133,8 +138,8 @@ export function InfectionMap({
         <g>
           {edges.map((e) => {
             const len = Math.hypot(e.to.x - e.from.x, e.to.y - e.from.y);
-            const targetId = e.id.split("->")[1];
-            const target = nodes.find((n) => n.node.id === targetId);
+            const targetId = e.toId;
+            const target = byId.get(targetId);
             const streak =
               target && healedSet.has(targetId)
                 ? HEALED_COLOR
