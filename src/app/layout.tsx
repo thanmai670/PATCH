@@ -28,9 +28,28 @@ export const metadata: Metadata = {
   description: "When truth changes, patch everywhere it spread.",
 };
 
+/**
+ * Applied before the first paint so the page never flashes the wrong brightness.
+ * A saved choice wins; otherwise follow the operating system.
+ */
+const NO_FLASH = `(function(){try{
+  var saved = localStorage.getItem("patch-theme");
+  var dark = saved ? saved === "dark"
+    : window.matchMedia("(prefers-color-scheme: dark)").matches;
+  document.documentElement.dataset.theme = dark ? "dark" : "light";
+}catch(e){document.documentElement.dataset.theme="light";}})();`;
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${plexSans.variable} ${plexMono.variable}`}>
+    <html
+      lang="en"
+      data-theme="light"
+      className={`${plexSans.variable} ${plexMono.variable}`}
+      suppressHydrationWarning
+    >
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: NO_FLASH }} />
+      </head>
       <body className="font-sans antialiased">{children}</body>
     </html>
   );

@@ -1,105 +1,57 @@
 "use client";
 
-import { STATUS_COLOR, STATUS_DEEP, DISPOSITION_RING, REVIEW_COLOR } from "./tokens";
+import { useState } from "react";
+import { DISPOSITION_RING, REVIEW_COLOR } from "./tokens";
 
 /**
- * Mandatory, not decorative (ADR-0008): `editable` draws no ring, so the *absence*
- * of a ring carries meaning, and absence is only legible if it is written down.
- * Phrased as what the reader is looking at, not as field names.
+ * The ring is the one mark that cannot explain itself, because `editable` deliberately
+ * draws nothing and absence has no label (ADR-0008). Everything else on the map now
+ * says what it is in words, so this is a short note rather than a decoder.
  */
 export function MapLegend() {
-  return (
-    <div
-      className="flex flex-wrap items-center gap-x-5 gap-y-2 text-[11.5px] text-ink-2"
-    >
-      <div className="flex flex-wrap items-center gap-x-3.5 gap-y-1.5">
-        <Item>
-          <Disc color={STATUS_COLOR.infected} edge={STATUS_DEEP.infected} />
-          has the old figure
-        </Item>
-        <Item>
-          <Disc color={STATUS_COLOR.exposed} edge={STATUS_DEEP.exposed} />
-          derived from it
-        </Item>
-        <Item>
-          <Disc color={STATUS_COLOR.immune} edge={STATUS_DEEP.immune} />
-          already correct
-        </Item>
-      </div>
+  const [open, setOpen] = useState(false);
 
-      <div className="flex flex-wrap items-center gap-x-3.5 gap-y-1.5">
-        <Item>
-          <Ring color={DISPOSITION_RING.historical!} />
-          keep as record
-        </Item>
-        <Item>
-          <Ring color={DISPOSITION_RING.irreversible!} />
-          already sent
-        </Item>
-        <Item>
-          <span
-            className="grid h-4 w-4 shrink-0 place-items-center rounded-full border-2 bg-surface text-[9px] font-bold"
-            style={{ borderColor: REVIEW_COLOR, color: "#9A5B06" }}
-          >
-            !
+  return (
+    <div className="flex items-center gap-3 text-[12.5px]">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className="rounded-md border border-rule bg-surface px-2.5 py-1 text-ink-2 hover:bg-sunk"
+        aria-expanded={open}
+      >
+        {open ? "Hide" : "What do the circles mean?"}
+      </button>
+
+      {open && (
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-ink-2">
+          <span className="flex items-center gap-2">
+            <span
+              className="h-3.5 w-3.5 shrink-0 rounded-full border-[2.5px] bg-surface"
+              style={{ borderColor: DISPOSITION_RING.historical! }}
+            />
+            a purple outline means it must stay as it is
           </span>
-          you decide
-        </Item>
-      </div>
-
-      <div className="flex flex-wrap items-center gap-x-3.5 gap-y-1.5 text-ink-3">
-        <Item>
-          <Dash pattern="none" />
-          written out
-        </Item>
-        <Item>
-          <Dash pattern="6 4" />
-          meaning match
-        </Item>
-        <Item>
-          <Dash pattern="2 5" />
-          agent inferred
-        </Item>
-      </div>
+          <span className="flex items-center gap-2">
+            <span
+              className="h-3.5 w-3.5 shrink-0 rounded-full border-[2.5px] bg-surface"
+              style={{ borderColor: DISPOSITION_RING.irreversible! }}
+            />
+            a pink outline means someone outside already has it
+          </span>
+          <span className="flex items-center gap-2">
+            <span
+              className="grid h-4 w-4 shrink-0 place-items-center rounded-full border-2 bg-surface text-[9px] font-bold"
+              style={{ borderColor: REVIEW_COLOR, color: "rgb(var(--c-exposed-deep))" }}
+            >
+              !
+            </span>
+            a warning dot means PATCH wants you to decide
+          </span>
+          <span className="text-ink-3">
+            no outline means PATCH can fix it on its own
+          </span>
+        </div>
+      )}
     </div>
-  );
-}
-
-function Item({ children }: { children: React.ReactNode }) {
-  return <span className="flex items-center gap-2">{children}</span>;
-}
-
-function Disc({ color, edge }: { color: string; edge: string }) {
-  return (
-    <span
-      className="h-3 w-3 shrink-0 rounded-full border"
-      style={{ background: color, borderColor: edge }}
-    />
-  );
-}
-
-function Ring({ color }: { color: string }) {
-  return (
-    <span
-      className="h-3.5 w-3.5 shrink-0 rounded-full border-[2.5px] bg-surface"
-      style={{ borderColor: color }}
-    />
-  );
-}
-
-function Dash({ pattern }: { pattern: string }) {
-  return (
-    <svg width={22} height={6} className="shrink-0" aria-hidden>
-      <line
-        x1={1}
-        y1={3}
-        x2={21}
-        y2={3}
-        stroke="#828E9B"
-        strokeWidth={1.5}
-        strokeLinecap="round"
-        strokeDasharray={pattern === "none" ? undefined : pattern}
-      />
-    </svg>
   );
 }

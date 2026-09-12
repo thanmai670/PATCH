@@ -40,6 +40,8 @@ export type PlacedEdge = {
   id: string;
   /** The node this edge feeds. Never re-derive this by splitting `id`. */
   toId: string;
+  /** The node it came from, or null when the fact came straight from the centre. */
+  fromId: string | null;
   from: { x: number; y: number };
   to: { x: number; y: number };
   /** Trust of the *child* — matchKind drives the stroke (ADR-0008). */
@@ -71,7 +73,7 @@ export function toContent(fit: Fit, p: { x: number; y: number }) {
 export function fitBounds(
   bounds: Bounds,
   view: { w: number; h: number },
-  pad = { left: 24, right: 24, top: 22, bottom: 22 },
+  pad = { left: 24, right: 24, top: 40, bottom: 20 },
 ): Fit {
   const availW = Math.max(1, view.w - pad.left - pad.right);
   const availH = Math.max(1, view.h - pad.top - pad.bottom);
@@ -204,6 +206,7 @@ export function layoutReport(report: InfectionReport): Layout {
     edges.push({
       id: `${parent ?? "centre"}->${p.node.id}`,
       toId: p.node.id,
+      fromId: parent ?? null,
       from: from ? { x: from.x, y: from.y } : { x: CX, y: CY },
       to: { x: p.x, y: p.y },
       matchKind: p.node.matchKind,

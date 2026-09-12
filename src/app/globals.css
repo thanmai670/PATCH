@@ -2,25 +2,143 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
+/*
+ * One set of names, two palettes. Everything — Tailwind classes and the SVG map alike
+ * — reads these, so a theme switch needs no JavaScript beyond flipping the attribute.
+ * Values are space-separated RGB triples so Tailwind's `/opacity` modifiers still work.
+ */
+:root,
+:root[data-theme="light"] {
   color-scheme: light;
+
+  --paper: 239 242 245;
+  --surface: 255 255 255;
+  --sunk: 228 233 239;
+  --rule: 216 222 229;
+  --ink: 22 32 43;
+  --ink-2: 74 87 99;
+  --ink-3: 130 142 155;
+
+  --c-infected: 224 65 63;
+  --c-infected-deep: 176 32 32;
+  --c-exposed: 224 138 17;
+  --c-exposed-deep: 154 91 6;
+  --c-immune: 14 159 110;
+  --c-immune-deep: 6 114 78;
+  --c-historical: 124 77 219;
+  --c-historical-deep: 91 47 176;
+  --c-irreversible: 219 60 138;
+  --c-irreversible-deep: 168 31 99;
+
+  /* Map furniture */
+  --map-orbit: 213 221 229;
+  --map-edge: 174 186 198;
+  --map-halo: 154 166 178;
+  --map-disc-ink: 255 255 255;
+  --shadow-ink: 22 32 43;
+  --shadow-strength: 0.18;
+
+  /* The drafting surface the contagion is drawn on */
+  --grid-line: 22 32 43;
+  --grid-alpha: 0.045;
+  --stage-lamp: 255 255 255;
+  --stage-lamp-alpha: 0.9;
+  --stage-breath-alpha: 0.05;
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  --paper: 13 17 23;
+  --surface: 21 26 34;
+  --sunk: 31 38 48;
+  --rule: 48 57 69;
+  --ink: 231 237 243;
+  --ink-2: 166 177 190;
+  --ink-3: 124 136 150;
+
+  --c-infected: 248 113 113;
+  --c-infected-deep: 252 165 165;
+  --c-exposed: 245 176 65;
+  --c-exposed-deep: 252 211 137;
+  --c-immune: 52 211 153;
+  --c-immune-deep: 110 231 183;
+  --c-historical: 167 139 250;
+  --c-historical-deep: 196 181 253;
+  --c-irreversible: 244 114 182;
+  --c-irreversible-deep: 249 168 212;
+
+  --map-orbit: 52 62 75;
+  --map-edge: 79 92 107;
+  --map-halo: 110 124 140;
+  --map-disc-ink: 12 16 22;
+  --shadow-ink: 0 0 0;
+  --shadow-strength: 0.5;
+
+  --grid-line: 148 170 200;
+  --grid-alpha: 0.05;
+  --stage-lamp: 56 78 110;
+  --stage-lamp-alpha: 0.22;
+  --stage-breath-alpha: 0.1;
 }
 
 body {
-  background: #eff2f5;
-  color: #16202b;
+  background: rgb(var(--paper));
+  color: rgb(var(--ink));
   /* Lining figures so measured values line up down a column. */
   font-feature-settings: "tnum" 1, "cv05" 1;
 }
 
 /*
- * The stage the contagion is drawn on: drafting paper under a drawing lamp.
- * The light falls on Patient Zero, which is where the change entered the project.
+ * The stage: ruled drafting paper under a drawing lamp, with the light breathing
+ * slowly out from where the change was announced. It is the subject matter, drawn
+ * faintly enough to read as texture rather than decoration.
  */
 .patch-stage {
+  position: relative;
+  isolation: isolate;
+  background: rgb(var(--paper));
+}
+
+.patch-stage::before,
+.patch-stage::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+}
+
+/* The ruled grid. */
+.patch-stage::before {
+  background-image:
+    linear-gradient(rgb(var(--grid-line) / var(--grid-alpha)) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(var(--grid-line) / var(--grid-alpha)) 1px, transparent 1px),
+    linear-gradient(rgb(var(--grid-line) / calc(var(--grid-alpha) * 0.45)) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(var(--grid-line) / calc(var(--grid-alpha) * 0.45)) 1px, transparent 1px);
+  background-size: 120px 120px, 120px 120px, 24px 24px, 24px 24px;
+  mask-image: radial-gradient(120% 110% at 50% 46%, #000 35%, transparent 82%);
+}
+
+/* The lamp, breathing outward from the centre. */
+.patch-stage::after {
   background:
-    radial-gradient(760px 520px at 50% 44%, #ffffff 0%, rgba(255, 255, 255, 0) 72%),
-    linear-gradient(#eff2f5, #e7ecf1);
+    radial-gradient(
+      760px 520px at 50% 46%,
+      rgb(var(--stage-lamp) / var(--stage-lamp-alpha)) 0%,
+      transparent 72%
+    ),
+    radial-gradient(
+      420px 300px at 50% 46%,
+      rgb(var(--c-infected) / var(--stage-breath-alpha)) 0%,
+      transparent 70%
+    );
+  animation: patch-breathe 14s ease-in-out infinite;
+}
+
+@keyframes patch-breathe {
+  0%, 100% { transform: scale(1); opacity: 0.9; }
+  50%      { transform: scale(1.06); opacity: 1; }
 }
 
 /* ── The spread: one orchestrated page-load sequence, and nothing else. ────── */
@@ -47,6 +165,19 @@ body {
   to   { transform: scale(8);    opacity: 0; }
 }
 
+/* Clicking the origin sends the spread out across the map again. */
+@keyframes patch-ripple {
+  from { transform: scale(0.12); opacity: 0.45; }
+  to   { transform: scale(12);   opacity: 0; }
+}
+
+/* Each artefact flares as the ripple front reaches it. */
+@keyframes patch-hit {
+  0%   { transform: scale(1);    opacity: 0; }
+  35%  { transform: scale(1.55); opacity: 0.5; }
+  100% { transform: scale(2.2);  opacity: 0; }
+}
+
 @keyframes patch-reveal {
   from { opacity: 0; }
   to   { opacity: 1; }
@@ -60,11 +191,24 @@ body {
 .patch-edge   { animation: patch-travel 620ms ease-out both; }
 .patch-line   { animation: patch-edge-fade 400ms ease-out both; }
 .patch-reveal { animation: patch-reveal 500ms ease-out both; }
+.patch-ripple {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: patch-ripple 1600ms cubic-bezier(.2, .7, .3, 1) both;
+}
+.patch-hit {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: patch-hit 900ms ease-out both;
+}
 .patch-shock  {
   transform-box: fill-box;
   transform-origin: center;
   animation: patch-shock 1900ms cubic-bezier(.15, .7, .3, 1) both;
 }
+
+/* A node the reader has moved settles rather than snapping. */
+.patch-settle { transition: transform 220ms cubic-bezier(.2, .8, .3, 1); }
 
 @media (prefers-reduced-motion: reduce) {
   .patch-node,
@@ -74,5 +218,9 @@ body {
     animation-duration: 1ms;
     animation-delay: 0ms !important;
   }
-  .patch-shock { animation: none; opacity: 0; }
+  .patch-shock,
+  .patch-ripple,
+  .patch-hit { animation: none; opacity: 0; }
+  .patch-stage::after { animation: none; }
+  .patch-settle { transition: none; }
 }
