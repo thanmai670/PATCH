@@ -20,6 +20,15 @@ import {
   HEALED_COLOR,
   isSafe,
 } from "./tokens";
+import { ArtefactIcon } from "./ArtefactIcon";
+import {
+  KIND_LABEL,
+  TONE_COLOR,
+  plainAction,
+  plainMatch,
+  plainStatus,
+  plainWhy,
+} from "./plainLanguage";
 
 const NODE_R = 30;
 const RING_R = 40;
@@ -30,17 +39,15 @@ export type LassoResult = { safe: string[]; excluded: string[] };
 type Props = {
   report: InfectionReport;
   selectedId: string | null;
+  hoveredId: string | null;
   lassoed: string[];
   onSelect: (id: string | null) => void;
+  onHover: (id: string | null) => void;
   onLasso: (result: LassoResult) => void;
   healed?: string[];
   unconfirmed?: string[];
 };
 
-/**
- * Two short lines beat one long one: a wide label collides with the neighbouring
- * artefact on a radial layout, a narrow stack does not.
- */
 function wrapLabel(title: string, perLine = 19, maxLines = 2): string[] {
   const words = title.split(" ");
   const lines: string[] = [];
@@ -66,19 +73,21 @@ function wrapLabel(title: string, perLine = 19, maxLines = 2): string[] {
   return lines;
 }
 
+type Nudge = Record<string, { dx: number; dy: number }>;
+
 export function InfectionMap({
   report,
   selectedId,
+  hoveredId,
   lassoed,
   onSelect,
+  onHover,
   onLasso,
   healed = [],
   unconfirmed = [],
 }: Props) {
   const { nodes, edges, radii, bounds } = useMemo(() => layoutReport(report), [report]);
 
-  // The stage is wide and short; a fixed viewBox would letterbox the map into the
-  // middle third of it. Measure the box and fit the drawing to what's actually there.
   const wrapRef = useRef<HTMLDivElement | null>(null);
   const [view, setView] = useState({ w: 1100, h: 620 });
   useEffect(() => {
@@ -93,18 +102,34 @@ export function InfectionMap({
   }, []);
 
   const fit = useMemo(() => fitBounds(bounds, view), [bounds, view]);
-  const byId = useMemo(() => new Map(nodes.map((n) => [n.node.id, n])), [nodes]);
+
+  /** Where the reader has dragged each artefact, relative to where PATCH put it. */
+  const [nudge, setNudge] = useState<Nudge>({});
+  const placed = useMemo(
+    () =>
+      nodes.map((n) => {
+        const d = nudge[n.node.id];
+        return d ? { ...n, x: n.x + d.dx, y: n.y + d.dy } : n;
+      }),
+    [nodes, nudge],
+  );
+  const byId = useMemo(() => new Map(placed.map((n) => [n.node.id, n])), [placed]);
+
   const healedSet = useMemo(() => new Set(healed), [healed]);
   const lassoedSet = useMemo(() => new Set(lassoed), [lassoed]);
   const unconfirmedSet = useMemo(() => new Set(unconfirmed), [unconfirmed]);
 
   const svgRef = useRef<SVGSVGElement | null>(null);
-  const [drag, setDrag] = useState<{ x0: number; y0: number; x1: number; y1: number } | null>(
+  const [lasso, setLasso] = useState<{ x0: number; y0: number; x1: number; y1: number } | null>(
     null,
   );
+  const [moving, setMoving] = useState<{
+    id: string;
+    from: { x: number; y: number };
+    base: { dx: number; dy: number };
+  } | null>(null);
   const movedRef = useRef(false);
 
-  /** Screen coordinates → content coordinates (through the fit transform). */
   function toView(ev: React.PointerEvent): { x: number; y: number } | null {
     const svg = svgRef.current;
     const ctm = svg?.getScreenCTM();
@@ -113,35 +138,72 @@ export function InfectionMap({
     return toContent(fit, { x: pt.x, y: pt.y });
   }
 
+  /* ── Dragging one artefact out of the way ─────────────────────────────────── */
+
+  function startMove(ev: React.PointerEvent, id: string) {
+    ev.stopPropagation();
+    const p = toView(ev);
+    if (!p) return;
+    movedRef.current = false;
+    setMoving({ id, from: p, base: nudge[id] ?? { dx: 0, dy: 0 } });
+    (ev.currentTarget as Element).setPointerCapture?.(ev.pointerId);
+  }
+
+  /* ── Dragging across empty space to pick several up at once ───────────────── */
+
   function onPointerDown(ev: React.PointerEvent<SVGSVGElement>) {
     const p = toView(ev);
     if (!p) return;
     movedRef.current = false;
-    setDrag({ x0: p.x, y0: p.y, x1: p.x, y1: p.y });
+    setLasso({ x0: p.x, y0: p.y, x1: p.x, y1: p.y });
     ev.currentTarget.setPointerCapture(ev.pointerId);
   }
 
   function onPointerMove(ev: React.PointerEvent<SVGSVGElement>) {
-    if (!drag) return;
     const p = toView(ev);
     if (!p) return;
-    if (Math.hypot(p.x - drag.x0, p.y - drag.y0) > DRAG_THRESHOLD) movedRef.current = true;
-    setDrag({ ...drag, x1: p.x, y1: p.y });
+
+    if (moving) {
+      if (Math.hypot(p.x - moving.from.x, p.y - moving.from.y) > DRAG_THRESHOLD) {
+        movedRef.current = true;
+      }
+      setNudge((n) => ({
+        ...n,
+        [moving.id]: {
+          dx: moving.base.dx + (p.x - moving.from.x),
+          dy: moving.base.dy + (p.y - moving.from.y),
+        },
+      }));
+      return;
+    }
+
+    if (!lasso) return;
+    if (Math.hypot(p.x - lasso.x0, p.y - lasso.y0) > DRAG_THRESHOLD) movedRef.current = true;
+    setLasso({ ...lasso, x1: p.x, y1: p.y });
   }
 
   function onPointerUp(ev: React.PointerEvent<SVGSVGElement>) {
-    if (!drag) return;
     ev.currentTarget.releasePointerCapture?.(ev.pointerId);
 
+    if (moving) {
+      const id = moving.id;
+      const dragged = movedRef.current;
+      setMoving(null);
+      // A press that never moved is a click on that artefact.
+      if (!dragged) onSelect(selectedId === id ? null : id);
+      return;
+    }
+
+    if (!lasso) return;
     if (!movedRef.current) {
-      setDrag(null);
+      setLasso(null);
       onSelect(null);
       return;
     }
 
-    const lo = { x: Math.min(drag.x0, drag.x1), y: Math.min(drag.y0, drag.y1) };
-    const hi = { x: Math.max(drag.x0, drag.x1), y: Math.max(drag.y0, drag.y1) };
-    const inside = nodes.filter(
+    const lo = { x: Math.min(lasso.x0, lasso.x1), y: Math.min(lasso.y0, lasso.y1) };
+    const hi = { x: Math.max(lasso.x0, lasso.x1), y: Math.max(lasso.y0, lasso.y1) };
+    const inside = placed.filter(
       ({ x, y }) => x >= lo.x && x <= hi.x && y >= lo.y && y <= hi.y,
     );
 
@@ -150,22 +212,32 @@ export function InfectionMap({
       safe: inside.filter((n) => isSafe(n.node)).map((n) => n.node.id),
       excluded: inside.filter((n) => !isSafe(n.node)).map((n) => n.node.id),
     });
-    setDrag(null);
+    setLasso(null);
   }
 
+  const hovered = hoveredId ? byId.get(hoveredId) : undefined;
+
   return (
-    <div ref={wrapRef} className="patch-stage relative h-full w-full">
+    <div ref={wrapRef} className="patch-stage relative h-full w-full overflow-hidden">
+      <p className="pointer-events-none absolute left-5 top-4 z-10 max-w-[34ch] text-[12.5px] leading-relaxed text-ink-2">
+        How far the change travelled. The centre is where it was announced; each ring out
+        is one step further from it. Drag any circle to move it, or drag across empty
+        space to pick up several at once.
+      </p>
+
       <svg
         ref={svgRef}
         viewBox={`0 0 ${view.w} ${view.h}`}
         preserveAspectRatio="xMidYMid meet"
         className="h-full w-full touch-none select-none"
-        aria-label={`Contagion map: ${nodes.length} affected artefacts`}
+        aria-label={`How the change spread: ${placed.length} affected things`}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
-        onPointerCancel={() => setDrag(null)}
-        onLostPointerCapture={() => setDrag(null)}
+        onPointerCancel={() => {
+          setLasso(null);
+          setMoving(null);
+        }}
       >
         <defs>
           <filter id="patch-lift" x="-60%" y="-60%" width="220%" height="220%">
@@ -180,7 +252,6 @@ export function InfectionMap({
         </defs>
 
         <g transform={`translate(${fit.tx},${fit.ty}) scale(${fit.scale})`}>
-          {/* ── Orbit guides: the rings the infection travels through ── */}
           <g pointerEvents="none">
             {radii.map((r, i) => (
               <ellipse
@@ -199,37 +270,42 @@ export function InfectionMap({
             ))}
           </g>
 
-          {/* ── Edges. matchKind is carried here, never on the node (ADR-0008). ── */}
+          {/* ── How the fact travelled. matchKind is on the edge (ADR-0008). ── */}
           <g>
             {edges.map((e) => {
-              const len = Math.hypot(e.to.x - e.from.x, e.to.y - e.from.y);
               const target = byId.get(e.toId);
+              const parentId = e.id.split("->")[0];
+              const source = byId.get(parentId);
+              const from = source ? { x: source.x, y: source.y } : { x: CX, y: CY };
+              const to = target ? { x: target.x, y: target.y } : e.to;
+              const len = Math.hypot(to.x - from.x, to.y - from.y);
               const streak = healedSet.has(e.toId)
                 ? HEALED_COLOR
                 : target
                   ? STATUS_COLOR[target.node.status]
                   : STATUS_COLOR.infected;
               const delay = (e.depth - 1) * RING_MS;
+              const lit = hoveredId === e.toId || selectedId === e.toId;
               return (
                 <g key={e.id} pointerEvents="none">
                   <line
                     className="patch-line"
-                    x1={e.from.x}
-                    y1={e.from.y}
-                    x2={e.to.x}
-                    y2={e.to.y}
-                    stroke="#AEBAC6"
-                    strokeWidth={1.5}
+                    x1={from.x}
+                    y1={from.y}
+                    x2={to.x}
+                    y2={to.y}
+                    stroke={lit ? "#16202B" : "#AEBAC6"}
+                    strokeWidth={lit ? 2.2 : 1.5}
                     strokeDasharray={MATCH_DASH[e.matchKind]}
                     strokeLinecap="round"
                     style={{ animationDelay: `${delay + 200}ms` }}
                   />
                   <line
                     className="patch-edge"
-                    x1={e.from.x}
-                    y1={e.from.y}
-                    x2={e.to.x}
-                    y2={e.to.y}
+                    x1={from.x}
+                    y1={from.y}
+                    x2={to.x}
+                    y2={to.y}
                     stroke={streak}
                     strokeWidth={4}
                     strokeLinecap="round"
@@ -246,7 +322,7 @@ export function InfectionMap({
             })}
           </g>
 
-          {/* ── Patient Zero. An origin, never a target — it is never repaired. ── */}
+          {/* ── Where it started. An origin, never a target — never repaired. ── */}
           <g transform={`translate(${CX},${CY})`} pointerEvents="none">
             <circle
               className="patch-shock"
@@ -281,43 +357,41 @@ export function InfectionMap({
             <text textAnchor="middle" dy={13} fontSize={32}>
               🩹
             </text>
-            <text
-              textAnchor="middle"
-              dy={76}
-              fontSize={14}
-              fontWeight={600}
-              fill="#16202B"
-            >
-              Where it started
+            <text textAnchor="middle" dy={76} fontSize={14} fontWeight={600} fill="#16202B">
+              Someone flagged it here
             </text>
             <text textAnchor="middle" dy={96} fontSize={13} fill="#828E9B">
-              {report.change.patientZero?.channel ?? "Nominated in the app"}
+              {report.change.patientZero?.channel ?? "Flagged in the app"}
             </text>
           </g>
 
-          {/* ── Artefacts. Fill = status, ring = disposition (ADR-0008). ── */}
-          {nodes.map(({ node, x, y, depth }) => {
+          {/* ── The things it reached ── */}
+          {placed.map(({ node, x, y, depth }) => {
             const isHealed = healedSet.has(node.id);
             const flat = isHealed ? HEALED_COLOR : STATUS_COLOR[node.status];
             const edge = isHealed ? HEALED_COLOR : STATUS_DEEP[node.status];
             const ring = DISPOSITION_RING[node.disposition];
             const isSelected = selectedId === node.id;
+            const isHovered = hoveredId === node.id;
             const isLassoed = lassoedSet.has(node.id);
+            const status = plainStatus(node);
+            const lines = wrapLabel(node.title);
 
             return (
               <g key={node.id} transform={`translate(${x},${y})`}>
-                <g className="patch-node" style={{ animationDelay: `${depth * RING_MS}ms` }}>
+                <g
+                  className="patch-node"
+                  style={{ animationDelay: `${depth * RING_MS}ms` }}
+                >
                   <g
                     role="button"
                     tabIndex={0}
-                    aria-label={`${node.title} — ${node.status}, ${node.disposition}`}
+                    aria-label={`${node.title}. ${KIND_LABEL[node.kind]}. ${status.label}.`}
                     aria-pressed={isSelected}
-                    style={{ cursor: "pointer", outline: "none" }}
-                    onPointerDown={(ev) => ev.stopPropagation()}
-                    onClick={(ev) => {
-                      ev.stopPropagation();
-                      onSelect(isSelected ? null : node.id);
-                    }}
+                    style={{ cursor: moving?.id === node.id ? "grabbing" : "grab", outline: "none" }}
+                    onPointerDown={(ev) => startMove(ev, node.id)}
+                    onPointerEnter={() => onHover(node.id)}
+                    onPointerLeave={() => onHover(null)}
                     onKeyDown={(ev) => {
                       if (ev.key === "Enter" || ev.key === " ") {
                         ev.preventDefault();
@@ -325,28 +399,22 @@ export function InfectionMap({
                       }
                     }}
                   >
-                    {(isSelected || isLassoed) && (
+                    {(isSelected || isLassoed || isHovered) && (
                       <circle
                         r={RING_R + 11}
                         fill="none"
-                        stroke={isSelected ? "#16202B" : HEALED_COLOR}
-                        strokeWidth={isSelected ? 2 : 3}
-                        strokeDasharray={isSelected ? undefined : "6 5"}
-                        opacity={isSelected ? 0.95 : 0.9}
+                        stroke={
+                          isSelected ? "#16202B" : isLassoed ? HEALED_COLOR : "#9AA6B2"
+                        }
+                        strokeWidth={isSelected ? 2 : isLassoed ? 3 : 1.5}
+                        strokeDasharray={isLassoed ? "6 5" : undefined}
                       />
                     )}
 
-                    {/* Disposition ring — absent for `editable`, and that absence means something */}
-                    {ring && (
-                      <circle r={RING_R} fill="none" stroke={ring} strokeWidth={3} />
-                    )}
+                    {/* Ring only when we may NOT edit it — absence is the signal */}
+                    {ring && <circle r={RING_R} fill="none" stroke={ring} strokeWidth={3} />}
 
-                    <circle
-                      r={NODE_R + 14}
-                      fill={flat}
-                      opacity={0.13}
-                      style={{ transition: "fill 600ms ease" }}
-                    />
+                    <circle r={NODE_R + 14} fill={flat} opacity={0.13} />
                     <circle
                       r={NODE_R}
                       fill={flat}
@@ -355,6 +423,7 @@ export function InfectionMap({
                       filter="url(#patch-lift)"
                       style={{ transition: "fill 600ms ease, stroke 600ms ease" }}
                     />
+                    <ArtefactIcon kind={node.kind} size={26} />
 
                     {node.requiresHumanReview && !isHealed && (
                       <g transform={`translate(${RING_R * 0.72},${-RING_R * 0.72})`}>
@@ -371,7 +440,6 @@ export function InfectionMap({
                       </g>
                     )}
 
-                    {/* Approved, but not yet written to the workspace (ADR-0011). */}
                     {unconfirmedSet.has(node.id) && (
                       <g transform={`translate(${RING_R * 0.72},${RING_R * 0.72})`}>
                         <circle r={9} fill="#FFFFFF" stroke="#828E9B" strokeWidth={2} />
@@ -379,7 +447,7 @@ export function InfectionMap({
                       </g>
                     )}
 
-                    {wrapLabel(node.title).map((line, i) => (
+                    {lines.map((line, i) => (
                       <text
                         key={i}
                         textAnchor="middle"
@@ -393,11 +461,12 @@ export function InfectionMap({
                     ))}
                     <text
                       textAnchor="middle"
-                      dy={RING_R + 26 + wrapLabel(node.title).length * 17 + 2}
-                      fontSize={11.5}
-                      fill="#828E9B"
+                      dy={RING_R + 26 + lines.length * 17 + 2}
+                      fontSize={12}
+                      fontWeight={500}
+                      fill={isHealed ? "#06724E" : TONE_COLOR[status.tone].dot}
                     >
-                      {node.kind.replace(/_/g, " ")} · {Math.round(node.confidence * 100)}%
+                      {isHealed ? "Repair approved" : status.label}
                     </text>
                   </g>
                 </g>
@@ -405,13 +474,12 @@ export function InfectionMap({
             );
           })}
 
-          {/* ── The lasso itself ── */}
-          {drag && movedRef.current && (
+          {lasso && movedRef.current && !moving && (
             <rect
-              x={Math.min(drag.x0, drag.x1)}
-              y={Math.min(drag.y0, drag.y1)}
-              width={Math.abs(drag.x1 - drag.x0)}
-              height={Math.abs(drag.y1 - drag.y0)}
+              x={Math.min(lasso.x0, lasso.x1)}
+              y={Math.min(lasso.y0, lasso.y1)}
+              width={Math.abs(lasso.x1 - lasso.x0)}
+              height={Math.abs(lasso.y1 - lasso.y0)}
               fill="rgba(14,159,110,0.10)"
               stroke={HEALED_COLOR}
               strokeWidth={2}
@@ -422,6 +490,34 @@ export function InfectionMap({
         </g>
       </svg>
 
+      {/* ── Hovering anything explains it, so nothing needs decoding ── */}
+      {hovered && !moving && !lasso && (
+        <div
+          className="pointer-events-none absolute z-20 w-[270px] rounded-lg border border-rule bg-surface p-3 shadow-panel"
+          style={{
+            left: Math.min(
+              Math.max(8, fit.tx + hovered.x * fit.scale - 135),
+              Math.max(8, view.w - 278),
+            ),
+            top: Math.max(8, fit.ty + hovered.y * fit.scale - 150),
+          }}
+        >
+          <p className="text-[12px] text-ink-3">{KIND_LABEL[hovered.node.kind]}</p>
+          <p className="mt-0.5 text-[13.5px] font-semibold leading-snug text-ink">
+            {hovered.node.title}
+          </p>
+          <p className="mt-1.5 text-[12.5px] leading-snug text-ink-2">
+            {plainWhy(hovered.node, report.change)}
+          </p>
+          <p className="mt-2 border-t border-rule pt-2 text-[12.5px] leading-snug text-ink">
+            PATCH suggests: {plainAction(hovered.node).toLowerCase()}
+          </p>
+          <p className="mt-1.5 text-[12px] leading-snug text-ink-3">
+            {plainMatch(hovered.node)}, {Math.round(hovered.node.confidence * 100)}% sure
+          </p>
+          <p className="mt-1.5 text-[12px] text-ink-3">Click to open it</p>
+        </div>
+      )}
     </div>
   );
 }

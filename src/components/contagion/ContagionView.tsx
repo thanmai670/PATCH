@@ -13,6 +13,7 @@ import { TracePanel } from "./TracePanel";
 import { EvidenceRail } from "./EvidenceRail";
 import { ApprovalBar } from "./ApprovalBar";
 import { MapLegend } from "./MapLegend";
+import { ArtefactList } from "./ArtefactList";
 import { Header } from "./Header";
 import { actions as offeredActions } from "./surfaceProps";
 
@@ -28,6 +29,7 @@ type Decision = { decision: string; payload: Record<string, unknown> };
  */
 export function ContagionView({ report }: { report: InfectionReport }) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [hoveredId, setHoveredId] = useState<string | null>(null);
   const [lasso, setLasso] = useState<LassoResult>({ safe: [], excluded: [] });
   const [decisions, setDecisions] = useState<Record<string, Decision>>({});
   const [healed, setHealed] = useState<string[]>([]);
@@ -127,17 +129,31 @@ export function ContagionView({ report }: { report: InfectionReport }) {
   }
 
   return (
-    <main className="grid h-screen grid-cols-[1fr_440px] grid-rows-[auto_1fr_auto] bg-paper">
-      <div className="col-span-2">
+    <main className="grid h-screen grid-cols-[286px_1fr_408px] grid-rows-[auto_1fr_auto] bg-paper">
+      <div className="col-span-3">
         <Header report={report} />
       </div>
 
-      <section className="relative overflow-hidden">
+      <aside className="row-span-2 min-h-0 border-r border-rule bg-surface">
+        <ArtefactList
+          nodes={report.nodes}
+          change={report.change}
+          selectedId={selectedId}
+          hoveredId={hoveredId}
+          healed={healed}
+          onSelect={setSelectedId}
+          onHover={setHoveredId}
+        />
+      </aside>
+
+      <section className="relative min-h-0 overflow-hidden">
         <InfectionMap
           report={report}
           selectedId={selectedId}
+          hoveredId={hoveredId}
           lassoed={lasso.safe}
           onSelect={setSelectedId}
+          onHover={setHoveredId}
           onLasso={setLasso}
           healed={healed}
           unconfirmed={unconfirmed}
