@@ -1,0 +1,286 @@
+{
+  "reportId": "rpt_chg_1789212327000100",
+  "change": {
+    "id": "chg_1789212327000100",
+    "subject": "approved motor specification for Project Atlas",
+    "previousValue": "22 kW",
+    "newValue": "18.5 kW",
+    "confidence": 0.95,
+    "announcedBy": "Thanmai",
+    "announcedAt": "2026-09-12T11:25:27.000Z",
+    "project": "Project Atlas",
+    "patientZero": {
+      "channel": "#project-atlas",
+      "messageTs": "1789212327.000100",
+      "text": "Supplier correction: the approved motor for Project Atlas is now 18.5 kW, not 22 kW. Please use the revised specification attached here.",
+      "permalink": null
+    }
+  },
+  "evidence": [
+    {
+      "id": "ev_0",
+      "title": "GA18-18kW-8.5bar Air Cooled",
+      "url": "https://www.atlascopco.com/content/dam/atlas-copco/local-countries/united-kingdom/documents/7-5-20kw-(10-25hp)/GA18-18kW-8.5bar-Air-Cooled.pdf",
+      "publishedAt": null,
+      "highlight": "The compressor shall be an 18 kW Atlas Copco model GA18 or pre-approved equivalent.",
+      "sourceStatus": "live",
+      "supports": true
+    },
+    {
+      "id": "ev_1",
+      "title": "18kw Ga18+ , Lubricated Oil Injected  Atlas Screw Air Compressor Ga+ Series by CEBE GROUP HK CO.,LTD",
+      "url": "https://www.bjjsgy.com/details-cuu5c5v-pudvnqb-18kw-ga18-lubricated-oil-injected-atlas-screw-air-compressor-ga-series.html",
+      "publishedAt": null,
+      "highlight": "ATLAS OIL-INJECTED SCREW GA+ SERIES AIR COMPRESSOR 18KW GA18+",
+      "sourceStatus": "live",
+      "supports": true
+    },
+    {
+      "id": "ev_2",
+      "title": "1092094200 9096922018 Atlas Copco Motor 18.5kW 400V 50Hz GA15 Genuine Screw Compressor Spare Parts from China Factory",
+      "url": "https://www.ecer.com/corp/details-uuufbag-p1n1raj-1092094200-9096922018-atlas-copco-motor-18-5kw-400v-50hz-ga15-genuine-screw-compressor-spare-parts.html",
+      "publishedAt": null,
+      "highlight": "Atlas Copco 1092094200 9096922018 Motor 18.5kW 400V 50Hz GA15 Genuine Screw Compressor Spare Parts.",
+      "sourceStatus": "live",
+      "supports": true
+    },
+    {
+      "id": "ev_3",
+      "title": "1092094200 9096922018 Atlas Copco Motor 18.5kW 400V 50Hz GA15 Genuine Screw Compressor Spare Parts – XUYUQIN | Himfr Supplier Product Page",
+      "url": "https://www.himfr.com/product-uufbag-1n1raj-1092094200-9096922018-atlas-copco-motor-18-5kw-400v-50hz-ga15-genuine-screw-compressor-spare-parts.html",
+      "publishedAt": null,
+      "highlight": "Atlas Copco 1092094200 9096922018 Motor 18.5kW 400V 50Hz GA15 Genuine Screw Compressor Spare Parts.",
+      "sourceStatus": "live",
+      "supports": true
+    }
+  ],
+  "nodes": [
+    {
+      "id": "n_3dfae650",
+      "ambiguousId": "3dfae650-8cf5-42b7-9b85-80518384d58f",
+      "kind": "document",
+      "title": "Atlas Drivetrain — Technical Specification",
+      "href": "https://app.ambiguous.ai/documents/3dfae650-8cf5-42b7-9b85-80518384d58f",
+      "status": "infected",
+      "disposition": "editable",
+      "matchKind": "exact",
+      "confidence": 0.95,
+      "rationale": "Technical specification document for Project Atlas contains the literal '22 kW' for auxiliary drive. This is an internal specification document (draft status implied by context) and should be updated to reflect the approved 18.5 kW rating.",
+      "excerpt": {
+        "before": "Auxiliary drive: 22 kW continuous.",
+        "after": "Auxiliary drive: 18.5 kW continuous.",
+        "field": null
+      },
+      "dependsOn": [],
+      "requiresHumanReview": false,
+      "surface": "document_diff",
+      "surfaceProps": {
+        "actions": [
+          "accept",
+          "rewrite",
+          "except"
+        ],
+        "paragraphContext": "Auxiliary drive: 22 kW continuous.",
+        "occurrences": 1
+      }
+    },
+    {
+      "id": "n_5328fc8e",
+      "ambiguousId": "5328fc8e-74be-441d-a7f7-0f82c11093f4",
+      "kind": "historical_document",
+      "title": "Project Orion — As-Built Documentation (2024)",
+      "href": "https://app.ambiguous.ai/documents/5328fc8e-74be-441d-a7f7-0f82c11093f4",
+      "status": "infected",
+      "disposition": "historical",
+      "matchKind": "exact",
+      "confidence": 0.98,
+      "rationale": "This is Project Orion as-built documentation from 2024, not Project Atlas. The 22 kW motor referenced is a different project's actual installed equipment. Must be preserved as historical record.",
+      "excerpt": null,
+      "dependsOn": [],
+      "requiresHumanReview": false,
+      "surface": "preservation_notice",
+      "surfaceProps": {
+        "actions": [
+          "annotate",
+          "except"
+        ],
+        "reason": "Project Orion as-built documentation from 2024 records the actual 22 kW motor that was installed in that project, not Project Atlas.",
+        "proposedNotice": "Note: Project Atlas motor specification changed to 18.5 kW in 2025. This Orion documentation remains accurate for the equipment actually installed in Project Orion."
+      }
+    },
+    {
+      "id": "n_4ad7167e",
+      "ambiguousId": "4ad7167e-73bd-4a71-ae95-471b54483648",
+      "kind": "document",
+      "title": "Project Atlas — Commercial Proposal (Draft v3)",
+      "href": "https://app.ambiguous.ai/documents/4ad7167e-73bd-4a71-ae95-471b54483648",
+      "status": "infected",
+      "disposition": "editable",
+      "matchKind": "exact",
+      "confidence": 0.92,
+      "rationale": "Commercial proposal draft v3 for Project Atlas contains literal '22 kW' specification. Marked for human review because changing motor rating in a commercial proposal may affect pricing, delivery commitments, and requires commercial approval before modification.",
+      "excerpt": {
+        "before": "Drive motor: 22 kW, 400 V, IE3 efficiency class.",
+        "after": "Drive motor: 18.5 kW, 400 V, IE3 efficiency class.",
+        "field": null
+      },
+      "dependsOn": [],
+      "requiresHumanReview": true,
+      "surface": "document_diff",
+      "surfaceProps": {
+        "actions": [
+          "accept",
+          "rewrite",
+          "except"
+        ],
+        "paragraphContext": "Drive motor: 22 kW, 400 V, IE3 efficiency class.",
+        "occurrences": 1,
+        "warning": "Commercial proposal draft — motor rating change may affect pricing, delivery terms, and contractual commitments. Human review required before customer communication."
+      }
+    },
+    {
+      "id": "n_7c6c3ca1",
+      "ambiguousId": "7c6c3ca1-e5f3-441f-854a-4ec99564eb5a",
+      "kind": "email_sent",
+      "title": "Atlas specification confirmation",
+      "href": "https://app.ambiguous.ai/mail/7c6c3ca1-e5f3-441f-854a-4ec99564eb5a",
+      "status": "infected",
+      "disposition": "irreversible",
+      "matchKind": "exact",
+      "confidence": 0.96,
+      "rationale": "Sent email confirming 22 kW motor specification for Project Atlas. Email has already been delivered and cannot be silently edited. Requires corrective action: a follow-up email clarifying the specification change to 18.5 kW.",
+      "excerpt": {
+        "before": "Confirming the drive motor at 22 kW as specified in the equipment schedule for Project Atlas.",
+        "after": "",
+        "field": null
+      },
+      "dependsOn": [],
+      "requiresHumanReview": true,
+      "surface": "corrective_message",
+      "surfaceProps": {
+        "actions": [
+          "draft_correction",
+          "except"
+        ],
+        "recipients": [
+          "original email recipients"
+        ],
+        "sentAt": "previously sent",
+        "impactExplanation": "Your sent email confirmed the Atlas drive motor at 22 kW, but the approved specification is now 18.5 kW. A follow-up email should clarify this change to prevent procurement or installation errors."
+      }
+    },
+    {
+      "id": "n_ddf4ef61",
+      "ambiguousId": "ddf4ef61-7663-4e4b-8e97-5a0dea1fa44d",
+      "kind": "task",
+      "title": "TASK-001: Electrical preparation — Atlas motor mount",
+      "href": "https://app.ambiguous.ai/tasks/ddf4ef61-7663-4e4b-8e97-5a0dea1fa44d",
+      "status": "exposed",
+      "disposition": "editable",
+      "matchKind": "inferred",
+      "confidence": 0.72,
+      "rationale": "Task for electrical preparation and motor mount for Atlas project. The motor rating change from 22 kW to 18.5 kW may affect mounting dimensions, cable sizing, or electrical preparation work. No literal value visible in snippet, but task scope likely depends on motor specification. Human review needed to assess impact on work scope.",
+      "excerpt": null,
+      "dependsOn": [
+        "n_3dfae650"
+      ],
+      "requiresHumanReview": true,
+      "surface": "dependency_decision",
+      "surfaceProps": {
+        "actions": [
+          "create_review",
+          "assign_engineer",
+          "preserve_original",
+          "set_urgency"
+        ],
+        "impactStatement": "Motor rating reduction from 22 kW to 18.5 kW may affect mounting footprint, cable sizing (potentially smaller), and electrical preparation scope for TASK-001.",
+        "suggestedAssignee": "electrical engineer assigned to Atlas project",
+        "suggestedUrgency": "medium"
+      }
+    },
+    {
+      "id": "n_27ea5dd9",
+      "ambiguousId": "27ea5dd9-8302-4686-8fbe-514325089f59",
+      "kind": "crm_record",
+      "title": "Atlas Drive Package",
+      "href": "https://app.ambiguous.ai/crm/deals/27ea5dd9-8302-4686-8fbe-514325089f59",
+      "status": "infected",
+      "disposition": "editable",
+      "matchKind": "exact",
+      "confidence": 0.97,
+      "rationale": "CRM record for Atlas Drive Package contains literal field value 'motor_rating = 22 kW'. This is a structured data field that should be updated to 18.5 kW to maintain data integrity across systems.",
+      "excerpt": {
+        "before": "22 kW",
+        "after": "18.5 kW",
+        "field": "motor_rating"
+      },
+      "dependsOn": [],
+      "requiresHumanReview": false,
+      "surface": "field_change",
+      "surfaceProps": {
+        "actions": [
+          "accept",
+          "except"
+        ],
+        "connectedOpportunities": [
+          "Atlas Drive Package CRM record links to quotations, orders, and delivery schedules"
+        ],
+        "verifiedBy": "motor_rating field contains literal '22 kW' value"
+      }
+    }
+  ],
+  "trace": [
+    {
+      "agent": "interpreter",
+      "model": "anthropic/claude-sonnet-4.5",
+      "startedAt": "2026-09-12T11:25:27.855Z",
+      "durationMs": 3667,
+      "summary": "Extracted truth change: approved motor specification for Project Atlas 22 kW → 18.5 kW, confidence 0.95",
+      "tokensIn": 292,
+      "tokensOut": 113
+    },
+    {
+      "agent": "evidence",
+      "model": "openai/gpt-4o-mini",
+      "startedAt": "2026-09-12T11:25:31.769Z",
+      "durationMs": 3739,
+      "summary": "Exa returned 5 source(s); 4 relevant, 0 contradicting",
+      "tokensIn": 2684,
+      "tokensOut": 293
+    },
+    {
+      "agent": "tracer",
+      "model": "n/a (mechanical retrieval)",
+      "startedAt": "2026-09-12T11:25:31.526Z",
+      "durationMs": 840,
+      "summary": "Found 6 candidate artefact(s) across Docs, Mail, Tasks, CRM: 4 literal, 1 by subject (possible dependencies), 1 via CRM field scan that search missed",
+      "tokensIn": null,
+      "tokensOut": null
+    },
+    {
+      "agent": "classifier",
+      "model": "anthropic/claude-sonnet-4.5",
+      "startedAt": "2026-09-12T11:25:35.509Z",
+      "durationMs": 26317,
+      "summary": "Classified 6: 4 editable, 1 historical, 1 irreversible, 1 exposed. 3 flagged for human review",
+      "tokensIn": 3010,
+      "tokensOut": 1307
+    },
+    {
+      "agent": "planner",
+      "model": "anthropic/claude-sonnet-4.5",
+      "startedAt": "2026-09-12T11:26:01.827Z",
+      "durationMs": 17000,
+      "summary": "Generated 5 distinct repair surface type(s) across 6 artefact(s)",
+      "tokensIn": 2106,
+      "tokensOut": 690
+    }
+  ],
+  "summary": {
+    "safeToUpdate": 2,
+    "requiresReview": 3,
+    "alreadyCommunicated": 1,
+    "preserveAsHistorical": 1
+  },
+  "generatedAt": "2026-09-12T11:26:18.827Z"
+}
